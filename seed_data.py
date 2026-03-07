@@ -41,7 +41,7 @@ def seed_data():
                 "languages": "Hindi, English",
                 "bio": "Professional playback singer with 10+ years of experience",
                 "min_price": 5000,
-                "max_price": 50000,
+                "max_price": 5000,
                 "experience_years": 10
             },
             {
@@ -52,7 +52,7 @@ def seed_data():
                 "languages": "Hindi, English, Punjabi",
                 "bio": "Bollywood choreographer and dancer",
                 "min_price": 3000,
-                "max_price": 30000,
+                "max_price": 3000,
                 "experience_years": 8
             },
             {
@@ -63,7 +63,7 @@ def seed_data():
                 "languages": "Hindi, English, Kannada",
                 "bio": "Theater and film actor",
                 "min_price": 10000,
-                "max_price": 100000,
+                "max_price": 10000,
                 "experience_years": 15
             }
         ]

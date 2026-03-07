@@ -75,7 +75,6 @@ Body: {
   "languages": "Hindi, English",
   "bio": "Bio text",
   "min_price": 5000,
-  "max_price": 50000,
   "experience_years": 10
 }
 ```
@@ -104,7 +103,7 @@ GET /api/users/profiles/{profile_id}
 
 #### Search Profiles
 ```
-GET /api/users/profiles?category=Singer&location=Mumbai&min_price=1000&max_price=50000
+GET /api/users/profiles?category=Singer&location=Mumbai&min_price=1000
 ```
 
 ### Gigs

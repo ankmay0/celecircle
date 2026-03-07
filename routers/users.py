@@ -43,6 +43,11 @@ def create_profile(
         
         # Create profile with required fields
         profile_dict = profile_data.dict()
+        role_value = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+        is_artist = role_value == "artist"
+        min_price = profile_dict.get("min_price", 0) or 0
+        # Keep backward compatibility in DB/API while using single "onwards" price model.
+        max_price = min_price if is_artist else 0
         new_profile = Profile(
             user_id=current_user.id,
             name=profile_dict.get('name'),
@@ -51,8 +56,8 @@ def create_profile(
             languages=profile_dict.get('languages'),
             bio=profile_dict.get('bio'),
             phone=profile_dict.get('phone'),
-            min_price=profile_dict.get('min_price', 0) or 0,
-            max_price=profile_dict.get('max_price', 0) or 0,
+            min_price=min_price,
+            max_price=max_price,
             experience_years=profile_dict.get('experience_years', 0) or 0
         )
         
@@ -114,6 +119,8 @@ def update_my_profile(
         )
     
     update_data = profile_data.dict(exclude_unset=True)
+    role_value = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+    is_artist = role_value == "artist"
     
     # Handle JSON fields
     if "portfolio_videos" in update_data and update_data["portfolio_videos"]:
@@ -126,6 +133,15 @@ def update_my_profile(
         update_data["past_events"] = json.dumps(update_data["past_events"])
     if "availability_calendar" in update_data and update_data["availability_calendar"]:
         update_data["availability_calendar"] = json.dumps(update_data["availability_calendar"])
+
+    if is_artist:
+        min_price = update_data.get("min_price", profile.min_price or 0) or 0
+        update_data["min_price"] = min_price
+        # Store same value for backward compatibility; UI shows only "Price onwards".
+        update_data["max_price"] = min_price
+    else:
+        update_data["min_price"] = 0
+        update_data["max_price"] = 0
     
     for field, value in update_data.items():
         setattr(profile, field, value)
@@ -234,7 +250,7 @@ def search_profiles(
     if location:
         query = query.filter(Profile.location.ilike(f"%{location}%"))
     if min_price:
-        query = query.filter(Profile.max_price >= min_price)
+        query = query.filter(Profile.min_price >= min_price)
     if max_price:
         query = query.filter(Profile.min_price <= max_price)
     

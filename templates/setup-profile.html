@@ -28,6 +28,30 @@
     <script src="/static/app.js"></script>
     <script>
         let userRole = 'artist';
+        const ARTIST_CATEGORY_OPTIONS = [
+            'Singer',
+            'Dancer',
+            'Comedian',
+            'Actor',
+            'Anchor',
+            'Influencer',
+            'YouTuber',
+            'Model',
+            'Director',
+            'Producer'
+        ];
+
+        function getArtistCategorySelectHTML() {
+            const options = ARTIST_CATEGORY_OPTIONS
+                .map((option) => `<option value="${option}">${option}</option>`)
+                .join('');
+            return `
+                <select class="form-input" name="category" required>
+                    <option value="">Select your role</option>
+                    ${options}
+                </select>
+            `;
+        }
         
         document.addEventListener('DOMContentLoaded', () => {
             initHeader();
@@ -85,7 +109,7 @@
                 formHTML += `
                     <div class="form-group">
                         <label class="form-label">Category *</label>
-                        <input type="text" class="form-input" name="category" required placeholder="Singer, Dancer, Actor, etc.">
+                        ${getArtistCategorySelectHTML()}
                         <small class="text-secondary">What type of artist are you?</small>
                     </div>
                 `;
@@ -118,14 +142,9 @@
             if (!isOrganizer) {
                 formHTML += `
                     <div class="form-group">
-                        <label class="form-label">Min Price ($)</label>
+                        <label class="form-label">Price Onwards (₹)</label>
                         <input type="number" class="form-input" name="min_price" step="0.01" min="0" placeholder="0">
-                        <small class="text-secondary">Minimum booking price</small>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Max Price ($)</label>
-                        <input type="number" class="form-input" name="max_price" step="0.01" min="0" placeholder="0">
-                        <small class="text-secondary">Maximum booking price</small>
+                        <small class="text-secondary">Displayed to organizers as "PRICE onwards"</small>
                     </div>
                 `;
             }
@@ -178,7 +197,7 @@
             // Convert price strings to numbers (only for artists)
             if (!isOrganizer) {
                 data.min_price = parseFloat(data.min_price) || 0;
-                data.max_price = parseFloat(data.max_price) || 0;
+                data.max_price = data.min_price;
             } else {
                 // Set to 0 for organizers (not used)
                 data.min_price = 0;

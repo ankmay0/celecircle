@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
     <link rel="stylesheet" href="/static/common.css">
+    <link rel="stylesheet" href="/static/theme-global.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .landing-shell {
@@ -101,6 +102,84 @@
             font-weight: 700;
             margin-bottom: 0.75rem;
         }
+
+        .landing-title-primary {
+            color: #111827;
+        }
+
+        .landing-title-accent {
+            color: #2563eb;
+        }
+
+        /* Dark-mode landing overrides */
+        :root[data-theme="dark"] .landing-shell {
+            background: radial-gradient(ellipse at top, rgba(37, 99, 235, 0.2), #0b1220 42%, #0b1220 100%);
+        }
+
+        :root[data-theme="dark"] .landing-title-primary {
+            color: #f8fafc !important;
+        }
+
+        :root[data-theme="dark"] .landing-title-accent {
+            color: #60a5fa !important;
+        }
+
+        :root[data-theme="dark"] .landing-subtitle {
+            color: #cbd5e1;
+        }
+
+        :root[data-theme="dark"] .landing-btn-outline {
+            background: #0f172a;
+            color: #93c5fd;
+            border-color: #60a5fa;
+        }
+
+        :root[data-theme="dark"] .landing-btn-outline:hover {
+            background: #1e293b;
+        }
+
+        :root[data-theme="dark"] .landing-feed-link {
+            color: #94a3b8;
+        }
+
+        :root[data-theme="dark"] .landing-feed-link:hover {
+            color: #93c5fd;
+        }
+
+        :root[data-theme="dark"] .landing-shell .group.block {
+            background: #0f172a !important;
+            border-color: #334155 !important;
+            box-shadow: 0 6px 20px rgba(2, 6, 23, 0.45) !important;
+        }
+
+        :root[data-theme="dark"] .landing-shell .group.block h3 {
+            color: #f8fafc !important;
+        }
+
+        :root[data-theme="dark"] .landing-shell .group.block p {
+            color: #cbd5e1 !important;
+        }
+
+        :root[data-theme="dark"] section.bg-gray-50,
+        :root[data-theme="dark"] section.bg-white {
+            background: #0f172a !important;
+        }
+
+        :root[data-theme="dark"] section h2,
+        :root[data-theme="dark"] section h3 {
+            color: #f8fafc !important;
+        }
+
+        :root[data-theme="dark"] section p,
+        :root[data-theme="dark"] section span,
+        :root[data-theme="dark"] section a {
+            color: #cbd5e1;
+        }
+
+        :root[data-theme="dark"] section a.text-blue-600,
+        :root[data-theme="dark"] section .text-blue-600 {
+            color: #93c5fd !important;
+        }
     </style>
 </head>
 <body>
@@ -125,8 +204,8 @@
     <main class="page-container landing-shell">
         <div class="text-center" style="max-width: 800px; margin: 0 auto;">
                 <h1 class="landing-title">
-                <span style="color: #111827;">Connect. Create.</span>
-                <span style="color: #2563eb;">Celebrate.</span>
+                <span class="landing-title-primary">Connect. Create.</span>
+                <span class="landing-title-accent">Celebrate.</span>
             </h1>
             <p class="landing-subtitle">
                 The premier marketplace connecting artists, celebrities, and entertainment professionals with event organizers, producers, and brands.
@@ -217,7 +296,7 @@
     <section class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 md:px-8">
             <h2 class="text-3xl font-extrabold text-gray-900 text-center mb-16">
-                How CeleBook Works
+                How CeleCircle Works
             </h2>
             <div class="grid md:grid-cols-3 gap-12 relative">
                 <a href="/register" class="group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-transparent hover:border-gray-100">
@@ -287,7 +366,7 @@
                 <div class="relative z-10">
                     <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to elevate your next event?</h2>
                     <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-                        Join thousands of professionals already using CeleBook to connect, create, and celebrate.
+                        Join thousands of professionals already using CeleCircle to connect, create, and celebrate.
                     </p>
                     <div class="flex flex-wrap items-center justify-center gap-4">
                         <a href="/register" class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:bg-blue-50">
@@ -303,24 +382,58 @@
     </section>
 
     <footer class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 py-10">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 items-start">
+                <div class="text-left">
                     <a href="/" class="inline-flex items-center gap-2.5 text-gray-900 no-underline">
-                        <span class="w-8 h-8 rounded-lg bg-blue-600 text-white inline-flex items-center justify-center text-xs font-bold">CB</span>
-                        <span class="font-bold text-lg tracking-tight">CeleBook</span>
+                        <span class="w-8 h-8 rounded-lg bg-blue-600 text-white inline-flex items-center justify-center text-xs font-bold">CC</span>
+                        <span class="font-bold text-lg tracking-tight">CeleCircle</span>
                     </a>
-                    <p class="text-sm text-gray-500 mt-3">Connecting artists and organizers with trusted, secure bookings.</p>
+                    <p class="text-sm text-gray-500 mt-3 leading-relaxed">
+                        Connecting artists, celebrities, and organizers with secure bookings, trusted payouts, and professional event collaboration.
+                    </p>
+                    <p class="text-sm text-gray-500 mt-4"><span class="font-semibold text-gray-700">Established:</span> 2026</p>
+                    <p class="text-sm text-gray-500 mt-1"><span class="font-semibold text-gray-700">Head Office:</span> Bhubaneswar, Odisha, India</p>
                 </div>
-                <nav class="flex flex-wrap items-center gap-5 text-sm font-medium text-gray-600">
-                    <a href="/login" class="hover:text-blue-600 transition-colors">Sign In</a>
-                    <a href="/register" class="hover:text-blue-600 transition-colors">Join Now</a>
-                    <a href="/secure-payments" class="hover:text-blue-600 transition-colors">Secure Payments</a>
-                    <a href="/contact-sales" class="hover:text-blue-600 transition-colors">Contact Sales</a>
-                </nav>
+
+                <div class="text-left">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Company</h4>
+                    <nav class="flex flex-col items-start gap-2 text-sm text-gray-600">
+                        <a href="/login" class="hover:text-blue-600 transition-colors">Sign In</a>
+                        <a href="/register" class="hover:text-blue-600 transition-colors">Join Now</a>
+                        <a href="/browse-gigs" class="hover:text-blue-600 transition-colors">Browse Gigs</a>
+                        <a href="/secure-payments" class="hover:text-blue-600 transition-colors">Secure Payments</a>
+                    </nav>
+                </div>
+
+                <div class="text-left">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Help & Support</h4>
+                    <nav class="flex flex-col items-start gap-2 text-sm text-gray-600">
+                        <a href="/help" class="hover:text-blue-600 transition-colors">Help Center</a>
+                        <a href="/terms" class="hover:text-blue-600 transition-colors">Terms & Conditions</a>
+                        <a href="/escrow" class="hover:text-blue-600 transition-colors">Escrow Policy</a>
+                        <a href="/payout" class="hover:text-blue-600 transition-colors">Payout Policy</a>
+                    </nav>
+                </div>
+
+                <div class="text-left">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Contact</h4>
+                    <div class="flex flex-col items-start gap-2 text-sm text-gray-600">
+                        <a href="tel:8658818888" class="hover:text-blue-600 transition-colors">+91 8658818888</a>
+                        <a href="tel:8249221773" class="hover:text-blue-600 transition-colors">+91 824 922 1773</a>
+                        <a href="mailto:celecircle1@gmail.com" class="hover:text-blue-600 transition-colors">celecircle1@gmail.com</a>
+                        <span>Support Hours: Mon - Sat, 9:00 AM - 7:00 PM IST</span>
+                    </div>
+                </div>
             </div>
-            <div class="mt-8 pt-5 border-t border-gray-100 text-xs text-gray-500">
-                © 2026 CeleBook. All rights reserved.
+
+            <div class="mt-10 pt-5 border-t border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-gray-500">
+                <span>© 2026 CeleCircle. All rights reserved.</span>
+                <div class="flex items-center gap-4">
+                    <a href="/settings" class="hover:text-blue-600 transition-colors">Privacy</a>
+                    <a href="/terms" class="hover:text-blue-600 transition-colors">Terms</a>
+                    <a href="/help" class="hover:text-blue-600 transition-colors">Help</a>
+                </div>
             </div>
         </div>
     </footer>
@@ -328,4 +441,3 @@
     <script src="/static/app.js"></script>
 </body>
 </html>
-

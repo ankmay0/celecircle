@@ -29,7 +29,7 @@ def calculate_ai_score(profile: Profile, db: Session) -> float:
         completeness += 1
     if profile.portfolio_images or profile.portfolio_videos:
         completeness += 2
-    if profile.min_price > 0 and profile.max_price > 0:
+    if profile.min_price > 0:
         completeness += 1
     if profile.experience_years > 0:
         completeness += 1
@@ -130,10 +130,7 @@ def recommend_artists(gig_category: str, location: str, budget: float, db: Sessi
         query = query.filter(Profile.category.ilike(f"%{gig_category}%"))
     
     # Filter by budget
-    query = query.filter(
-        Profile.min_price <= budget,
-        Profile.max_price >= budget
-    )
+    query = query.filter(Profile.min_price <= budget)
     
     profiles = query.all()
     
@@ -178,9 +175,8 @@ def recommend_gigs(artist_profile: Profile, db: Session, limit: int = 10) -> Lis
         query = query.filter(Gig.category.ilike(f"%{artist_profile.category}%"))
     
     # Filter by budget
-    if artist_profile.min_price > 0 and artist_profile.max_price > 0:
+    if artist_profile.min_price > 0:
         query = query.filter(
-            Gig.budget_min <= artist_profile.max_price,
             Gig.budget_max >= artist_profile.min_price
         )
     
@@ -203,7 +199,7 @@ def recommend_gigs(artist_profile: Profile, db: Session, limit: int = 10) -> Lis
         # Budget fit
         if artist_profile.min_price > 0:
             budget_fit = (gig.budget_min + gig.budget_max) / 2
-            if artist_profile.min_price <= budget_fit <= artist_profile.max_price:
+            if budget_fit >= artist_profile.min_price:
                 score += 20
         
         # Time proximity (sooner events get slight bonus)

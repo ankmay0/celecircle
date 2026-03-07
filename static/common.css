@@ -235,7 +235,7 @@ body {
 }
 
 .text-secondary {
-    color: var(--text-secondary-base);
+    color: var(--text-secondary);
 }
 
 .mt-1 { margin-top: 0.5rem; }
@@ -376,5 +376,36 @@ body {
         width: 280px !important;
         height: 280px !important;
     }
+}
+
+/* Dark mode form readability overrides (auth/setup forms) */
+:root[data-theme="dark"] .card-title {
+    color: #f8fafc !important;
+    border-bottom-color: #334155 !important;
+}
+
+:root[data-theme="dark"] .form-label {
+    color: #e5e7eb !important;
+}
+
+:root[data-theme="dark"] .text-secondary {
+    color: #cbd5e1 !important;
+}
+
+:root[data-theme="dark"] .form-input,
+:root[data-theme="dark"] .form-select,
+:root[data-theme="dark"] .form-textarea {
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    border-color: #334155 !important;
+}
+
+:root[data-theme="dark"] .form-input::placeholder,
+:root[data-theme="dark"] .form-textarea::placeholder {
+    color: #94a3b8 !important;
+}
+
+:root[data-theme="dark"] .password-toggle {
+    color: #cbd5e1 !important;
 }
 

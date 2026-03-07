@@ -62,6 +62,43 @@
     <script src="/static/app.js"></script>
     <script src="/static/feed.js"></script>
     <script>
+        const ARTIST_CATEGORY_OPTIONS = [
+            'Singer',
+            'Dancer',
+            'Comedian',
+            'Actor',
+            'Anchor',
+            'Influencer',
+            'YouTuber',
+            'Model',
+            'Director',
+            'Producer'
+        ];
+
+        function getArtistCategorySelectHTML(selectedCategory = '') {
+            const normalizedSelected = (selectedCategory || '').trim().toLowerCase();
+            const hasSelectedOption = ARTIST_CATEGORY_OPTIONS.some(
+                (option) => option.toLowerCase() === normalizedSelected
+            );
+
+            const options = ARTIST_CATEGORY_OPTIONS.map((option) => {
+                const selectedAttr = option.toLowerCase() === normalizedSelected ? ' selected' : '';
+                return `<option value="${option}"${selectedAttr}>${option}</option>`;
+            }).join('');
+
+            const legacyOption = selectedCategory && !hasSelectedOption
+                ? `<option value="${escapeHtml(selectedCategory)}" selected>${escapeHtml(selectedCategory)} (Current)</option>`
+                : '';
+
+            return `
+                <select class="form-input" name="category" required>
+                    <option value="">Select your role</option>
+                    ${legacyOption}
+                    ${options}
+                </select>
+            `;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             initHeader();
             setActiveNavItem('me');
@@ -159,7 +196,9 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">${isOrganizer ? 'Looking for' : 'Category'}</label>
-                            <input type="text" class="form-input" name="category" value="${profile.category}" required>
+                            ${isOrganizer
+                                ? `<input type="text" class="form-input" name="category" value="${profile.category}" required>`
+                                : getArtistCategorySelectHTML(profile.category)}
                             ${isOrganizer ? '<small class="text-secondary">What type of talent are you looking for?</small>' : ''}
                         </div>
                         <div class="form-group">
@@ -175,12 +214,9 @@
             if (!isOrganizer) {
                 html += `
                         <div class="form-group">
-                            <label class="form-label">Min Price ($)</label>
+                            <label class="form-label">Price Onwards (₹)</label>
                             <input type="number" class="form-input" name="min_price" value="${profile.min_price}" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Max Price ($)</label>
-                            <input type="number" class="form-input" name="max_price" value="${profile.max_price}" step="0.01">
+                            <small class="text-secondary">Shown to organizers as "PRICE onwards"</small>
                         </div>`;
             }
             
@@ -274,7 +310,7 @@
                 // Convert price strings to numbers (only for artists)
                 if (!isOrganizer) {
                     data.min_price = parseFloat(data.min_price) || 0;
-                    data.max_price = parseFloat(data.max_price) || 0;
+                    data.max_price = data.min_price;
                 } else {
                     // Set to 0 for organizers (not used)
                     data.min_price = 0;
@@ -393,7 +429,9 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">${isOrganizer ? 'Looking for' : 'Category'} *</label>
-                            <input type="text" class="form-input" name="category" required placeholder="${isOrganizer ? 'Singers, Dancers, Actors, etc.' : 'Singer, Dancer, Actor, etc.'}">
+                            ${isOrganizer
+                                ? '<input type="text" class="form-input" name="category" required placeholder="Singers, Dancers, Actors, etc.">'
+                                : getArtistCategorySelectHTML()}
                             <small class="text-secondary">${isOrganizer ? 'What type of talent are you looking for?' : 'What type of artist are you?'}</small>
                         </div>
                         <div class="form-group">
@@ -421,14 +459,9 @@
             if (!isOrganizer) {
                 formHTML += `
                         <div class="form-group">
-                            <label class="form-label">Min Price ($)</label>
+                            <label class="form-label">Price Onwards (₹)</label>
                             <input type="number" class="form-input" name="min_price" step="0.01" min="0" placeholder="0">
-                            <small class="text-secondary">Minimum booking price</small>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Max Price ($)</label>
-                            <input type="number" class="form-input" name="max_price" step="0.01" min="0" placeholder="0">
-                            <small class="text-secondary">Maximum booking price</small>
+                            <small class="text-secondary">Shown to organizers as "PRICE onwards"</small>
                         </div>`;
             }
             
@@ -486,7 +519,7 @@
                 // Convert price strings to numbers (only for artists)
                 if (!isOrganizer) {
                     data.min_price = parseFloat(data.min_price) || 0;
-                    data.max_price = parseFloat(data.max_price) || 0;
+                    data.max_price = data.min_price;
                 } else {
                     // Set to 0 for organizers (not used)
                     data.min_price = 0;

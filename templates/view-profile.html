@@ -573,7 +573,7 @@
                                     <div class="vp-quick-info">
                                         ${profile.average_rating ? `<span class="vp-quick-item"><span class="icon">⭐</span> ${profile.average_rating.toFixed(1)} Rating</span>` : ''}
                                         ${safeLocation ? `<span class="vp-quick-item"><span class="icon">📍</span> ${safeLocation}</span>` : ''}
-                                        ${isArtist && artistFee > 0 ? `<span class="vp-quick-item"><span class="icon">💰</span> Starting From <span class="vp-price-highlight">₹${displayPrice.toLocaleString('en-IN')}</span></span>` : ''}
+                                        ${isArtist && artistFee > 0 ? `<span class="vp-quick-item"><span class="icon">💰</span> PRICE onwards <span class="vp-price-highlight">₹${displayPrice.toLocaleString('en-IN')}</span></span>` : ''}
                                     </div>
                                 </div>
                             </div>`;
@@ -621,7 +621,7 @@
                                     <div><strong>Location</strong><p>${safeLocation || 'Not provided'}</p></div>
                                     <div><strong>Languages</strong><p>${escapeHtml(profile.languages || 'Not provided')}</p></div>
                                     <div><strong>Experience</strong><p>${profile.experience_years || 0} years</p></div>
-                                    ${!isOrganizer ? `<div><strong>Price Range</strong><p>₹${(profile.min_price || 0).toLocaleString('en-IN')} – ₹${(profile.max_price || 0).toLocaleString('en-IN')}</p></div>` : ''}
+                                    ${!isOrganizer ? `<div><strong>PRICE onwards</strong><p>₹${(profile.min_price || 0).toLocaleString('en-IN')} onwards</p></div>` : ''}
                                 </div>
                                 ${profile.bio ? `<div style="margin-top:0.75rem;"><strong style="font-size:0.78rem;color:#666;">Bio</strong><p style="margin:4px 0 0;font-size:0.88rem;color:#222;white-space:pre-wrap;">${escapeHtml(profile.bio)}</p></div>` : ''}
                             </div>
