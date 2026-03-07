@@ -20,7 +20,7 @@ def _build_database_url() -> str:
         db_host = os.getenv("DB_HOST", "localhost")
         db_port = os.getenv("DB_PORT", "5432")
         db_name = os.getenv("DB_NAME", "celelink_db")
-        return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+        return f"postgresql+psycopg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
     sqlite_path = os.getenv("SQLITE_PATH", "./celelink.db")
     if sqlite_path.startswith("sqlite:///"):
