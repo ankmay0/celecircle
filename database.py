@@ -11,6 +11,10 @@ def _build_database_url() -> str:
     """Resolve database URL from env with SQLite as dev default."""
     explicit_url = os.getenv("DATABASE_URL")
     if explicit_url:
+        if explicit_url.startswith("postgres://"):
+            return explicit_url.replace("postgres://", "postgresql+psycopg://", 1)
+        if explicit_url.startswith("postgresql://"):
+            return explicit_url.replace("postgresql://", "postgresql+psycopg://", 1)
         return explicit_url
 
     db_engine = os.getenv("DB_ENGINE", "sqlite").strip().lower()
