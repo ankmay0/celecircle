@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - CeleCircle</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+    <style>
+        .msg-container {
+            display: flex;
+            height: calc(100vh - 120px);
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .msg-sidebar {
+            width: 320px;
+            min-width: 280px;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            background: #fafafa;
+        }
+        .msg-sidebar-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+        .msg-sidebar-header h2 { margin: 0; font-size: 1.1rem; }
+
+        .msg-search-box {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fff;
+        }
+        .msg-search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 0.88rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .msg-search-input:focus { border-color: #0a66c2; }
+
+        .msg-list-area {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .section-label {
+            padding: 10px 14px 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #fafafa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            cursor: pointer;
+            transition: background 0.12s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .contact-item:hover { background: #e8f0fe; }
+        .contact-item.active { background: #ddeaf6; }
+        .contact-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a66c2, #00a0dc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .contact-info { flex: 1; min-width: 0; }
+        .contact-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #111;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .contact-sub {
+            font-size: 0.78rem;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+        .contact-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .contact-time { font-size: 0.72rem; color: #999; }
+        .contact-badge {
+            display: inline-block;
+            background: #0a66c2;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-top: 3px;
+        }
+        .empty-state {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #999;
+            font-size: 0.88rem;
+        }
+
+        /* Right panel */
+        .msg-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+        .msg-chat-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+        }
+        .msg-chat-header .contact-avatar { width: 36px; height: 36px; font-size: 0.9rem; }
+        .msg-chat-header-info h3 { margin: 0; font-size: 0.95rem; }
+        .msg-chat-header-info span { font-size: 0.78rem; color: #666; }
+        .msg-chat-placeholder {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 1rem;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .msg-chat-placeholder-icon { font-size: 3rem; }
+        .msg-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #f9f9f9;
+        }
+        .msg-bubble {
+            max-width: 70%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            word-wrap: break-word;
+        }
+        .msg-bubble.sent {
+            align-self: flex-end;
+            background: #0a66c2;
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+        .msg-bubble.received {
+            align-self: flex-start;
+            background: #e8e8e8;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        .msg-bubble-time {
+            font-size: 0.68rem;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+        .msg-bubble.sent .msg-bubble-time { text-align: right; }
+        .msg-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            background: #fff;
+        }
+        .msg-input-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        /* The row that holds the text input + paperclip inside */
+        .msg-input-row {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .msg-input-row input {
+            width: 100%;
+            padding: 10px 44px 10px 14px; /* extra right padding for the icon */
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .msg-input-row input:focus { border-color: #0a66c2; }
+        /* Paperclip icon — inside the input, right-aligned */
+        .msg-attach-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1.15rem;
+            color: #888;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, color 0.15s;
+            z-index: 1;
+        }
+        .msg-attach-btn:hover { background: #e8f0fe; color: #0a66c2; }
+        .msg-send-btn {
+            padding: 8px 20px;
+            background: #0a66c2;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.88rem;
+            flex-shrink: 0;
+            height: 38px;
+        }
+        .msg-send-btn:hover { background: #004182; }
+        .msg-send-btn:disabled { background: #ccc; cursor: default; }
+
+        /* Attachment preview strip */
+        .msg-attach-preview {
+            display: none; /* toggled via JS */
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f0f4f8;
+            border: 1px solid #dce3ea;
+            border-radius: 14px;
+            font-size: 0.82rem;
+            color: #333;
+            position: relative;
+        }
+        .msg-attach-preview .attach-thumb {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .msg-attach-preview img {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            object-fit: cover;
+            display: block;
+        }
+        .msg-attach-preview video {
+            width: 80px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            display: block;
+            background: #000;
+        }
+        .msg-attach-preview .attach-file-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .msg-attach-preview .attach-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .msg-attach-preview .attach-name {
+            font-weight: 600;
+            font-size: 0.82rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .msg-attach-preview .attach-size {
+            font-size: 0.72rem;
+            color: #888;
+            margin-top: 2px;
+        }
+        .msg-attach-preview .attach-status {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .msg-attach-preview .attach-progress {
+            flex: 1;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .msg-attach-preview .attach-progress-bar {
+            height: 100%;
+            background: #0a66c2;
+            width: 0%;
+            transition: width 0.2s;
+            border-radius: 2px;
+        }
+        .msg-attach-preview .attach-done {
+            color: #22c55e;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .msg-attach-preview .attach-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #666;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            z-index: 2;
+        }
+        .msg-attach-preview .attach-remove:hover { background: #fee2e2; color: #dc2626; border-color: #dc2626; }
+
+        /* Attachment rendering in bubbles */
+        .msg-bubble img.msg-attachment-img {
+            max-width: 220px;
+            max-height: 200px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .msg-bubble video.msg-attachment-video {
+            max-width: 240px;
+            max-height: 180px;
+            border-radius: 10px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .msg-bubble .msg-attachment-file {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-size: 0.82rem;
+            text-decoration: none;
+            color: inherit;
+        }
+        .msg-bubble.received .msg-attachment-file { background: rgba(0,0,0,0.06); }
+        .msg-bubble .msg-attachment-file:hover { opacity: 0.8; }
+        .msg-attachment-file-icon { font-size: 1.3rem; }
+
+        /* ── Booking context header ── */
+        .msg-booking-ctx {
+            display: none;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+            border-bottom: 1px solid #d0e3f1;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.82rem;
+        }
+        .msg-booking-ctx.visible { display: flex; }
+        .msg-booking-ctx-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .msg-booking-ctx-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            flex: 1;
+            min-width: 0;
+        }
+        .msg-booking-ctx-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #444;
+        }
+        .msg-booking-ctx-item strong { color: #111; font-weight: 600; }
+        .msg-booking-ctx-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .ctx-status-pending { background: #fff3e0; color: #e65100; }
+        .ctx-status-awaiting_payment { background: #fff8e1; color: #f57f17; }
+        .ctx-status-confirmed { background: #e8f5e9; color: #2e7d32; }
+        .ctx-status-completed { background: #e3f2fd; color: #1565c0; }
+        .ctx-status-cancelled { background: #ffebee; color: #c62828; }
+        .ctx-status-disputed { background: #f3e5f5; color: #7b1fa2; }
+        .msg-booking-ctx-link {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #0a66c2;
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .msg-booking-ctx-link:hover { text-decoration: underline; }
+
+        /* Contact reveal notice */
+        .msg-contact-notice {
+            display: none;
+            padding: 8px 18px;
+            background: #fffbe6;
+            border-bottom: 1px solid #ffe58f;
+            font-size: 0.8rem;
+            color: #8a6d3b;
+            text-align: center;
+        }
+        .msg-contact-notice.visible { display: block; }
+
+        @media (max-width: 700px) {
+            .msg-sidebar { width: 100%; min-width: 0; }
+            .msg-chat { display: none; }
+            .msg-container.chat-open .msg-sidebar { display: none; }
+            .msg-container.chat-open .msg-chat { display: flex; }
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container" style="padding-top: 1rem; padding-bottom: 0;">
+        <div class="msg-container" id="msgContainer">
+            <!-- Left sidebar -->
+            <div class="msg-sidebar">
+                <div class="msg-sidebar-header">
+                    <h2>Messaging</h2>
+                </div>
+                <div class="msg-search-box">
+                    <input type="text" class="msg-search-input" id="userSearchInput"
+                           placeholder="Search by name, category...">
+                </div>
+                <div class="msg-list-area" id="sidebarList">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Right chat panel -->
+            <div class="msg-chat" id="chatPanel">
+                <div class="msg-chat-placeholder" id="chatPlaceholder">
+                    <div class="msg-chat-placeholder-icon">💬</div>
+                    <div>Select a person to start messaging</div>
+                </div>
+                <div id="chatHeaderArea" style="display:none;"></div>
+                <div class="msg-booking-ctx" id="bookingCtx"></div>
+                <div class="msg-contact-notice" id="contactNotice">🔒 Phone number and email are hidden until advance payment is confirmed.</div>
+                <div class="msg-messages" id="chatMessages" style="display:none;"></div>
+                <div class="msg-input-area" id="chatInputArea" style="display:none;">
+                    <input type="file" id="chatFileInput" style="display:none;"
+                           accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip">
+                    <div class="msg-input-wrap">
+                        <div class="msg-attach-preview" id="attachPreview" style="display:none;"></div>
+                        <div class="msg-input-row">
+                            <input type="text" id="messageInput" placeholder="Write a message...">
+                            <button class="msg-attach-btn" id="attachBtn" title="Attach file" onclick="document.getElementById('chatFileInput').click()">📎</button>
+                        </div>
+                    </div>
+                    <button class="msg-send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        /* ── State ── */
+        var currentChatUserId = null;
+        var currentChatUserName = '';
+        var currentChatUserCategory = '';
+        var allConversations = [];
+        var allPeople = [];
+        var searchTimeout = null;
+        var sidebarLoaded = false;
+
+        // Pending attachment (set after upload, cleared after send)
+        var pendingAttachment = null; // { url, type, filename }
+
+        /* ══════════════════════════════════════════
+           BOOT SEQUENCE
+           ══════════════════════════════════════════ */
+        document.addEventListener('DOMContentLoaded', function() {
+            initHeader();
+            setActiveNavItem('messaging');
+
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Wire up enter-to-send
+            var inp = document.getElementById('messageInput');
+            if (inp) {
+                inp.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) sendMessage();
+                });
+            }
+
+            // Wire up search
+            var si = document.getElementById('userSearchInput');
+            if (si) {
+                si.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    var q = this.value.trim();
+                    searchTimeout = setTimeout(function() { renderSidebar(q || null); }, 200);
+                });
+            }
+
+            // Wire up file input for attachments
+            var fileInput = document.getElementById('chatFileInput');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+
+            // ── Read URL params FIRST, before anything async ──
+            var params = new URLSearchParams(window.location.search);
+            var openUserId = params.get('open_user');
+            var openName = params.get('name') || '';
+            var openCategory = params.get('category') || '';
+
+            // Clean URL immediately so refreshes don't re-trigger
+            if (openUserId) {
+                window.history.replaceState({}, '', '/chat');
+            }
+
+            // ── If we have a user to open, do it NOW (don't wait for sidebar) ──
+            if (openUserId) {
+                var uid = parseInt(openUserId);
+
+                // If name was passed via URL, open chat immediately with what we have
+                if (openName) {
+                    openChat(uid, decodeURIComponent(openName), decodeURIComponent(openCategory));
+                    // Load sidebar in background
+                    loadSidebar();
+                } else {
+                    // No name provided — fetch profile first, then open
+                    apiRequest('/users/profiles/user/' + uid)
+                        .then(function(profile) {
+                            openChat(uid, profile.name || 'User', profile.category || '');
+                        })
+                        .catch(function() {
+                            // Fallback: open with generic name
+                            openChat(uid, 'User', '');
+                        })
+                        .finally(function() {
+                            loadSidebar();
+                        });
+                }
+            } else {
+                // Normal load — just show sidebar
+                loadSidebar();
+            }
+        });
+
+        /* ══════════════════════════════════════════
+           SIDEBAR
+           ══════════════════════════════════════════ */
+        function loadSidebar() {
+            var sidebar = document.getElementById('sidebarList');
+            if (!sidebarLoaded) {
+                sidebar.innerHTML = '<div class="empty-state">Loading...</div>';
+            }
+
+            return Promise.all([
+                apiRequest('/chat/conversations').catch(function(err) {
+                    console.error('Failed to load conversations:', err);
+                    return [];
+                }),
+                apiRequest('/users/profiles?limit=100').catch(function(err) {
+                    console.error('Failed to load profiles:', err);
+                    return [];
+                })
+            ]).then(function(results) {
+                allConversations = results[0] || [];
+                allPeople = (results[1] || []).map(function(p) {
+                    return {
+                        user_id: p.user_id,
+                        name: p.name || '',
+                        category: p.category || '',
+                        location: p.location || ''
+                    };
+                });
+                sidebarLoaded = true;
+                renderSidebar();
+            }).catch(function(err) {
+                console.error('Sidebar load error:', err);
+                sidebar.innerHTML = '<div class="empty-state">Error loading contacts.<br><button class="btn btn-secondary" style="margin-top:8px;" onclick="window._reloadSidebar()">Retry</button></div>';
+            });
+        }
+
+        function renderSidebar(filterText) {
+            var sidebar = document.getElementById('sidebarList');
+            var me = getCurrentUser();
+            var myId = me ? me.id : null;
+            var html = '';
+
+            /* ── Conversations ── */
+            var convos = allConversations.slice();
+            if (filterText) {
+                var q = filterText.toLowerCase();
+                convos = convos.filter(function(c) {
+                    return (c.user_name || c.user_email || '').toLowerCase().indexOf(q) !== -1 ||
+                           (c.user_category || '').toLowerCase().indexOf(q) !== -1;
+                });
+            }
+
+            if (convos.length > 0) {
+                html += '<div class="section-label">Recent Conversations</div>';
+                for (var i = 0; i < convos.length; i++) {
+                    var conv = convos[i];
+                    var name = conv.user_name || (conv.user_email ? conv.user_email.split('@')[0] : 'User');
+                    var initials = getInitials(name);
+                    var preview = conv.last_message
+                        ? (conv.last_message.length > 38 ? conv.last_message.substring(0, 38) + '...' : conv.last_message)
+                        : '';
+                    var time = getTimeAgo(conv.last_message_time);
+                    var isActive = conv.user_id === currentChatUserId;
+                    var cat = conv.user_category || conv.user_role || '';
+
+                    html += '<div class="contact-item' + (isActive ? ' active' : '') + '"' +
+                        ' onclick="window._openChat(' + conv.user_id + ', \'' + esc(name) + '\', \'' + esc(cat) + '\')">' +
+                        '<div class="contact-avatar">' + initials + '</div>' +
+                        '<div class="contact-info">' +
+                            '<div class="contact-name">' + escapeHtml(name) + '</div>' +
+                            '<div class="contact-sub">' + escapeHtml(preview) + '</div>' +
+                        '</div>' +
+                        '<div class="contact-meta">' +
+                            '<div class="contact-time" data-timestamp="' + escapeHtml(conv.last_message_time || '') + '">' + time + '</div>' +
+                            (conv.unread_count > 0 ? '<div class="contact-badge">' + conv.unread_count + '</div>' : '') +
+                        '</div></div>';
+                }
+            }
+
+            /* ── People (not yet in conversations) ── */
+            var convoUserIds = {};
+            for (var j = 0; j < allConversations.length; j++) {
+                convoUserIds[allConversations[j].user_id] = true;
+            }
+
+            var people = allPeople.filter(function(p) {
+                return p.user_id !== myId && !convoUserIds[p.user_id];
+            });
+
+            if (filterText) {
+                var q2 = filterText.toLowerCase();
+                people = people.filter(function(p) {
+                    return (p.name || '').toLowerCase().indexOf(q2) !== -1 ||
+                           (p.category || '').toLowerCase().indexOf(q2) !== -1 ||
+                           (p.location || '').toLowerCase().indexOf(q2) !== -1;
+                });
+            }
+
+            if (people.length > 0) {
+                html += '<div class="section-label">People</div>';
+                for (var k = 0; k < people.length; k++) {
+                    var p = people[k];
+                    var pInitials = getInitials(p.name);
+                    var sub = [p.category, p.location].filter(Boolean).join(' · ');
+                    var pActive = p.user_id === currentChatUserId;
+
+                    html += '<div class="contact-item' + (pActive ? ' active' : '') + '"' +
+                        ' onclick="window._openChat(' + p.user_id + ', \'' + esc(p.name) + '\', \'' + esc(p.category) + '\')">' +
+                        '<div class="contact-avatar">' + pInitials + '</div>' +
+                        '<div class="contact-info">' +
+                            '<div class="contact-name">' + escapeHtml(p.name) + '</div>' +
+                            '<div class="contact-sub">' + escapeHtml(sub) + '</div>' +
+                        '</div></div>';
+                }
+            }
+
+            if (!html) {
+                html = '<div class="empty-state">No users found.</div>';
+            }
+
+            sidebar.innerHTML = html;
+        }
+
+        /* ══════════════════════════════════════════
+           CHAT PANEL
+           ══════════════════════════════════════════ */
+        function openChat(userId, name, category) {
+            if (!userId) return;
+            currentChatUserId = userId;
+            currentChatUserName = name || 'User';
+            currentChatUserCategory = category || '';
+
+            // Show chat UI immediately
+            document.getElementById('chatPlaceholder').style.display = 'none';
+            document.getElementById('chatHeaderArea').style.display = 'block';
+            document.getElementById('chatMessages').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'flex';
+            document.getElementById('msgContainer').classList.add('chat-open');
+
+            // Render header
+            var initials = getInitials(currentChatUserName);
+            document.getElementById('chatHeaderArea').innerHTML =
+                '<div class="msg-chat-header">' +
+                    '<button onclick="window._closeChat()" style="border:none;background:none;font-size:1.2rem;cursor:pointer;margin-right:4px;display:none;" class="back-btn">\u2190</button>' +
+                    '<div class="contact-avatar">' + initials + '</div>' +
+                    '<div class="msg-chat-header-info">' +
+                        '<h3>' + escapeHtml(currentChatUserName) + '</h3>' +
+                        '<span>' + escapeHtml(currentChatUserCategory) + '</span>' +
+                    '</div>' +
+                '</div>';
+
+            // Show back button on mobile
+            if (window.innerWidth <= 700) {
+                var bb = document.querySelector('.back-btn');
+                if (bb) bb.style.display = 'inline';
+            }
+
+            // Fetch booking context between current user and chat user
+            fetchBookingContext(userId);
+
+            // Loading state for messages
+            var msgBox = document.getElementById('chatMessages');
+            msgBox.innerHTML = '<div style="align-self:center;margin:auto;color:#999;">Loading messages...</div>';
+
+            // Highlight in sidebar (if loaded)
+            if (sidebarLoaded) {
+                renderSidebar(document.getElementById('userSearchInput').value.trim() || null);
+            }
+
+            // Fetch messages (backend marks them as read)
+            apiRequest('/chat/conversations/' + userId)
+                .then(function(messages) {
+                    displayMessages(messages);
+                    // Messages marked as read — refresh navbar badge
+                    if (window.refreshMsgBadge) window.refreshMsgBadge();
+                })
+                .catch(function(err) {
+                    console.log('No messages yet or error:', err);
+                    msgBox.innerHTML = '<div style="align-self:center;margin:auto;color:#999;text-align:center;">No messages yet.<br>Say hello! 👋</div>';
+                });
+
+            // Focus input
+            setTimeout(function() {
+                var inp = document.getElementById('messageInput');
+                if (inp) inp.focus();
+            }, 150);
+        }
+
+        /* ══════════════════════════════════════════
+           BOOKING CONTEXT
+           ══════════════════════════════════════════ */
+        function fetchBookingContext(userId) {
+            var ctxEl = document.getElementById('bookingCtx');
+            var noticeEl = document.getElementById('contactNotice');
+            ctxEl.classList.remove('visible');
+            ctxEl.innerHTML = '';
+            noticeEl.classList.remove('visible');
+
+            apiRequest('/bookings/context/' + userId)
+                .then(function(ctx) {
+                    if (!ctx || !ctx.has_booking) {
+                        // No active booking — show notice about hidden contact
+                        noticeEl.classList.add('visible');
+                        return;
+                    }
+
+                    var eventDate = ctx.event_date
+                        ? new Date(ctx.event_date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : '-';
+                    var statusClass = 'ctx-status-' + ctx.status;
+                    var statusLabel = ctx.status.replace(/_/g, ' ');
+
+                    var html = '<span class="msg-booking-ctx-icon">📋</span>';
+                    html += '<div class="msg-booking-ctx-info">';
+                    html += '<span class="msg-booking-ctx-item">Event: <strong>' + escapeHtml(ctx.event_type || '-') + '</strong></span>';
+                    html += '<span class="msg-booking-ctx-item">Date: <strong>' + eventDate + '</strong></span>';
+                    html += '<span class="msg-booking-ctx-item">Location: <strong>' + escapeHtml(ctx.location || '-') + '</strong></span>';
+                    html += '<span class="msg-booking-ctx-item"><span class="msg-booking-ctx-status ' + statusClass + '">' + statusLabel + '</span></span>';
+                    html += '</div>';
+                    html += '<a class="msg-booking-ctx-link" href="/bookings" title="View booking">View Booking →</a>';
+
+                    ctxEl.innerHTML = html;
+                    ctxEl.classList.add('visible');
+
+                    // If booking is NOT confirmed yet, show contact hidden notice
+                    if (!ctx.is_confirmed) {
+                        noticeEl.classList.add('visible');
+                    } else {
+                        noticeEl.classList.remove('visible');
+                    }
+                })
+                .catch(function(err) {
+                    console.log('No booking context:', err);
+                    // Don't show notice on error — just hide everything
+                });
+        }
+
+        function closeChat() {
+            document.getElementById('chatPlaceholder').style.display = 'flex';
+            document.getElementById('chatHeaderArea').style.display = 'none';
+            document.getElementById('chatMessages').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'none';
+            document.getElementById('bookingCtx').classList.remove('visible');
+            document.getElementById('contactNotice').classList.remove('visible');
+            document.getElementById('msgContainer').classList.remove('chat-open');
+            currentChatUserId = null;
+            renderSidebar(document.getElementById('userSearchInput').value.trim() || null);
+        }
+
+        function displayMessages(messages) {
+            var container = document.getElementById('chatMessages');
+            var user = getCurrentUser();
+
+            if (!messages || messages.length === 0) {
+                container.innerHTML = '<div style="align-self:center;margin:auto;color:#999;text-align:center;">No messages yet.<br>Say hello! 👋</div>';
+                return;
+            }
+
+            var html = '';
+            for (var i = 0; i < messages.length; i++) {
+                var msg = messages[i];
+                var isSent = msg.sender_id === (user ? user.id : -1);
+                var time = getTimeShort(msg.created_at);
+                html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">';
+
+                // Render attachment if present
+                if (msg.attachment_url) {
+                    html += renderAttachmentHTML(msg.attachment_url, msg.attachment_type, '');
+                }
+
+                // Render text (skip if it's just the placeholder "📎 Attachment")
+                var text = msg.message || '';
+                if (text && text !== '📎 Attachment') {
+                    html += '<div>' + escapeHtml(text) + '</div>';
+                }
+
+                html += '<div class="msg-bubble-time">' + time + '</div></div>';
+            }
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        /* ══════════════════════════════════════════
+           SIDEBAR OPTIMISTIC UPDATE
+           ══════════════════════════════════════════ */
+        function updateConversationInSidebar(userId, messageText) {
+            var nowISO = new Date().toISOString();
+            var found = false;
+
+            // Find existing conversation and update it
+            for (var i = 0; i < allConversations.length; i++) {
+                if (allConversations[i].user_id === userId) {
+                    allConversations[i].last_message = messageText;
+                    allConversations[i].last_message_time = nowISO;
+                    // Move to top
+                    var conv = allConversations.splice(i, 1)[0];
+                    allConversations.unshift(conv);
+                    found = true;
+                    break;
+                }
+            }
+
+            // If no existing conversation, create one at the top
+            if (!found) {
+                allConversations.unshift({
+                    user_id: userId,
+                    user_name: currentChatUserName,
+                    user_category: currentChatUserCategory,
+                    user_email: '',
+                    user_role: '',
+                    last_message: messageText,
+                    last_message_time: nowISO,
+                    unread_count: 0
+                });
+            }
+
+            // Re-render sidebar instantly
+            renderSidebar(document.getElementById('userSearchInput').value.trim() || null);
+        }
+
+        /* ══════════════════════════════════════════
+           SEND MESSAGE
+           ══════════════════════════════════════════ */
+        function sendMessage() {
+            var input = document.getElementById('messageInput');
+            var sendBtn = document.getElementById('sendBtn');
+            var message = input.value.trim();
+            var hasAttachment = !!pendingAttachment;
+
+            // Need either text or attachment
+            if (!message && !hasAttachment) return;
+            if (!currentChatUserId) return;
+
+            // Disable button during send
+            sendBtn.disabled = true;
+
+            var container = document.getElementById('chatMessages');
+            // Remove empty-state placeholder if present
+            var placeholder = container.querySelector('div[style*="margin:auto"]');
+            if (placeholder) container.innerHTML = '';
+
+            // Optimistic UI: show bubble immediately
+            var bubble = document.createElement('div');
+            bubble.className = 'msg-bubble sent';
+            var bubbleHTML = '';
+            if (hasAttachment) {
+                bubbleHTML += renderAttachmentHTML(pendingAttachment.url, pendingAttachment.type, pendingAttachment.filename);
+            }
+            if (message) {
+                bubbleHTML += '<div>' + escapeHtml(message) + '</div>';
+            }
+            bubbleHTML += '<div class="msg-bubble-time">Sending...</div>';
+            bubble.innerHTML = bubbleHTML;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+            input.value = '';
+
+            // Build the message payload
+            var payload = {
+                receiver_id: currentChatUserId,
+                message: message || (hasAttachment ? '📎 Attachment' : '')
+            };
+            if (hasAttachment) {
+                payload.attachment_url = pendingAttachment.url;
+                payload.attachment_type = pendingAttachment.type;
+            }
+
+            // Optimistically update sidebar
+            updateConversationInSidebar(currentChatUserId, payload.message);
+
+            // Clear attachment state
+            clearAttachment();
+
+            apiRequest('/chat', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(function() {
+                return apiRequest('/chat/conversations/' + currentChatUserId);
+            })
+            .then(function(msgs) {
+                displayMessages(msgs);
+                loadSidebar();
+            })
+            .catch(function(err) {
+                console.error('Send error:', err);
+                bubble.querySelector('.msg-bubble-time').textContent = 'Failed to send';
+                bubble.style.opacity = '0.5';
+                if (typeof showNotification === 'function') {
+                    showNotification('Error sending message: ' + (err.message || 'Unknown error'), 'error');
+                }
+            })
+            .finally(function() {
+                sendBtn.disabled = false;
+                input.focus();
+            });
+        }
+
+        /* ══════════════════════════════════════════
+           FILE ATTACHMENT
+           ══════════════════════════════════════════ */
+        function handleFileSelect(e) {
+            var file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            // Validate size (max 25MB)
+            if (file.size > 25 * 1024 * 1024) {
+                if (typeof showNotification === 'function') showNotification('File too large. Max 25MB.', 'error');
+                e.target.value = '';
+                return;
+            }
+
+            var preview = document.getElementById('attachPreview');
+            preview.style.display = 'flex';
+
+            // Generate local preview URL
+            var localUrl = URL.createObjectURL(file);
+
+            // Detect type from MIME
+            var isImage = file.type && file.type.startsWith('image/');
+            var isVideo = file.type && file.type.startsWith('video/');
+
+            // Format file size
+            var sizeStr = '';
+            if (file.size < 1024) sizeStr = file.size + ' B';
+            else if (file.size < 1024 * 1024) sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+            else sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+            // Build thumbnail
+            var thumbHTML = '';
+            if (isImage) {
+                thumbHTML = '<div class="attach-thumb"><img src="' + localUrl + '" alt="preview"></div>';
+            } else if (isVideo) {
+                thumbHTML = '<div class="attach-thumb"><video src="' + localUrl + '" muted></video></div>';
+            } else {
+                // Document — pick icon based on extension
+                var ext = (file.name.split('.').pop() || '').toLowerCase();
+                var icon = '📄';
+                if (ext === 'pdf') icon = '📕';
+                else if (ext === 'doc' || ext === 'docx') icon = '📘';
+                else if (ext === 'xls' || ext === 'xlsx') icon = '📊';
+                else if (ext === 'ppt' || ext === 'pptx') icon = '📙';
+                else if (ext === 'zip') icon = '🗜️';
+                thumbHTML = '<div class="attach-thumb"><div class="attach-file-icon">' + icon + '</div></div>';
+            }
+
+            // Build info + progress
+            var displayName = file.name.length > 28 ? file.name.substring(0, 25) + '...' : file.name;
+
+            preview.innerHTML =
+                thumbHTML +
+                '<div class="attach-info">' +
+                    '<div class="attach-name">' + escapeHtml(displayName) + '</div>' +
+                    '<div class="attach-size">' + sizeStr + '</div>' +
+                    '<div class="attach-status" id="attachStatus">' +
+                        '<div class="attach-progress"><div class="attach-progress-bar" id="uploadProgress"></div></div>' +
+                        '<span style="font-size:0.72rem;color:#888;">Uploading...</span>' +
+                    '</div>' +
+                '</div>' +
+                '<span class="attach-remove" onclick="clearAttachment()" title="Remove">✕</span>';
+
+            // Upload immediately
+            uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            var authToken = localStorage.getItem('authToken');
+            var formData = new FormData();
+            formData.append('file', file);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/chat/upload');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    var pct = Math.round((e.loaded / e.total) * 100);
+                    var bar = document.getElementById('uploadProgress');
+                    if (bar) bar.style.width = pct + '%';
+                }
+            });
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    pendingAttachment = { url: data.url, type: data.type, filename: data.filename };
+                    // Replace status area with "Ready to send"
+                    var statusEl = document.getElementById('attachStatus');
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span class="attach-done">✓ Ready to send</span>';
+                    }
+                } else {
+                    clearAttachment();
+                    if (typeof showNotification === 'function') showNotification('Upload failed. Please try again.', 'error');
+                }
+            };
+
+            xhr.onerror = function() {
+                clearAttachment();
+                if (typeof showNotification === 'function') showNotification('Upload failed. Please try again.', 'error');
+            };
+
+            xhr.send(formData);
+        }
+
+        function clearAttachment() {
+            pendingAttachment = null;
+            var preview = document.getElementById('attachPreview');
+            if (preview) {
+                // Revoke any object URLs to free memory
+                var imgs = preview.querySelectorAll('img[src^="blob:"]');
+                for (var i = 0; i < imgs.length; i++) URL.revokeObjectURL(imgs[i].src);
+                var vids = preview.querySelectorAll('video[src^="blob:"]');
+                for (var j = 0; j < vids.length; j++) URL.revokeObjectURL(vids[j].src);
+                preview.innerHTML = '';
+                preview.style.display = 'none';
+            }
+            var fi = document.getElementById('chatFileInput');
+            if (fi) fi.value = '';
+        }
+
+        /* ══════════════════════════════════════════
+           UTILITIES
+           ══════════════════════════════════════════ */
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').map(function(w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
+        }
+
+        /** Ensure a timestamp string is treated as UTC.
+         *  Backend stores datetimes via datetime.utcnow() but serializes
+         *  without a 'Z' or offset, e.g. "2026-02-09T12:03:00".
+         *  Appending 'Z' tells the browser it's UTC so toLocaleTimeString()
+         *  correctly converts to the user's local timezone. */
+        function toUTC(dateStr) {
+            if (!dateStr) return dateStr;
+            var s = String(dateStr).trim();
+            // Already has timezone info (Z, +xx:xx, -xx:xx) — leave it alone
+            if (/Z$/i.test(s) || /[+-]\d{2}:\d{2}$/.test(s)) return s;
+            return s + 'Z';
+        }
+
+        function getTimeAgo(dateStr) {
+            if (!dateStr) return '';
+            var then = new Date(toUTC(dateStr)).getTime();
+            if (isNaN(then)) return '';
+            var diff = Date.now() - then;
+            if (diff < 0) diff = 0;
+            var secs = Math.floor(diff / 1000);
+            var mins = Math.floor(diff / 60000);
+            var hrs  = Math.floor(diff / 3600000);
+            var days = Math.floor(diff / 86400000);
+            if (secs < 60) return 'Just now';
+            if (mins === 1) return '1 min';
+            if (mins < 60)  return mins + ' min';
+            if (hrs === 1)  return '1 hr';
+            if (hrs < 24)   return hrs + ' hr';
+            if (days === 1) return '1 day';
+            if (days < 7)   return days + ' days';
+            return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+
+        /* ── Live-update all visible relative timestamps every 60s ── */
+        function refreshLiveTimestamps() {
+            var els = document.querySelectorAll('[data-timestamp]');
+            for (var i = 0; i < els.length; i++) {
+                var ts = els[i].getAttribute('data-timestamp');
+                if (ts) els[i].textContent = getTimeAgo(ts);
+            }
+        }
+        setInterval(refreshLiveTimestamps, 60000);
+
+        function getTimeShort(dateStr) {
+            if (!dateStr) return '';
+            var d = new Date(toUTC(dateStr));
+            if (isNaN(d.getTime())) return '';
+            var now = new Date();
+            var diffDays = Math.floor((now - d) / 86400000);
+            if (diffDays === 0) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (diffDays < 7) return d.toLocaleDateString([], { weekday: 'short' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function esc(text) {
+            if (!text) return '';
+            return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        function renderAttachmentHTML(url, type, filename) {
+            if (!url) return '';
+            if (type === 'image') {
+                return '<img class="msg-attachment-img" src="' + escapeHtml(url) + '" alt="image" onclick="window.open(\'' + escapeHtml(url) + '\', \'_blank\')">';
+            }
+            if (type === 'video') {
+                return '<video class="msg-attachment-video" src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
+            }
+            // File / document
+            var icon = '📄';
+            var lowerUrl = url.toLowerCase();
+            if (lowerUrl.indexOf('.pdf') !== -1) icon = '📕';
+            else if (lowerUrl.indexOf('.doc') !== -1) icon = '📘';
+            else if (lowerUrl.indexOf('.xls') !== -1) icon = '📊';
+            else if (lowerUrl.indexOf('.zip') !== -1) icon = '🗜️';
+            var displayName = filename || url.split('/').pop() || 'File';
+            return '<a class="msg-attachment-file" href="' + escapeHtml(url) + '" target="_blank" download>' +
+                '<span class="msg-attachment-file-icon">' + icon + '</span>' +
+                '<span>' + escapeHtml(displayName.length > 30 ? displayName.substring(0,27) + '...' : displayName) + '</span>' +
+                '<span>⬇</span></a>';
+        }
+
+        /* ── Auto-refresh every 15s ── */
+        setInterval(function() {
+            if (!sidebarLoaded) return; // Don't refresh before first load
+            loadSidebar();
+            if (window.refreshMsgBadge) window.refreshMsgBadge();
+            if (currentChatUserId) {
+                apiRequest('/chat/conversations/' + currentChatUserId)
+                    .then(function(msgs) { displayMessages(msgs); })
+                    .catch(function() {});
+            }
+        }, 15000);
+
+        /* ── Expose to global scope for onclick handlers ── */
+        window._openChat = openChat;
+        window._closeChat = closeChat;
+        window._reloadSidebar = loadSidebar;
+        window.openChat = openChat;
+        window.closeChat = closeChat;
+        window.sendMessage = sendMessage;
+        window.loadSidebar = loadSidebar;
+        window.clearAttachment = clearAttachment;
+
+    })();
+    </script>
+</body>
+</html>

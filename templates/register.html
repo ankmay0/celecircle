@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - CeleCircle</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="header-left">
+                <a href="/" class="logo-header">
+                    <img src="/static/logos/celevircle-logo.png" alt="celevircle logo" class="logo-brand-image">
+                </a>
+            </div>
+            <nav class="header-nav">
+                <a href="/login" class="nav-item-header">
+                    <span class="nav-label">Sign In</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-container" style="max-width: 500px; margin: 4rem auto;">
+        <div class="card">
+            <h1 class="card-title text-center">Create Account</h1>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-input" id="firstName" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-input" id="lastName" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" id="username" required minlength="4" maxlength="30" autocomplete="off">
+                    <small class="text-secondary" id="usernameHelper">
+                        Username can contain letters, numbers, and . _ # @ characters. No spaces allowed.
+                    </small>
+                    <small class="text-secondary" id="usernameStatus" style="display:block;margin-top:0.25rem;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" class="form-input" id="password" required minlength="6">
+                        <button type="button" class="password-toggle" id="passwordToggle" onclick="togglePassword('password', 'passwordToggle')">
+                            <span class="password-toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" id="role" required>
+                        <option value="">Select role</option>
+                        <option value="artist">Artist / Celebrity</option>
+                        <option value="organizer">Organizer / Recruiter</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+            </form>
+            
+            <div id="otpSection" class="hidden mt-3">
+                <div class="card" style="background: #e8f5e9; border: 1px solid #4caf50; margin-bottom: 1rem;">
+                    <p style="margin: 0; color: #2e7d32; font-weight: 600;">📧 OTP Sent!</p>
+                    <p style="margin: 0.5rem 0 0 0; color: #2e7d32; font-size: 0.9rem;" id="otpDisplay"></p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Enter OTP sent to your email</label>
+                    <input type="text" class="form-input" id="otp" placeholder="6-digit OTP" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+                </div>
+                <button type="button" class="btn btn-primary" style="width: 100%;" onclick="verifyOTPHandler()">Verify OTP</button>
+            </div>
+            
+            <p class="text-center mt-2">
+                Already have an account? <a href="/login">Login</a>
+            </p>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        function togglePassword(inputId, toggleId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleButton = document.getElementById(toggleId);
+            const toggleIcon = toggleButton.querySelector('.password-toggle-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = '👁️';
+            }
+        }
+        
+        // Set role from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const roleParam = urlParams.get('role');
+        if (roleParam) {
+            document.getElementById('role').value = roleParam;
+        }
+        
+        let registeredEmail = '';
+        let registeredPassword = '';
+        let usernameCheckTimeout = null;
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            // Basic client-side username validation
+            const usernamePattern = /^[a-zA-Z0-9._#@]{4,30}$/;
+            if (!usernamePattern.test(username)) {
+                showNotification('Invalid username. It must be 4–30 characters with letters, numbers, and . _ # @ only, and no spaces.', 'error');
+                return;
+            }
+            
+            try {
+                await register(email, password, role, firstName, lastName, username);
+                registeredEmail = email;
+                registeredPassword = password; // Store password for auto-login after OTP verification
+                
+                // Request OTP
+                const otpResponse = await apiRequest('/auth/request-otp', {
+                    method: 'POST',
+                    body: JSON.stringify({ email })
+                });
+                
+                console.log('OTP Response:', otpResponse);
+                
+                document.getElementById('otpSection').classList.remove('hidden');
+                
+                // Display OTP - always show in development mode
+                const otpDisplay = document.getElementById('otpDisplay');
+                if (otpResponse.otp) {
+                    otpDisplay.innerHTML = 
+                        `<div style="background: white; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #0077b5; text-align: center; letter-spacing: 0.5rem; margin-bottom: 0.5rem;">
+                                ${otpResponse.otp}
+                            </div>
+                            <div style="text-align: center; color: #666; font-size: 0.85rem;">
+                                Copy this code to verify your email
+                            </div>
+                        </div>`;
+                } else {
+                    otpDisplay.innerHTML = 
+                        `<div style="color: #f59e0b;">
+                            <strong>OTP generated!</strong> Check the server console/terminal for your OTP code.
+                        </div>`;
+                }
+                
+                showNotification('Registration successful! OTP displayed above', 'success');
+            } catch (error) {
+                console.error('Registration error:', error);
+                showNotification(error.message, 'error');
+            }
+        });
+        
+        // Real-time username availability check
+        const usernameInput = document.getElementById('username');
+        const usernameStatus = document.getElementById('usernameStatus');
+
+        if (usernameInput && usernameStatus) {
+            usernameInput.addEventListener('input', () => {
+                const value = usernameInput.value.trim();
+
+                if (usernameCheckTimeout) {
+                    clearTimeout(usernameCheckTimeout);
+                }
+
+                if (!value) {
+                    usernameStatus.textContent = '';
+                    return;
+                }
+
+                const pattern = /^[a-zA-Z0-9._#@]{4,30}$/;
+                if (!pattern.test(value)) {
+                    usernameStatus.textContent = 'Username must be 4–30 characters with letters, numbers, and . _ # @ only, and no spaces.';
+                    usernameStatus.style.color = 'var(--danger-color)';
+                    return;
+                }
+
+                usernameStatus.textContent = 'Checking availability...';
+                usernameStatus.style.color = '#666';
+
+                usernameCheckTimeout = setTimeout(async () => {
+                    try {
+                        const result = await apiRequest(`/auth/check-username?username=${encodeURIComponent(value)}`);
+                        if (result.available) {
+                            usernameStatus.textContent = 'Username is available';
+                            usernameStatus.style.color = 'var(--success-color)';
+                        } else {
+                            usernameStatus.textContent = 'Username already taken. Please choose another.';
+                            usernameStatus.style.color = 'var(--danger-color)';
+                        }
+                    } catch (error) {
+                        usernameStatus.textContent = error.message || 'Could not check username.';
+                        usernameStatus.style.color = 'var(--danger-color)';
+                    }
+                }, 400);
+            });
+        }
+
+        async function verifyOTPHandler() {
+            const otp = document.getElementById('otp').value;
+            
+            if (!otp || otp.length !== 6) {
+                showNotification('Please enter a valid 6-digit OTP', 'error');
+                return;
+            }
+            
+            try {
+                await verifyOTP(registeredEmail, otp);
+                showNotification('Email verified! Logging you in...', 'success');
+                
+                // Automatically log in the user using stored password
+                try {
+                    await login(registeredEmail, registeredPassword);
+                    showNotification('Login successful! Setting up your profile...', 'success');
+                    
+                    // Check if user has a profile, if not redirect to setup
+                    setTimeout(async () => {
+                        try {
+                            const profile = await apiRequest('/users/profiles/me');
+                            // Profile exists, go to feed
+                            window.location.href = '/feed';
+                        } catch (error) {
+                            // No profile, redirect to setup
+                            if (error.status === 404) {
+                                window.location.href = '/setup-profile';
+                            } else {
+                                // For artists and organizers, redirect to setup
+                                const user = getCurrentUser();
+                                if (user && (user.role === 'artist' || user.role === 'organizer')) {
+                                    window.location.href = '/setup-profile';
+                                } else {
+                                    window.location.href = '/feed';
+                                }
+                            }
+                        }
+                    }, 1000);
+                } catch (loginError) {
+                    // If auto-login fails, redirect to login page
+                    showNotification('Please login to continue', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+

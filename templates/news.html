@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cele News</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+    <style>
+        .news-page-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .news-header {
+            margin-bottom: 2rem;
+        }
+        .news-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .news-header p {
+            color: var(--text-secondary);
+        }
+        .news-articles {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .news-article-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: box-shadow 0.2s;
+        }
+        .news-article-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        .article-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        .article-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .article-title a:hover {
+            color: var(--primary-color);
+        }
+        .article-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+        .article-source {
+            font-weight: 500;
+        }
+        .article-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .article-image {
+            width: 100%;
+            max-width: 400px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .article-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .article-link:hover {
+            text-decoration: underline;
+        }
+        .loading-news {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        .no-news {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-bottom: 1rem;
+        }
+        .back-button:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="news-page-container">
+        <a href="/feed" class="back-button">← Back to Feed</a>
+        
+        <div class="news-header">
+            <h1 id="newsTopic">Cele News</h1>
+            <p id="newsSubtitle">Approved celebrity and entertainment industry updates</p>
+        </div>
+
+        <div id="newsArticles" class="news-articles">
+            <div class="loading-news">Loading news articles...</div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('home');
+            
+            loadNewsArticles();
+        });
+        
+        async function loadNewsArticles() {
+            const container = document.getElementById('newsArticles');
+            
+            try {
+                const response = await apiRequest(`/news/articles?limit=20`);
+                
+                if (response && response.articles && response.articles.length > 0) {
+                    displayNewsArticles(response.articles);
+                } else {
+                    container.innerHTML = `
+                        <div class="no-news">
+                            <h3>No approved articles available</h3>
+                            <p>Articles will appear here after admin approval.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="no-news">
+                        <h3>Error loading news</h3>
+                        <p>${error.message || 'Unable to load news articles. Please try again later.'}</p>
+                        <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                            Error details: ${JSON.stringify(error)}
+                        </p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayNewsArticles(articles) {
+            const container = document.getElementById('newsArticles');
+            
+            let html = '';
+            articles.forEach(article => {
+                const imageHtml = article.image_url ?
+                    `<img src="${article.image_url}" alt="${article.title}" class="article-image" onerror="this.style.display='none'">` : '';
+                
+                html += `
+                    <div class="news-article-card">
+                        ${imageHtml}
+                        <div class="article-header">
+                            <div style="flex: 1;">
+                                <h2 class="article-title">
+                                    <a href="${article.article_url}" target="_blank" rel="noopener noreferrer">
+                                        ${escapeHtml(article.title)}
+                                    </a>
+                                </h2>
+                                <div class="article-meta">
+                                    <span class="article-source">${escapeHtml(article.source || 'Unknown')}</span>
+                                    <span>•</span>
+                                    <span>${article.time_ago || 'Recently'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        ${article.description ? `
+                            <p class="article-description">${escapeHtml(article.description)}</p>
+                        ` : ''}
+                        <a href="${article.article_url}" target="_blank" rel="noopener noreferrer" class="article-link">
+                            Read full article →
+                        </a>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispute Management - CeleCircle Admin</title>
+    <link rel="stylesheet" href="/static/eventnet.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1e293b;display:flex;min-height:100vh;}
+
+        /* ── Sidebar ── */
+        .sidebar{width:240px;background:#1e293b;color:#94a3b8;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+        .sidebar-brand{padding:20px 18px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px;}
+        .sidebar-brand .logo{width:32px;height:32px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+        .sidebar-brand span{font-size:16px;font-weight:700;color:#f1f5f9;}
+        .sidebar-nav{flex:1;padding:12px 0;}
+        .nav-section{padding:8px 18px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-top:8px;}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;color:#94a3b8;text-decoration:none;}
+        .nav-item:hover{background:#334155;color:#e2e8f0;}
+        .nav-item.active{background:#334155;color:#3b82f6;border-left-color:#3b82f6;font-weight:600;}
+        .nav-item .icon{width:18px;text-align:center;font-size:15px;}
+        .sidebar-footer{padding:14px 18px;border-top:1px solid #334155;font-size:12px;}
+        .sidebar-footer a{color:#f87171;text-decoration:none;font-weight:600;}
+
+        /* ── Main Content ── */
+        .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+        .topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+        .topbar-title{font-size:15px;font-weight:700;color:#1e293b;}
+        .topbar-user{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;}
+        .topbar-avatar{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+        .content{padding:24px;flex:1;}
+
+        /* ── Stats ── */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+        .stat-card{background:#fff;border-radius:10px;padding:18px;border:1px solid #e2e8f0;}
+        .stat-card .label{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+        .stat-card .value{font-size:24px;font-weight:800;color:#1e293b;margin-top:4px;}
+        .stat-card .value.blue{color:#3b82f6;}
+        .stat-card .value.green{color:#10b981;}
+        .stat-card .value.orange{color:#f59e0b;}
+        .stat-card .value.red{color:#ef4444;}
+        .stat-card .value.gray{color:#64748b;}
+
+        /* ── Panel ── */
+        .panel{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px;overflow:hidden;}
+        .panel-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .panel-header h3{font-size:14px;font-weight:700;color:#1e293b;}
+        .panel-body{padding:0;}
+
+        /* ── Tables ── */
+        .tbl{width:100%;border-collapse:collapse;font-size:13px;}
+        .tbl th{background:#f8fafc;padding:10px 14px;text-align:left;font-weight:700;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;}
+        .tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;}
+        .tbl tr:hover td{background:#f8fafc;}
+        .tbl .mono{font-family:'SF Mono',Monaco,monospace;font-size:12px;color:#64748b;}
+        .tbl .money{font-weight:700;white-space:nowrap;}
+
+        /* ── Badges ── */
+        .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+        .badge-green{background:#d1fae5;color:#065f46;}
+        .badge-red{background:#fee2e2;color:#991b1b;}
+        .badge-orange{background:#fef3c7;color:#92400e;}
+        .badge-blue{background:#dbeafe;color:#1e40af;}
+        .badge-purple{background:#ede9fe;color:#5b21b6;}
+        .badge-gray{background:#f1f5f9;color:#475569;}
+
+        /* ── Buttons ── */
+        .btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+        .btn-sm{padding:4px 10px;font-size:11px;}
+        .btn-primary{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+        .btn-primary:hover{background:#2563eb;}
+        .btn-success{background:#10b981;color:#fff;}
+        .btn-success:hover{background:#059669;}
+        .btn-danger{background:#ef4444;color:#fff;}
+        .btn-danger:hover{background:#dc2626;}
+        .btn-outline{background:#fff;color:#475569;border-color:#d1d5db;}
+        .btn-outline:hover{background:#f8fafc;}
+        .btn-warning{background:#f59e0b;color:#fff;}
+        .btn-warning:hover{background:#d97706;}
+
+        /* ── Filters ── */
+        .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 20px;border-bottom:1px solid #f1f5f9;}
+        .filters input,.filters select{padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#fff;}
+        .filters select{min-width:140px;}
+
+        /* ── Pagination ── */
+        .pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid #f1f5f9;font-size:12px;color:#64748b;}
+        .pagination .pages{display:flex;gap:4px;}
+        .pagination .pg-btn{padding:4px 10px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;}
+        .pagination .pg-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+        .pagination .pg-btn:hover{background:#f1f5f9;}
+
+        /* ── Form ── */
+        .form-group{margin-bottom:16px;}
+        .form-group label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px;}
+        .form-group textarea{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;min-height:80px;resize:vertical;}
+
+        /* ── Modal ── */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;}
+        .modal-overlay.open{display:flex;}
+        .modal{background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+        .modal-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .modal-header h3{font-size:15px;font-weight:700;}
+        .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+        .modal-close:hover{background:#f1f5f9;}
+        .modal-body{padding:20px;}
+        .modal-footer{padding:14px 20px;border-top:1px solid #e2e8f0;display:flex;flex-direction:column;gap:10px;}
+
+        .detail-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #f8fafc;}
+        .detail-row .dl{color:#64748b;}
+        .detail-row .dv{font-weight:600;color:#1e293b;text-align:right;}
+        .dw-section{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f1f5f9;}
+        .dw-section:last-child{border-bottom:none;}
+        .dw-heading{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:8px;}
+        .resolution-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+
+        /* ── Responsive ── */
+        @media(max-width:768px){
+            .sidebar{width:60px;}.sidebar-brand span,.nav-item span:not(.icon),.nav-section,.sidebar-footer span{display:none;}
+            .main{margin-left:60px;}.sidebar-brand{justify-content:center;padding:14px 0;}.nav-item{justify-content:center;padding:12px 0;border-left:none;}
+            .stats-grid{grid-template-columns:repeat(2,1fr);}
+        }
+
+        :root{
+            --en-primary:#0A66C2;
+            --en-primary-dark:#084d93;
+            --en-bg:#f4f7fb;
+            --en-border:#dbe3ef;
+            --en-text:#191919;
+            --en-muted:#5f6b7a;
+            --en-sidebar:#0f172a;
+            --en-sidebar-soft:#1e293b;
+        }
+        body{background:var(--en-bg);color:var(--en-text);}
+        .sidebar{background:var(--en-sidebar);color:#c3cedd;}
+        .sidebar-brand{border-bottom-color:#2b3648;}
+        .sidebar-brand .logo{background:var(--en-primary);}
+        .nav-section{color:#8ca0bd;}
+        .nav-item{color:#b9c7da;}
+        .nav-item:hover{background:var(--en-sidebar-soft);color:#eef4ff;}
+        .nav-item.active{background:rgba(10,102,194,.18);color:#8ac4ff;border-left-color:var(--en-primary);}
+        .sidebar-footer{border-top-color:#2b3648;}
+        .topbar,.panel,.stat-card,.modal{border:1px solid var(--en-border);box-shadow:0 2px 10px rgba(15,23,42,.06);}
+        .topbar-title,.panel-header h3,.stat-card .value,.detail-row .dv{color:#1d2430;}
+        .stat-card .label,.topbar-user,.detail-row .dl,.dw-heading,.pagination{color:var(--en-muted);}
+        .tbl th{background:#f5f8fc;border-bottom-color:var(--en-border);}
+        .tbl tr:hover td{background:#f7fbff;}
+        .btn-primary,.pagination .pg-btn.active{background:var(--en-primary);border-color:var(--en-primary);}
+        .btn-primary:hover{background:var(--en-primary-dark);}
+        .btn-outline,.pagination .pg-btn,.filters input,.filters select,.form-group textarea{border-color:#c8d5e8;}
+    </style>
+    <link rel="stylesheet" href="/static/admin-theme.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-brand"><div class="logo">CC</div><span>CeleCircle Admin</span></div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <a class="nav-item" href="/admin"><span class="icon">📊</span><span>Dashboard</span></a>
+            <div class="nav-section">Management</div>
+            <a class="nav-item active" href="/admin/disputes"><span class="icon">⚖️</span><span>Disputes</span></a>
+            <a class="nav-item" href="/admin/settings"><span class="icon">💰</span><span>Settings</span></a>
+            <div class="nav-section">Analytics</div>
+            <a class="nav-item" href="/admin/finance"><span class="icon">💹</span><span>Finance</span></a>
+            <a class="nav-item" href="/admin/analytics"><span class="icon">📈</span><span>Analytics</span></a>
+            <a class="nav-item" href="/admin/reports"><span class="icon">📥</span><span>Reports</span></a>
+            <a class="nav-item" href="/admin/audit-logs"><span class="icon">📋</span><span>Audit Logs</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <span style="display:block;margin-bottom:6px;color:#64748b;" id="adminName">Admin</span>
+            <a href="/feed" style="color:#94a3b8;text-decoration:none;font-size:12px;">← Back to App</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-title">Dispute Management</div>
+            <div class="topbar-user">
+                <div class="topbar-avatar" id="topbarAvatar">A</div>
+                <span id="topbarName">Admin</span>
+            </div>
+        </div>
+        <div class="content">
+            <div class="stats-grid" id="statsRow">
+                <div class="stat-card"><div class="label">Total Disputes</div><div class="value" id="statTotal">0</div></div>
+                <div class="stat-card"><div class="label">Open</div><div class="value orange" id="statOpen">0</div></div>
+                <div class="stat-card"><div class="label">Under Review</div><div class="value orange" id="statUnderReview">0</div></div>
+                <div class="stat-card"><div class="label">Resolved</div><div class="value green" id="statResolved">0</div></div>
+                <div class="stat-card"><div class="label">Closed</div><div class="value gray" id="statClosed">0</div></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><h3>Disputes</h3></div>
+                <div class="filters">
+                    <select id="statusFilter" onchange="applyFilter()">
+                        <option value="">All</option>
+                        <option value="open">Open</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="panel-body" style="overflow-x:auto;">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Booking</th>
+                                <th>Raised By</th>
+                                <th>Reason</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Resolution</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disputesTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="disputesPagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="disputeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Dispute #<span id="modalDisputeId"></span></h3>
+                <button class="modal-close" type="button" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        var currentPage = 1;
+        var limit = 25;
+        var stats = { total: 0, open: 0, under_review: 0, resolved: 0, closed: 0 };
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if (!isAuthenticated()) { window.location.href = '/login'; return; }
+            var u = getCurrentUser();
+            if (!u || u.role !== 'admin') { window.location.href = '/dashboard'; return; }
+            document.getElementById('adminName').textContent = u.email || 'Admin';
+            document.getElementById('topbarName').textContent = u.email || 'Admin';
+            document.getElementById('topbarAvatar').textContent = (u.email || 'A').charAt(0).toUpperCase();
+            loadStats();
+            loadDisputes();
+        });
+
+        function fmt(n) { return (n || 0).toLocaleString('en-IN'); }
+        function esc(t) { if (!t) return ''; var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        function fmtDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }); }
+        function fmtDateTime(d) { if (!d) return '-'; var dt = new Date(d); return dt.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) + ' ' + dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }); }
+
+        function disputeBadge(status) {
+            if (!status) return '<span class="badge badge-gray">-</span>';
+            var s = String(status).toLowerCase();
+            var cls = 'badge-gray';
+            if (s === 'open' || s === 'under_review') cls = 'badge-orange';
+            else if (s === 'resolved') cls = 'badge-green';
+            else if (s === 'closed') cls = 'badge-gray';
+            return '<span class="badge ' + cls + '">' + s.replace(/_/g, ' ') + '</span>';
+        }
+
+        function dr(label, value) { return '<div class="detail-row"><span class="dl">' + label + '</span><span class="dv">' + value + '</span></div>'; }
+
+        async function loadStats() {
+            try {
+                var statuses = ['', 'open', 'under_review', 'resolved', 'closed'];
+                var results = await Promise.all(statuses.map(function(s) {
+                    var q = '/admin/disputes?page=1&limit=1';
+                    if (s) q += '&status=' + s;
+                    return apiRequest(q);
+                }));
+                stats.total = results[0].total || 0;
+                stats.open = (results[1] && results[1].total) || 0;
+                stats.under_review = (results[2] && results[2].total) || 0;
+                stats.resolved = (results[3] && results[3].total) || 0;
+                stats.closed = (results[4] && results[4].total) || 0;
+                document.getElementById('statTotal').textContent = stats.total;
+                document.getElementById('statOpen').textContent = stats.open;
+                document.getElementById('statUnderReview').textContent = stats.under_review;
+                document.getElementById('statResolved').textContent = stats.resolved;
+                document.getElementById('statClosed').textContent = stats.closed;
+            } catch (e) {
+                document.getElementById('statTotal').textContent = '-';
+                document.getElementById('statOpen').textContent = '-';
+                document.getElementById('statUnderReview').textContent = '-';
+                document.getElementById('statResolved').textContent = '-';
+                document.getElementById('statClosed').textContent = '-';
+            }
+        }
+
+        function applyFilter() {
+            currentPage = 1;
+            loadDisputes();
+        }
+
+        async function loadDisputes() {
+            var q = '/admin/disputes?page=' + currentPage + '&limit=' + limit;
+            var status = document.getElementById('statusFilter').value;
+            if (status) q += '&status=' + encodeURIComponent(status);
+            try {
+                var res = await apiRequest(q);
+                var list = res.disputes || [];
+                var tbody = document.getElementById('disputesTableBody');
+                tbody.innerHTML = list.map(function(d) {
+                    return '<tr>' +
+                        '<td>#' + d.id + '</td>' +
+                        '<td>#' + (d.booking_id || '-') + '</td>' +
+                        '<td class="mono">' + esc(d.raised_by_email || '-') + '</td>' +
+                        '<td>' + esc((d.reason || '-').substring(0, 40)) + (d.reason && d.reason.length > 40 ? '…' : '') + '</td>' +
+                        '<td class="money">₹' + fmt(d.total_amount) + '</td>' +
+                        '<td>' + disputeBadge(d.status) + '</td>' +
+                        '<td>' + (d.resolution_notes ? esc((d.resolution_notes).substring(0, 30)) + ((d.resolution_notes).length > 30 ? '…' : '') : '-') + '</td>' +
+                        '<td style="white-space:nowrap;">' + fmtDate(d.created_at) + '</td>' +
+                        '<td><button class="btn btn-outline btn-sm" type="button" onclick="viewDispute(' + d.id + ')">View</button></td>' +
+                        '</tr>';
+                }).join('') || '<tr><td colspan="9" style="text-align:center;padding:24px;color:#94a3b8;">No disputes found</td></tr>';
+                renderPagination(res.total, res.page || 1, limit);
+                loadStats();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('disputesTableBody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#ef4444;">Error loading disputes</td></tr>';
+            }
+        }
+
+        function renderPagination(total, page, perPage) {
+            var el = document.getElementById('disputesPagination');
+            var pages = Math.ceil(total / perPage) || 1;
+            if (pages <= 1) {
+                el.innerHTML = '<span>' + total + ' total</span><div></div>';
+                return;
+            }
+            var html = '<span>Showing ' + (((page - 1) * perPage) + 1) + '–' + Math.min(page * perPage, total) + ' of ' + total + '</span><div class="pages">';
+            for (var i = 1; i <= pages && i <= 10; i++) {
+                html += '<button class="pg-btn' + (i === page ? ' active' : '') + '" type="button" onclick="goPage(' + i + ')">' + i + '</button>';
+            }
+            html += '</div>';
+            el.innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            loadDisputes();
+        }
+
+        async function viewDispute(id) {
+            try {
+                var d = await apiRequest('/admin/disputes/' + id);
+                document.getElementById('modalDisputeId').textContent = d.id;
+
+                var html = '';
+
+                html += '<div class="dw-section"><div class="dw-heading">Dispute Info</div>';
+                html += dr('Reason', esc(d.reason || '-'));
+                html += dr('Description', esc(d.description || '-'));
+                if (d.evidence_url) html += dr('Evidence', '<a href="' + esc(d.evidence_url) + '" target="_blank" rel="noopener">View link</a>');
+                html += dr('Status', disputeBadge(d.status));
+                html += dr('Raised By', esc(d.raised_by_email || '-'));
+                html += dr('Created', fmtDateTime(d.created_at));
+                if (d.resolution_notes) html += dr('Resolution Notes', esc(d.resolution_notes));
+                if (d.resolved_by_email) html += dr('Resolved By', esc(d.resolved_by_email));
+                html += '</div>';
+
+                if (d.booking) {
+                    var b = d.booking;
+                    html += '<div class="dw-section"><div class="dw-heading">Booking Financial Breakdown</div>';
+                    html += dr('Booking #', '#' + b.id);
+                    html += dr('Artist', esc(b.artist_name || '-'));
+                    html += dr('Organizer', esc(b.organizer_email || '-'));
+                    html += dr('Event Type', esc(b.event_type || '-'));
+                    if (b.artist_fee != null) html += dr('Artist Fee', '₹' + fmt(b.artist_fee));
+                    if (b.platform_fee != null) html += dr('Platform Fee', '₹' + fmt(b.platform_fee));
+                    if (b.addon_total != null) html += dr('Add-ons', '₹' + fmt(b.addon_total));
+                    html += dr('Total', '<strong>₹' + fmt(b.total_amount) + '</strong>');
+                    html += dr('Advance Paid', '₹' + fmt(b.advance_paid));
+                    html += dr('Remaining', '₹' + fmt(b.remaining_amount));
+                    html += dr('Status', disputeBadge(b.status));
+                    html += '</div>';
+                }
+
+                var footer = '';
+                if (d.status === 'open' || d.status === 'under_review') {
+                    footer += '<div class="form-group"><label>Resolution notes</label><textarea id="resNotes" placeholder="Add notes..."></textarea></div>';
+                    footer += '<div class="resolution-actions">';
+                    footer += '<button class="btn btn-danger btn-sm" type="button" onclick="resolveDispute(' + d.id + ',\'refund\')">Full Refund</button>';
+                    footer += '<button class="btn btn-warning btn-sm" type="button" onclick="resolveDispute(' + d.id + ',\'partial\')">Partial Refund</button>';
+                    footer += '<button class="btn btn-success btn-sm" type="button" onclick="resolveDispute(' + d.id + ',\'release\')">Release Funds</button>';
+                    footer += '<button class="btn btn-outline btn-sm" type="button" onclick="resolveDispute(' + d.id + ',\'close\')">Close</button>';
+                    footer += '</div>';
+                } else {
+                    if (d.resolution_type) footer += '<div>' + disputeBadge(d.resolution_type) + ' (resolution type)</div>';
+                    footer += '<button class="btn btn-outline" type="button" onclick="closeModal()">Close</button>';
+                }
+                document.getElementById('modalBody').innerHTML = html;
+                document.getElementById('modalFooter').innerHTML = footer;
+                document.getElementById('disputeModal').classList.add('open');
+            } catch (e) {
+                alert('Error loading dispute');
+                console.error(e);
+            }
+        }
+
+        async function resolveDispute(id, action) {
+            var notesEl = document.getElementById('resNotes');
+            var notes = notesEl ? notesEl.value.trim() : '';
+            if (!notes) { alert('Please add resolution notes'); return; }
+            try {
+                await apiRequest('/admin/disputes/' + id + '/resolve?resolution_notes=' + encodeURIComponent(notes) + '&action=' + encodeURIComponent(action), { method: 'PUT' });
+                closeModal();
+                loadStats();
+                loadDisputes();
+            } catch (e) {
+                alert(e.message || 'Error resolving dispute');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('disputeModal').classList.remove('open');
+        }
+
+        document.getElementById('disputeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        window.goPage = goPage;
+        window.viewDispute = viewDispute;
+        window.resolveDispute = resolveDispute;
+        window.closeModal = closeModal;
+    })();
+    </script>
+</body>
+</html>

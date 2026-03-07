@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CeleCircle</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <h1 style="margin-bottom: 2rem;">Dashboard</h1>
+        
+        <div id="dashboardContent">
+            <div class="loading"></div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('home');
+        });
+        
+        async function loadDashboard() {
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            const user = getCurrentUser();
+            if (!user) {
+                try {
+                    currentUser = await apiRequest('/auth/me');
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                } catch (error) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+            }
+            
+            updateNavigation();
+            
+            const content = document.getElementById('dashboardContent');
+            const user = getCurrentUser();
+            
+            if (user.role === 'artist') {
+                await loadArtistDashboard(content);
+            } else if (user.role === 'organizer') {
+                await loadOrganizerDashboard(content);
+            } else if (user.role === 'admin') {
+                await loadAdminDashboard(content);
+            }
+        }
+        
+        async function loadArtistDashboard(container) {
+            try {
+                const [profile, gigs, payments, analytics] = await Promise.all([
+                    apiRequest('/users/profiles/me').catch(() => null),
+                    apiRequest('/gigs/recommendations/for-me?limit=5').catch(() => []),
+                    apiRequest('/payments').catch(() => []),
+                    apiRequest('/bookings/analytics/artist').catch(() => null)
+                ]);
+                
+                let html = '<div class="dashboard-stats">';
+                if (analytics) {
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.total_bookings}</div><div class="stat-label">Total Bookings</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">₹${(analytics.total_earnings || 0).toLocaleString('en-IN')}</div><div class="stat-label">Total Earnings</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.success_rate}%</div><div class="stat-label">Success Rate</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.cancellation_rate}%</div><div class="stat-label">Cancellation Rate</div></div>`;
+                } else {
+                    html += `<div class="stat-card"><div class="stat-value">${payments.length}</div><div class="stat-label">Total Payments</div></div>`;
+                    if (profile) {
+                        html += `<div class="stat-card"><div class="stat-value">${profile.total_hires}</div><div class="stat-label">Total Hires</div></div>`;
+                        html += `<div class="stat-card"><div class="stat-value">${profile.ai_score.toFixed(1)}</div><div class="stat-label">AI Score</div></div>`;
+                    }
+                }
+                html += '</div>';
+
+                if (analytics && analytics.monthly_earnings) {
+                    html += '<div class="card"><h2 class="card-title">Monthly Earnings</h2>';
+                    html += '<div style="display:flex;align-items:flex-end;gap:6px;height:150px;padding:16px 0;">';
+                    const maxE = Math.max(...analytics.monthly_earnings.map(m => m.earnings || 0)) || 1;
+                    analytics.monthly_earnings.forEach(m => {
+                        const pct = Math.max(((m.earnings || 0) / maxE) * 100, 3);
+                        html += `<div style="flex:1;background:#0a66c2;border-radius:4px 4px 0 0;height:${pct}%;position:relative;min-width:16px;" title="₹${(m.earnings||0).toLocaleString('en-IN')}">
+                            <span style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:#666;white-space:nowrap;">${m.month}</span></div>`;
+                    });
+                    html += '</div></div>';
+
+                    html += '<div class="dashboard-stats" style="margin-top:1rem;">';
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.response_time ? analytics.response_time.toFixed(0) + 'h' : 'N/A'}</div><div class="stat-label">Avg Response Time</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.profile_views || 0}</div><div class="stat-label">Profile Views</div></div>`;
+                    html += '</div>';
+                }
+                
+                if (!profile) {
+                    html += '<div class="card"><p>Complete your profile to get started: <a href="/profile">Create Profile</a></p></div>';
+                } else if (gigs.length > 0) {
+                    html += '<div class="card"><h2 class="card-title">Recommended Gigs</h2>';
+                    gigs.forEach(gig => {
+                        html += `<div class="card" style="margin-bottom: 1rem;">
+                            <h3>${gig.title}</h3>
+                            <p>${gig.description.substring(0, 100)}...</p>
+                            <p><strong>Budget:</strong> ${formatCurrency(gig.budget_min)} - ${formatCurrency(gig.budget_max)}</p>
+                            <p><strong>Date:</strong> ${formatDate(gig.event_date)}</p>
+                            <a href="/gig-detail?id=${gig.id}" class="btn btn-primary">View Details</a>
+                        </div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<div class="card"><p>Error loading dashboard: ${error.message}</p></div>`;
+            }
+        }
+        
+        async function loadOrganizerDashboard(container) {
+            try {
+                const [gigs, payments, analytics] = await Promise.all([
+                    apiRequest('/gigs?limit=5').catch(() => []),
+                    apiRequest('/payments').catch(() => []),
+                    apiRequest('/bookings/analytics/organizer').catch(() => null)
+                ]);
+                
+                let html = '<div class="dashboard-stats">';
+                if (analytics) {
+                    html += `<div class="stat-card"><div class="stat-value">₹${(analytics.total_spend || 0).toLocaleString('en-IN')}</div><div class="stat-label">Total Spend</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.total_bookings}</div><div class="stat-label">Total Bookings</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.confirmed_bookings}</div><div class="stat-label">Confirmed</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${analytics.booking_frequency}/mo</div><div class="stat-label">Booking Frequency</div></div>`;
+                } else {
+                    html += `<div class="stat-card"><div class="stat-value">${gigs.length}</div><div class="stat-label">Active Gigs</div></div>`;
+                    html += `<div class="stat-card"><div class="stat-value">${payments.length}</div><div class="stat-label">Payments</div></div>`;
+                }
+                html += '</div>';
+
+                if (analytics && analytics.monthly_spend) {
+                    html += '<div class="card"><h2 class="card-title">Monthly Spending</h2>';
+                    html += '<div style="display:flex;align-items:flex-end;gap:6px;height:150px;padding:16px 0;">';
+                    const maxS = Math.max(...analytics.monthly_spend.map(m => m.spend || 0)) || 1;
+                    analytics.monthly_spend.forEach(m => {
+                        const pct = Math.max(((m.spend || 0) / maxS) * 100, 3);
+                        html += `<div style="flex:1;background:#7c3aed;border-radius:4px 4px 0 0;height:${pct}%;position:relative;min-width:16px;" title="₹${(m.spend||0).toLocaleString('en-IN')}">
+                            <span style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:#666;white-space:nowrap;">${m.month}</span></div>`;
+                    });
+                    html += '</div></div>';
+                }
+
+                if (analytics && analytics.favorite_categories && analytics.favorite_categories.length > 0) {
+                    html += '<div class="card"><h2 class="card-title">Favorite Categories</h2>';
+                    analytics.favorite_categories.forEach(c => {
+                        html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;">
+                            <span style="font-weight:600;">${c.category}</span>
+                            <span style="color:#64748b;">${c.count} bookings</span></div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                html += '<div class="card"><h2 class="card-title">My Gigs</h2>';
+                if (gigs.length > 0) {
+                    gigs.forEach(gig => {
+                        html += `<div class="card" style="margin-bottom: 1rem;">
+                            <h3>${gig.title}</h3>
+                            <p>${gig.description.substring(0, 100)}...</p>
+                            <span class="badge badge-primary">${gig.status}</span>
+                            <a href="/gig-detail?id=${gig.id}" class="btn btn-primary">View</a>
+                        </div>`;
+                    });
+                } else {
+                    html += '<p>No gigs yet. <a href="/post-gig">Post your first gig</a></p>';
+                }
+                html += '</div>';
+                
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<div class="card"><p>Error loading dashboard: ${error.message}</p></div>`;
+            }
+        }
+        
+        async function loadAdminDashboard(container) {
+            try {
+                const stats = await apiRequest('/admin/dashboard');
+                
+                let html = '<div class="dashboard-stats">';
+                html += `<div class="stat-card"><div class="stat-value">${stats.users.total}</div><div class="stat-label">Total Users</div></div>`;
+                html += `<div class="stat-card"><div class="stat-value">${stats.gigs.total}</div><div class="stat-label">Total Gigs</div></div>`;
+                html += `<div class="stat-card"><div class="stat-value">${formatCurrency(stats.payments.revenue)}</div><div class="stat-label">Total Revenue</div></div>`;
+                html += '</div>';
+                
+                html += '<div class="grid grid-2">';
+                html += '<div class="card"><h2 class="card-title">Recent Users</h2>';
+                stats.recent_users.forEach(user => {
+                    html += `<p>${user.email} (${user.role})</p>`;
+                });
+                html += '</div>';
+                
+                html += '<div class="card"><h2 class="card-title">Recent Gigs</h2>';
+                stats.recent_gigs.forEach(gig => {
+                    html += `<p>${gig.title} - ${gig.status}</p>`;
+                });
+                html += '</div></div>';
+                
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<div class="card"><p>Error loading dashboard: ${error.message}</p></div>`;
+            }
+        }
+        
+        loadDashboard();
+    </script>
+</body>
+</html>
+

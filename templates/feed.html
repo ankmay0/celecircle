@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CeleCircle - Home</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+</head>
+<body>
+    <script>
+        // Public/private layout guard: prevent unauthenticated access before dashboard UI renders.
+        (function () {
+            if (!localStorage.getItem('authToken')) {
+                window.location.replace('/login');
+            }
+        })();
+    </script>
+    <!-- Header will be created by linkedin-header.js -->
+
+    <div class="feed-container">
+        <!-- Main Feed (LinkedIn style) -->
+        <main class="feed-main">
+            <!-- Start a Post Section -->
+            <div class="start-post-card card">
+                <div class="start-post-header">
+                    <div class="user-avatar-small" id="userAvatar">U</div>
+                    <button class="start-post-input" onclick="focusPostInput()">Start a post</button>
+                </div>
+                <div class="post-options">
+                    <button class="post-option-btn" id="filterVideoBtn" data-media="video">
+                        <span>🎥</span> Video
+                    </button>
+                    <button class="post-option-btn" id="filterImageBtn" data-media="image">
+                        <span>📷</span> Photo
+                    </button>
+                    <button class="post-option-btn" id="filterTextBtn" data-media="text">
+                        <span>📝</span> Write article
+                    </button>
+                    <button class="post-option-btn" id="filterAllBtn" data-media="" style="display: none;">
+                        <span>📋</span> Show All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner shown when filtering – sits between the post card and the feed -->
+            <div id="createTypeBanner" class="create-type-banner" style="display:none;">
+                <span id="bannerText" class="create-type-banner-text"></span>
+                <button class="btn btn-primary btn-sm" id="bannerPostBtn">Post</button>
+            </div>
+
+            <!-- Create Post Modal -->
+            <div id="createPostModal" class="modal" style="display: none;">
+                <div class="modal-content create-post-modal">
+                    <div class="modal-header">
+                        <h2>Create a post</h2>
+                        <button class="close-modal" onclick="closeCreatePostModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="create-post-user">
+                            <div class="user-avatar-small" id="modalUserAvatar">U</div>
+                            <div>
+                                <div class="modal-user-name" id="modalUserName">Your Name</div>
+                                <select class="audience-select">
+                                    <option>Anyone</option>
+                                    <option>Connections only</option>
+                                </select>
+                            </div>
+                        </div>
+                        <textarea id="postContentInput" class="post-content-textarea" placeholder="What do you want to talk about?"></textarea>
+                        <input type="hidden" id="postMediaType" value="text">
+                        <div class="post-media-preview" id="postMediaPreview"></div>
+                        <div class="post-actions-modal">
+                            <label for="postImageInput" class="action-icon-btn" onclick="setPostMediaType('image')">
+                                <span>📷</span>
+                                <input type="file" id="postImageInput" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+                            </label>
+                            <label for="postVideoInput" class="action-icon-btn" onclick="setPostMediaType('video')">
+                                <span>🎥</span>
+                                <input type="file" id="postVideoInput" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
+                            </label>
+                            <label class="action-icon-btn" onclick="setPostMediaType('text')">
+                                <span>📝</span> Article
+                            </label>
+                            <button class="btn btn-primary" onclick="createPost()">Post</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed Sort -->
+            <div class="feed-sort">
+                <span>Sort by: </span>
+                <select id="sortSelect" class="sort-select" onchange="loadFeed()">
+                    <option value="top">Top</option>
+                    <option value="recent">Recent</option>
+                </select>
+            </div>
+
+            <!-- Feed Posts -->
+            <div id="feedPosts" class="feed-posts">
+                <div class="loading">Loading feed...</div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar (LinkedIn style) -->
+        <aside class="sidebar right-sidebar">
+            <div class="sidebar-content">
+                <!-- Profile Card (moved from old left sidebar) -->
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <div class="profile-picture-large" id="profilePictureLarge">
+                            <span id="profileInitial">U</span>
+                        </div>
+                        <div class="profile-meta">
+                            <div class="profile-name" id="profileName">Your Name</div>
+                            <div class="profile-title" id="profileTitle">Artist</div>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value profile-stat-value-link" id="followersCount" onclick="openNetworkTab('followers')">0</div>
+                            <div class="profile-stat-label">Followers</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value profile-stat-value-link" id="followingCount" onclick="openNetworkTab('following')">0</div>
+                            <div class="profile-stat-label">Following</div>
+                        </div>
+                    </div>
+                    <div class="profile-footer-note">
+                        <span class="profile-footer-label">Recent booking</span>
+                        <span class="profile-footer-value">None</span>
+                    </div>
+                </div>
+
+                <!-- LinkedIn News -->
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3>CeleNews</h3>
+                        <span class="info-icon">ℹ️</span>
+                    </div>
+                    <div class="news-list" id="newsList">
+                        <div class="news-item">
+                            <div class="news-title">Loading CeleNews...</div>
+                            <div class="news-meta">Fetching approved updates</div>
+                        </div>
+                    </div>
+                    <button class="show-more-btn" onclick="window.location.href='/news'">Show more ▼</button>
+                </div>
+
+                <!-- Ads / Promotional Widget -->
+                <div class="ad-card">
+                    <div class="ad-label">Ad</div>
+                    <div class="ad-content">
+                        <div class="ad-icon">📢</div>
+                        <div class="ad-text">
+                            <strong>Smarter connections</strong>
+                            <p>Connect with top talent</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script src="/static/linkedin-header.js"></script>
+    <script src="/static/feed.js?v=2"></script>
+    <script>
+        // Ensure notifications icon is clickable on feed page
+        function ensureNotificationsClickable() {
+            const notifIcon = document.getElementById('nav-notifications');
+            if (notifIcon) {
+                // Check if already processed
+                if (notifIcon.hasAttribute('data-clickable-set')) {
+                    return; // Already set up
+                }
+                
+                // Remove onclick attribute if present
+                notifIcon.removeAttribute('onclick');
+                
+                // Ensure styles first
+                notifIcon.style.cursor = 'pointer';
+                notifIcon.style.userSelect = 'none';
+                notifIcon.style.webkitUserSelect = 'none';
+                notifIcon.style.mozUserSelect = 'none';
+                notifIcon.style.msUserSelect = 'none';
+                notifIcon.style.pointerEvents = 'auto';
+                notifIcon.style.position = 'relative';
+                notifIcon.style.zIndex = '10';
+                
+                // Prevent text selection on child elements
+                const children = notifIcon.querySelectorAll('*');
+                children.forEach(child => {
+                    child.style.pointerEvents = 'none';
+                    child.style.userSelect = 'none';
+                });
+                
+                // Add click handler with multiple attempts
+                const clickHandler = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    console.log('Notifications icon clicked on feed page');
+                    
+                    // Try multiple ways to call the function
+                    if (typeof window.toggleNotificationsDropdown === 'function') {
+                        window.toggleNotificationsDropdown(e);
+                    } else if (typeof toggleNotificationsDropdown === 'function') {
+                        toggleNotificationsDropdown(e);
+                    } else {
+                        console.error('toggleNotificationsDropdown function not found');
+                        // Fallback: try to create dropdown manually
+                        console.log('Attempting to create dropdown manually...');
+                    }
+                    return false;
+                };
+                
+                // Add listener with capture
+                notifIcon.addEventListener('click', clickHandler, true);
+                // Also add without capture as backup
+                notifIcon.addEventListener('click', clickHandler, false);
+                
+                // Mark as processed
+                notifIcon.setAttribute('data-clickable-set', 'true');
+                
+                console.log('Notifications icon made clickable on feed page');
+            } else {
+                console.log('Notifications icon not found yet, will retry...');
+            }
+        }
+        
+        // ── Wire up post-option buttons (Photo / Video / Article / Show All) ──
+        // Defined here so they work even if feed.js has issues.
+        
+        var _currentFilter = null;
+        
+        function _handleFilterClick(mediaType) {
+            _currentFilter = mediaType || null;
+            
+            // Highlight the active button
+            document.querySelectorAll('.post-option-btn').forEach(function(b) { b.classList.remove('active'); });
+            if (mediaType === 'video')  document.getElementById('filterVideoBtn').classList.add('active');
+            if (mediaType === 'image')  document.getElementById('filterImageBtn').classList.add('active');
+            if (mediaType === 'text')   document.getElementById('filterTextBtn').classList.add('active');
+            
+            // Toggle "Show All"
+            var showAll = document.getElementById('filterAllBtn');
+            if (showAll) showAll.style.display = mediaType ? 'inline-flex' : 'none';
+            
+            // Toggle banner
+            var banner    = document.getElementById('createTypeBanner');
+            var bannerTxt = document.getElementById('bannerText');
+            var bannerBtn = document.getElementById('bannerPostBtn');
+            if (banner) {
+                if (mediaType) {
+                    var labels = { image:'Photo', video:'Video', text:'Article' };
+                    var icons  = { image:'📷',    video:'🎥',    text:'📝' };
+                    banner.style.display = 'flex';
+                    bannerTxt.innerHTML = icons[mediaType] + ' Showing <strong>' + labels[mediaType] + '</strong> posts';
+                    bannerBtn.textContent = 'Post a ' + labels[mediaType];
+                    bannerBtn.setAttribute('data-type', mediaType);
+                } else {
+                    banner.style.display = 'none';
+                }
+            }
+            
+            // Filter the feed and update banner text based on results
+            var _loadAndUpdateBanner = function(mediaType) {
+                if (typeof window.loadFeed === 'function') {
+                    window.loadFeed(mediaType);
+                } else if (typeof loadFeed === 'function') {
+                    loadFeed(mediaType);
+                }
+                // After a short delay, check if feed is empty and update banner
+                setTimeout(function() {
+                    if (!mediaType) return;
+                    var feedPosts = document.getElementById('feedPosts');
+                    var hasCards = feedPosts && feedPosts.querySelector('.post-card');
+                    var bannerTxtEl = document.getElementById('bannerText');
+                    if (bannerTxtEl && !hasCards) {
+                        var labels = { image:'photos', video:'videos', text:'articles' };
+                        var icons  = { image:'📷',     video:'🎥',     text:'📝' };
+                        bannerTxtEl.innerHTML = icons[mediaType] + ' No <strong>' + labels[mediaType] + '</strong> posted yet';
+                    }
+                }, 500);
+            };
+            _loadAndUpdateBanner(mediaType);
+        }
+        
+        function _openPostForType(type) {
+            var modal = document.getElementById('createPostModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            
+            // Set hidden media type
+            var hidden = document.getElementById('postMediaType');
+            if (hidden) hidden.value = type || 'text';
+            
+            if (type === 'image') {
+                setTimeout(function() {
+                    var inp = document.getElementById('postImageInput');
+                    if (inp) inp.click();
+                }, 150);
+            } else if (type === 'video') {
+                setTimeout(function() {
+                    var inp = document.getElementById('postVideoInput');
+                    if (inp) inp.click();
+                }, 150);
+            } else {
+                var ta = document.getElementById('postContentInput');
+                if (ta) ta.focus();
+            }
+        }
+        
+        // Also put on window so feed.js can use them
+        window._handleFilterClick = _handleFilterClick;
+        window._openPostForType   = _openPostForType;
+        
+        // Attach event listeners to news items when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveNavItem('home');
+            
+            // ── Attach click handlers to filter buttons ──
+            document.querySelectorAll('.post-option-btn[data-media]').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var media = this.getAttribute('data-media');
+                    _handleFilterClick(media || null);
+                });
+            });
+            
+            // ── "Post a ___" banner button ──
+            var bannerBtn = document.getElementById('bannerPostBtn');
+            if (bannerBtn) {
+                bannerBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var type = this.getAttribute('data-type') || 'text';
+                    _openPostForType(type);
+                });
+            }
+            
+            // Ensure notifications icon is clickable - try multiple times
+            ensureNotificationsClickable();
+            setTimeout(ensureNotificationsClickable, 100);
+            setTimeout(ensureNotificationsClickable, 200);
+            setTimeout(ensureNotificationsClickable, 500);
+            setTimeout(ensureNotificationsClickable, 1000);
+            
+            // Also use MutationObserver to watch for header creation
+            var observer = new MutationObserver(function() {
+                ensureNotificationsClickable();
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post a Gig - CeleCircle</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container" style="max-width: 800px; margin: 0 auto;">
+        <h1 style="margin-bottom: 2rem;">Post a New Gig</h1>
+        
+        <div class="card">
+            <form id="gigForm">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-input" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea class="form-textarea" name="description" required></textarea>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <input type="text" class="form-input" name="category" required placeholder="Singer, Dancer, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location *</label>
+                        <input type="text" class="form-input" name="location" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Event Date *</label>
+                        <input type="datetime-local" class="form-input" name="event_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Budget Min ($) *</label>
+                        <input type="number" class="form-input" name="budget_min" required step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Budget Max ($) *</label>
+                        <input type="number" class="form-input" name="budget_max" required step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Required Experience (Years)</label>
+                        <input type="number" class="form-input" name="required_experience" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Required Languages</label>
+                    <input type="text" class="form-input" name="required_languages" placeholder="English, Hindi, etc.">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Post Gig</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('gigs');
+        });
+        
+        if (!isAuthenticated()) {
+            window.location.href = '/login';
+        }
+        
+        document.getElementById('gigForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            // Convert date to ISO string
+            if (data.event_date) {
+                data.event_date = new Date(data.event_date).toISOString();
+            }
+            
+            data.budget_min = parseFloat(data.budget_min);
+            data.budget_max = parseFloat(data.budget_max);
+            data.required_experience = parseInt(data.required_experience) || 0;
+            
+            try {
+                const gig = await apiRequest('/gigs', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                showNotification('Gig posted successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = `/gig-detail.html?id=${gig.id}`;
+                }, 1000);
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>
+

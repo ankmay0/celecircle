@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gig Details - CeleCircle</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container" style="max-width: 1000px; margin: 0 auto;">
+        <div id="gigContent">
+            <div class="loading"></div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('gigs');
+        });
+        
+        if (!isAuthenticated()) {
+            window.location.href = '/login';
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const gigId = urlParams.get('id');
+        
+        async function loadGig() {
+            try {
+                const [gig, applications, recommended] = await Promise.all([
+                    apiRequest(`/gigs/${gigId}`),
+                    apiRequest(`/gigs/${gigId}/applications`).catch(() => []),
+                    apiRequest(`/gigs/recommendations/artists/${gigId}`).catch(() => [])
+                ]);
+                
+                const user = getCurrentUser();
+                displayGig(gig, applications, recommended, user);
+            } catch (error) {
+                document.getElementById('gigContent').innerHTML = `<div class="card"><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        function displayGig(gig, applications, recommended, user) {
+            const container = document.getElementById('gigContent');
+            let html = `<div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">${gig.title}</h1>
+                    <span class="badge badge-primary">${gig.status}</span>
+                </div>
+                <p style="margin-bottom: 1rem;">${gig.description}</p>
+                <div class="grid grid-2" style="margin-top: 1rem;">
+                    <div><strong>Category:</strong> ${gig.category}</div>
+                    <div><strong>Location:</strong> ${gig.location}</div>
+                    <div><strong>Event Date:</strong> ${formatDate(gig.event_date)}</div>
+                    <div><strong>Budget:</strong> ${formatCurrency(gig.budget_min)} - ${formatCurrency(gig.budget_max)}</div>
+                </div>
+            </div>`;
+            
+            if (user.role === 'organizer' && user.id === gig.organizer_id) {
+                html += `<div class="card">
+                    <h2 class="card-title">Applications (${applications.length})</h2>`;
+                if (applications.length > 0) {
+                    applications.forEach(app => {
+                        html += `<div class="card" style="margin-bottom: 1rem;">
+                            <p><strong>Proposal:</strong> ${app.proposal}</p>
+                            <p><strong>Quote:</strong> ${formatCurrency(app.quote)}</p>
+                            <p><strong>Status:</strong> <span class="badge badge-primary">${app.status}</span></p>
+                            <div style="margin-top: 1rem;">
+                                <button class="btn btn-success" onclick="updateApplication(${app.id}, 'accepted')">Accept</button>
+                                <button class="btn btn-danger" onclick="updateApplication(${app.id}, 'rejected')">Reject</button>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    html += '<p>No applications yet.</p>';
+                }
+                html += '</div>';
+                
+                if (recommended.length > 0) {
+                    html += `<div class="card">
+                        <h2 class="card-title">Recommended Artists</h2>`;
+                    recommended.forEach(artist => {
+                        html += `<div class="card" style="margin-bottom: 1rem;">
+                            <h3>${artist.name}</h3>
+                            <p>${artist.category} - AI Score: ${artist.ai_score.toFixed(1)}</p>
+                            <a href="/users/profiles/${artist.id}" class="btn btn-primary">View Profile</a>
+                        </div>`;
+                    });
+                    html += '</div>';
+                }
+            } else if (user.role === 'artist') {
+                html += `<div class="card">
+                    <h2 class="card-title">Apply to this Gig</h2>
+                    <form id="applicationForm">
+                        <div class="form-group">
+                            <label class="form-label">Proposal</label>
+                            <textarea class="form-textarea" name="proposal" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Your Quote ($)</label>
+                            <input type="number" class="form-input" name="quote" required step="0.01">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Application</button>
+                    </form>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+            
+            if (user.role === 'artist') {
+                document.getElementById('applicationForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const data = {
+                        gig_id: parseInt(gigId),
+                        proposal: formData.get('proposal'),
+                        quote: parseFloat(formData.get('quote'))
+                    };
+                    
+                    try {
+                        await apiRequest('/gigs/' + gigId + '/applications', {
+                            method: 'POST',
+                            body: JSON.stringify(data)
+                        });
+                        showNotification('Application submitted successfully!', 'success');
+                        setTimeout(() => loadGig(), 1000);
+                    } catch (error) {
+                        showNotification(error.message, 'error');
+                    }
+                });
+            }
+        }
+        
+        async function updateApplication(appId, status) {
+            try {
+                await apiRequest(`/gigs/applications/${appId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ status })
+                });
+                showNotification('Application updated!', 'success');
+                setTimeout(() => loadGig(), 1000);
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+        
+        window.updateApplication = updateApplication;
+        
+        loadGig();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment History - CeleCircle</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+    <style>
+        .ph-main {
+            width: 100%;
+            padding: 1.25rem 0;
+        }
+
+        .ph-wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 2rem;
+        }
+
+        .ph-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .ph-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .ph-subtitle {
+            margin-top: 0.25rem;
+            color: #64748b;
+            font-size: 0.92rem;
+        }
+
+        .ph-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .ph-table-wrap {
+            overflow-x: auto;
+        }
+
+        .ph-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 640px;
+        }
+
+        .ph-table th {
+            text-align: left;
+            padding: 0.85rem 1rem;
+            background: #f8fafc;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .ph-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+            color: #1f2937;
+        }
+
+        .ph-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ph-money {
+            font-weight: 700;
+            color: #111827;
+            white-space: nowrap;
+        }
+
+        .ph-status {
+            display: inline-flex;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .ph-status-pending { background: #fff7ed; color: #9a3412; }
+        .ph-status-paid { background: #ecfdf5; color: #166534; }
+        .ph-status-released { background: #eff6ff; color: #1d4ed8; }
+        .ph-status-refunded { background: #fef2f2; color: #991b1b; }
+
+        .ph-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.92rem;
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="ph-main">
+        <div class="ph-wrapper">
+            <div class="ph-header">
+                <div>
+                    <h1 class="ph-title">Payment History</h1>
+                    <p class="ph-subtitle">Track organizer payments and their current status.</p>
+                </div>
+            </div>
+
+            <section class="ph-card">
+                <div class="ph-table-wrap">
+                    <table class="ph-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Event/Gig</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentHistoryBody">
+                            <tr>
+                                <td colspan="4" class="ph-empty">Loading payment history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            initHeader();
+            if (typeof setActiveNavItem === 'function') {
+                // Keep this page standalone: no Bookings nav state.
+                setActiveNavItem('');
+            }
+
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            let user = getCurrentUser();
+            if (!user) {
+                try {
+                    user = await apiRequest('/auth/me');
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                } catch (error) {
+                    window.location.href = '/login';
+                    return;
+                }
+            }
+
+            // Match the existing protected page behavior and keep this organizer-focused.
+            if (user.role !== 'organizer' && user.role !== 'admin') {
+                window.location.href = '/dashboard';
+                return;
+            }
+
+            loadPaymentHistory();
+        });
+
+        async function loadPaymentHistory() {
+            const tbody = document.getElementById('paymentHistoryBody');
+            if (!tbody) return;
+
+            try {
+                const payments = await apiRequest('/payments');
+                if (!payments || payments.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="ph-empty">No payments found yet.</td></tr>';
+                    return;
+                }
+
+                let rows = '';
+                payments.forEach(function (payment) {
+                    const dateValue = payment.paid_at || payment.created_at;
+                    const date = dateValue ? new Date(dateValue).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    }) : '-';
+
+                    const gigLabel = payment.gig_id ? ('Gig #' + payment.gig_id) : 'N/A';
+                    const amount = typeof payment.amount === 'number'
+                        ? payment.amount.toLocaleString('en-IN')
+                        : payment.amount;
+                    const status = (payment.status || 'pending').toLowerCase();
+                    const statusClass = 'ph-status-' + status;
+
+                    rows += '' +
+                        '<tr>' +
+                        '<td>' + escapeHtml(date) + '</td>' +
+                        '<td>' + escapeHtml(gigLabel) + '</td>' +
+                        '<td class="ph-money">₹' + escapeHtml(String(amount)) + '</td>' +
+                        '<td><span class="ph-status ' + statusClass + '">' + escapeHtml(status.replace(/_/g, ' ')) + '</span></td>' +
+                        '</tr>';
+                });
+
+                tbody.innerHTML = rows;
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="4" class="ph-empty">Unable to load payment history.</td></tr>';
+            }
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value == null ? '' : String(value);
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

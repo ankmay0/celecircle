@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings & Pricing - CeleCircle Admin</title>
+    <link rel="stylesheet" href="/static/eventnet.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1e293b;display:flex;min-height:100vh;}
+
+        /* ── Sidebar ── */
+        .sidebar{width:240px;background:#1e293b;color:#94a3b8;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+        .sidebar-brand{padding:20px 18px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px;}
+        .sidebar-brand .logo{width:32px;height:32px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+        .sidebar-brand span{font-size:16px;font-weight:700;color:#f1f5f9;}
+        .sidebar-nav{flex:1;padding:12px 0;}
+        .nav-section{padding:8px 18px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-top:8px;}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;color:#94a3b8;text-decoration:none;}
+        .nav-item:hover{background:#334155;color:#e2e8f0;}
+        .nav-item.active{background:#334155;color:#3b82f6;border-left-color:#3b82f6;font-weight:600;}
+        .nav-item .icon{width:18px;text-align:center;font-size:15px;}
+        .sidebar-footer{padding:14px 18px;border-top:1px solid #334155;font-size:12px;}
+        .sidebar-footer a{color:#f87171;text-decoration:none;font-weight:600;}
+
+        /* ── Main Content ── */
+        .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+        .topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+        .topbar-title{font-size:15px;font-weight:700;color:#1e293b;}
+        .topbar-user{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;}
+        .topbar-avatar{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+        .content{padding:24px;flex:1;}
+
+        /* ── Panel ── */
+        .panel{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px;overflow:hidden;}
+        .panel-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .panel-header h3{font-size:14px;font-weight:700;color:#1e293b;}
+        .panel-body{padding:0;}
+
+        /* ── Buttons ── */
+        .btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+        .btn-primary{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+        .btn-primary:hover{background:#2563eb;}
+
+        /* ── Pricing cards ── */
+        .pricing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding:20px;}
+        .pricing-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;}
+        .pricing-card.pricing-card-span2{grid-column:span 2;}
+        .pricing-card .pc-label{font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:6px;}
+        .pricing-card .pc-input{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-weight:700;}
+        .pricing-card .pc-desc{font-size:11px;color:#94a3b8;margin-top:4px;}
+        .pricing-card .pc-toggle{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:12px;}
+        .pricing-card textarea.pc-input{font-weight:400;min-height:80px;resize:vertical;}
+
+        /* ── Responsive ── */
+        @media(max-width:768px){
+            .sidebar{width:60px;}.sidebar-brand span,.nav-item span:not(.icon),.nav-section,.sidebar-footer span{display:none;}
+            .main{margin-left:60px;}.sidebar-brand{justify-content:center;padding:14px 0;}.nav-item{justify-content:center;padding:12px 0;border-left:none;}
+            .pricing-card.pricing-card-span2{grid-column:span 1;}
+        }
+
+        :root{
+            --en-primary:#0A66C2;
+            --en-primary-dark:#084d93;
+            --en-bg:#f4f7fb;
+            --en-border:#dbe3ef;
+            --en-text:#191919;
+            --en-muted:#5f6b7a;
+            --en-sidebar:#0f172a;
+            --en-sidebar-soft:#1e293b;
+        }
+        body{background:var(--en-bg);color:var(--en-text);}
+        .sidebar{background:var(--en-sidebar);color:#c3cedd;}
+        .sidebar-brand{border-bottom-color:#2b3648;}
+        .sidebar-brand .logo{background:var(--en-primary);}
+        .nav-section{color:#8ca0bd;}
+        .nav-item{color:#b9c7da;}
+        .nav-item:hover{background:var(--en-sidebar-soft);color:#eef4ff;}
+        .nav-item.active{background:rgba(10,102,194,.18);color:#8ac4ff;border-left-color:var(--en-primary);}
+        .sidebar-footer{border-top-color:#2b3648;}
+        .topbar,.panel,.pricing-card{border:1px solid var(--en-border);box-shadow:0 2px 10px rgba(15,23,42,.06);}
+        .topbar-title,.panel-header h3{color:#1d2430;}
+        .topbar-user,.pc-desc{color:var(--en-muted);}
+        .btn-primary{background:var(--en-primary);border-color:var(--en-primary);}
+        .btn-primary:hover{background:var(--en-primary-dark);}
+        .pricing-card{border-radius:14px;background:#fff;}
+        .pricing-card .pc-input{border-color:#c8d5e8;border-radius:10px;}
+    </style>
+    <link rel="stylesheet" href="/static/admin-theme.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-brand"><div class="logo">CC</div><span>CeleCircle Admin</span></div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <a class="nav-item" href="/admin"><span class="icon">📊</span><span>Dashboard</span></a>
+            <div class="nav-section">Management</div>
+            <a class="nav-item" href="/admin/disputes"><span class="icon">⚖️</span><span>Disputes</span></a>
+            <a class="nav-item active" href="/admin/settings"><span class="icon">💰</span><span>Settings</span></a>
+            <div class="nav-section">Analytics</div>
+            <a class="nav-item" href="/admin/finance"><span class="icon">💹</span><span>Finance</span></a>
+            <a class="nav-item" href="/admin/analytics"><span class="icon">📈</span><span>Analytics</span></a>
+            <a class="nav-item" href="/admin/reports"><span class="icon">📥</span><span>Reports</span></a>
+            <a class="nav-item" href="/admin/audit-logs"><span class="icon">📋</span><span>Audit Logs</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <span style="display:block;margin-bottom:6px;color:#64748b;" id="adminName">Admin</span>
+            <a href="/feed" style="color:#94a3b8;text-decoration:none;font-size:12px;">← Back to App</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-title">System Settings & Pricing</div>
+            <div class="topbar-user">
+                <div class="topbar-avatar" id="topbarAvatar">A</div>
+                <span id="topbarName">Admin</span>
+            </div>
+        </div>
+        <div class="content">
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Platform Fee & Pricing</h3>
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+                </div>
+                <div class="pricing-grid" id="pricingGrid">
+                    <div class="pricing-card">
+                        <div class="pc-label">Platform Fee (₹)</div>
+                        <input type="number" id="platform_fee" class="pc-input" min="0" step="1" data-key="platform_fee">
+                        <div class="pc-desc" id="platform_fee_desc"></div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pc-label">Accommodation Price (₹)</div>
+                        <input type="number" id="accommodation_price" class="pc-input" min="0" step="1" data-key="accommodation_price">
+                        <div class="pc-desc" id="accommodation_price_desc"></div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pc-label">Transport Price (₹)</div>
+                        <input type="number" id="transport_price" class="pc-input" min="0" step="1" data-key="transport_price">
+                        <div class="pc-desc" id="transport_price_desc"></div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pc-label">Security Price (₹)</div>
+                        <input type="number" id="security_price" class="pc-input" min="0" step="1" data-key="security_price">
+                        <div class="pc-desc" id="security_price_desc"></div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pc-label">Tax Percentage (%)</div>
+                        <input type="number" id="tax_percentage" class="pc-input" min="0" max="100" step="0.01" data-key="tax_percentage">
+                        <div class="pc-desc" id="tax_percentage_desc"></div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pc-label">Accommodation Add-on</div>
+                        <div class="pc-toggle">
+                            <input type="checkbox" id="accommodation_enabled" data-key="accommodation_enabled">
+                            <label for="accommodation_enabled">Enabled</label>
+                        </div>
+                        <div class="pc-desc" id="accommodation_enabled_desc"></div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pc-label">Transport Add-on</div>
+                        <div class="pc-toggle">
+                            <input type="checkbox" id="transport_enabled" data-key="transport_enabled">
+                            <label for="transport_enabled">Enabled</label>
+                        </div>
+                        <div class="pc-desc" id="transport_enabled_desc"></div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pc-label">Security Add-on</div>
+                        <div class="pc-toggle">
+                            <input type="checkbox" id="security_enabled" data-key="security_enabled">
+                            <label for="security_enabled">Enabled</label>
+                        </div>
+                        <div class="pc-desc" id="security_enabled_desc"></div>
+                    </div>
+                    <div class="pricing-card pricing-card-span2">
+                        <div class="pc-label">Cancellation Policy</div>
+                        <textarea id="cancellation_policy" class="pc-input" rows="4" data-key="cancellation_policy"></textarea>
+                        <div class="pc-desc" id="cancellation_policy_desc"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        var PRICING_KEYS = [
+            'platform_fee', 'accommodation_price', 'transport_price', 'security_price', 'tax_percentage',
+            'accommodation_enabled', 'transport_enabled', 'security_enabled', 'cancellation_policy'
+        ];
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if (!isAuthenticated()) { window.location.href = '/login'; return; }
+            var u = getCurrentUser();
+            if (!u || u.role !== 'admin') { window.location.href = '/dashboard'; return; }
+            document.getElementById('adminName').textContent = u.email || 'Admin';
+            document.getElementById('topbarName').textContent = u.email || 'Admin';
+            document.getElementById('topbarAvatar').textContent = (u.email || 'A').charAt(0).toUpperCase();
+            loadSettings();
+        });
+
+        function getValueFromApi(obj) {
+            if (obj == null) return undefined;
+            if (typeof obj === 'object' && 'value' in obj) return obj.value;
+            return obj;
+        }
+
+        function getDescriptionFromApi(obj) {
+            if (obj == null || typeof obj !== 'object') return '';
+            return obj.description || '';
+        }
+
+        async function loadSettings() {
+            try {
+                var data = await apiRequest('/admin/pricing');
+                PRICING_KEYS.forEach(function(key){
+                    var item = data[key];
+                    var value = getValueFromApi(item);
+                    var desc = getDescriptionFromApi(item);
+                    var el = document.getElementById(key);
+                    var descEl = document.getElementById(key + '_desc');
+                    if (!el) return;
+                    if (descEl) descEl.textContent = desc;
+                    if (el.type === 'checkbox') {
+                        el.checked = value === true || value === 'true' || value === 1;
+                    } else if (el.tagName === 'TEXTAREA') {
+                        el.value = value != null ? String(value) : '';
+                    } else {
+                        el.value = value != null ? String(value) : '';
+                    }
+                });
+            } catch (e) {
+                console.error('Failed to load settings', e);
+            }
+        }
+
+        function saveSettings() {
+            var body = {};
+            PRICING_KEYS.forEach(function(key){
+                var el = document.getElementById(key);
+                if (!el) return;
+                if (el.type === 'checkbox') {
+                    body[key] = el.checked;
+                } else if (el.type === 'number') {
+                    var n = parseFloat(el.value, 10);
+                    body[key] = isNaN(n) ? 0 : n;
+                } else {
+                    body[key] = el.value;
+                }
+            });
+            apiRequest('/admin/pricing', {
+                method: 'PUT',
+                body: JSON.stringify(body)
+            }).then(function(){
+                alert('Settings saved successfully.');
+            }).catch(function(err){
+                alert('Failed to save: ' + (err && err.message ? err.message : 'Unknown error'));
+            });
+        }
+
+        window.saveSettings = saveSettings;
+    })();
+    </script>
+</body>
+</html>

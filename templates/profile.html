@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - CeleCircle</title>
+    <!-- cache-busted to ensure latest avatar sizing styles load -->
+    <link rel="stylesheet" href="/static/style.css?v=20260217">
+    <link rel="stylesheet" href="/static/feed.css?v=20260217">
+    <link rel="stylesheet" href="/static/common.css?v=20260217">
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <h1 style="margin-bottom: 2rem;">My Profile</h1>
+        
+        <div id="profileContent">
+            <div class="loading"></div>
+        </div>
+    </main>
+
+    <!-- Create Post Modal (same as feed) -->
+    <div id="createPostModal" class="modal" style="display: none;">
+        <div class="modal-content create-post-modal">
+            <div class="modal-header">
+                <h2>Create a post</h2>
+                <button class="close-modal" onclick="closeCreatePostModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="create-post-user">
+                    <div class="user-avatar-small" id="modalUserAvatar">U</div>
+                    <div>
+                        <div class="modal-user-name" id="modalUserName">Your Name</div>
+                        <select class="audience-select">
+                            <option>Anyone</option>
+                            <option>Connections only</option>
+                        </select>
+                    </div>
+                </div>
+                <textarea id="postContentInput" class="post-content-textarea" placeholder="What do you want to talk about?"></textarea>
+                <input type="hidden" id="postMediaType" value="text">
+                <div class="post-media-preview" id="postMediaPreview"></div>
+                <div class="post-actions-modal">
+                    <label for="postImageInput" class="action-icon-btn" onclick="setPostMediaType('image')">
+                        <span>📷</span>
+                        <input type="file" id="postImageInput" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+                    </label>
+                    <label for="postVideoInput" class="action-icon-btn" onclick="setPostMediaType('video')">
+                        <span>🎥</span>
+                        <input type="file" id="postVideoInput" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
+                    </label>
+                    <label class="action-icon-btn" onclick="setPostMediaType('text')">
+                        <span>📝</span> Article
+                    </label>
+                    <button class="btn btn-primary" onclick="createPost()">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script src="/static/feed.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('me');
+        });
+        
+        async function loadProfile() {
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            const user = getCurrentUser();
+            if (user.role !== 'artist' && user.role !== 'organizer') {
+                window.location.href = '/dashboard.html';
+                return;
+            }
+            
+            try {
+                const profile = await apiRequest('/users/profiles/me');
+                displayProfile(profile);
+            } catch (error) {
+                console.log('Profile error:', error, 'Status:', error.status);
+                // Check for 404 or "Profile not found" error
+                const errorMsg = (error.message || '').toLowerCase();
+                const is404 = error.status === 404 || 
+                             errorMsg.includes('404') || 
+                             errorMsg.includes('profile not found') || 
+                             errorMsg.includes('not found');
+                
+                if (is404) {
+                    // Profile doesn't exist, show create form
+                    showCreateProfileForm();
+                } else {
+                    // Other error, show error message
+                    document.getElementById('profileContent').innerHTML = `<div class="card"><p>Error: ${error.message || 'Unknown error'}</p></div>`;
+                }
+            }
+        }
+        
+        function displayProfile(profile) {
+            const container = document.getElementById('profileContent');
+            const user = getCurrentUser();
+            const isOrganizer = user && user.role === 'organizer';
+            const fullName = (user && user.first_name && user.last_name)
+                ? `${user.first_name} ${user.last_name}`
+                : (profile.name || (user && user.email ? user.email.split('@')[0] : ''));
+            const usernameDisplay = user && user.username ? `@${user.username}` : '';
+            
+            // Profile header with avatar, full name, username, and role/category
+            let html = `<div class="card">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">
+                        ${fullName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h2>${escapeHtml(fullName)}</h2>
+                        ${usernameDisplay ? `<p class="text-secondary" style="margin: 0.1rem 0 0.3rem 0; color: #777;">${escapeHtml(usernameDisplay)}</p>` : ''}
+                        <p class="text-secondary">${escapeHtml(profile.category || (isOrganizer ? 'Event Organizer' : 'Member'))}</p>
+                        ${!isOrganizer ? `<div class="ai-score">AI Score: ${profile.ai_score.toFixed(1)}/100</div>` : ''}
+                    </div>
+                </div>
+            </div>`;
+
+            // Account details & profile photo settings
+            html += `<div class="card">
+                <h3 class="card-title">Account & Profile Photo</h3>
+                <div class="profile-account-settings">
+                    <div class="profile-photo-section">
+                        <div class="profile-photo-preview" id="profilePhotoPreview"></div>
+                        <div>
+                            <button type="button" class="btn btn-secondary" id="uploadProfilePhotoBtn">
+                                Upload Photo
+                            </button>
+                            <input type="file" id="profilePhotoInput" accept=".jpg,.jpeg,.png" style="display:none;">
+                            <p class="text-secondary" style="margin-top: 0.5rem;">
+                                JPG or PNG, maximum size 5MB. Your photo will appear as a circular avatar.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="profile-account-info">
+                        <p><strong>Full Name:</strong> ${escapeHtml(fullName)}</p>
+                        ${usernameDisplay ? `<p><strong>Username:</strong> ${escapeHtml(usernameDisplay)}</p>` : ''}
+                        <p><strong>Email:</strong> ${escapeHtml(user && user.email ? user.email : '')}</p>
+                    </div>
+                </div>
+            </div>`;
+
+            html += `<div class="card">
+                <h3 class="card-title">Profile Information</h3>
+                <form id="profileForm">
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-input" name="name" value="${profile.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">${isOrganizer ? 'Looking for' : 'Category'}</label>
+                            <input type="text" class="form-input" name="category" value="${profile.category}" required>
+                            ${isOrganizer ? '<small class="text-secondary">What type of talent are you looking for?</small>' : ''}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-input" name="location" value="${profile.location || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Languages</label>
+                            <input type="text" class="form-input" name="languages" value="${profile.languages || ''}" placeholder="English, Hindi, etc.">
+                        </div>`;
+            
+            // Price fields only for artists
+            if (!isOrganizer) {
+                html += `
+                        <div class="form-group">
+                            <label class="form-label">Min Price ($)</label>
+                            <input type="number" class="form-input" name="min_price" value="${profile.min_price}" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Price ($)</label>
+                            <input type="number" class="form-input" name="max_price" value="${profile.max_price}" step="0.01">
+                        </div>`;
+            }
+            
+            html += `
+                        <div class="form-group">
+                            <label class="form-label">Experience (Years)</label>
+                            <input type="number" class="form-input" name="experience_years" value="${profile.experience_years}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-input" name="phone" value="${profile.phone || ''}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bio</label>
+                        <textarea class="form-textarea" name="bio">${profile.bio || ''}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>`;
+            
+            // Add Posts & Activity section
+            html += `<div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 class="card-title" style="margin: 0;">Posts & Activity</h3>
+                    <button type="button" class="btn btn-primary" id="createPostBtn" onclick="openCreatePostModal()">
+                        <span style="margin-right: 0.5rem;">➕</span>
+                        Create Post
+                    </button>
+                </div>
+                <div class="profile-tabs" style="display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 1rem;">
+                    <button class="profile-tab active" data-tab="posts" onclick="switchProfileTab('posts')" style="flex: 1; padding: 10px 16px; border: none; background: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: #0a66c2; border-bottom: 2px solid #0a66c2; margin-bottom: -2px; transition: all 0.2s;">
+                        Posts
+                    </button>
+                    <button class="profile-tab" data-tab="activity" onclick="switchProfileTab('activity')" style="flex: 1; padding: 10px 16px; border: none; background: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+                        Activity
+                    </button>
+                </div>
+                <div id="postsTabContent">
+                    <div id="userPosts" class="posts-grid">
+                        <div class="loading">Loading posts...</div>
+                    </div>
+                </div>
+                <div id="activityTabContent" style="display: none;">
+                    <div id="userActivity">
+                        <div class="loading">Loading activity...</div>
+                    </div>
+                </div>
+            </div>`;
+            
+            // Add logout section
+            html += `<div class="card">
+                <h3 class="card-title">Account Actions</h3>
+                <button type="button" class="btn btn-danger" id="logoutBtn" style="width: 100%;">
+                    <span style="margin-right: 0.5rem;">🚪</span>
+                    Log Out
+                </button>
+            </div>`;
+            
+            container.innerHTML = html;
+
+            // Initialize profile photo preview and upload behavior
+            setupProfilePhotoSection(user, fullName);
+            
+            // Load user posts
+            loadUserPosts();
+            
+            // Add logout event listener
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (typeof window.logout === 'function') {
+                        window.logout();
+                    } else {
+                        // Fallback logout
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUser');
+                        window.location.href = '/';
+                    }
+                });
+            }
+            
+            document.getElementById('profileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                
+                const user = getCurrentUser();
+                const isOrganizer = user && user.role === 'organizer';
+                
+                // Convert price strings to numbers (only for artists)
+                if (!isOrganizer) {
+                    data.min_price = parseFloat(data.min_price) || 0;
+                    data.max_price = parseFloat(data.max_price) || 0;
+                } else {
+                    // Set to 0 for organizers (not used)
+                    data.min_price = 0;
+                    data.max_price = 0;
+                }
+                data.experience_years = parseInt(data.experience_years) || 0;
+                
+                try {
+                    await apiRequest('/users/profiles/me', {
+                        method: 'PUT',
+                        body: JSON.stringify(data)
+                    });
+                    showNotification('Profile updated successfully!', 'success');
+                    setTimeout(() => loadProfile(), 1000);
+                } catch (error) {
+                    showNotification(error.message, 'error');
+                }
+            });
+        }
+
+        function setupProfilePhotoSection(user, fullName) {
+            const preview = document.getElementById('profilePhotoPreview');
+            const avatar = document.getElementById('profileAvatar');
+            const uploadBtn = document.getElementById('uploadProfilePhotoBtn');
+            const input = document.getElementById('profilePhotoInput');
+
+            if (!preview || !avatar || !uploadBtn || !input) return;
+
+            // Render current profile photo or default avatar
+            const initial = (fullName || (user && user.email) || 'U').charAt(0).toUpperCase();
+            const photoUrl = user && user.profile_photo_url ? user.profile_photo_url : null;
+
+            if (photoUrl) {
+                preview.innerHTML = `<img src="${photoUrl}" alt="${escapeHtml(fullName || '')}" class="profile-photo-img">`;
+                avatar.innerHTML = `<img src="${photoUrl}" alt="${escapeHtml(fullName || '')}" class="profile-photo-img">`;
+            } else {
+                preview.innerHTML = `<div class="profile-avatar-default">${initial}</div>`;
+                avatar.textContent = initial;
+            }
+
+            uploadBtn.addEventListener('click', () => {
+                input.click();
+            });
+
+            input.addEventListener('change', async (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    showNotification('Image is too large. Maximum size is 5MB.', 'error');
+                    return;
+                }
+
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    showNotification('Invalid image type. Only JPG and PNG are allowed.', 'error');
+                    return;
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const headers = {};
+                    if (authToken) {
+                        headers['Authorization'] = `Bearer ${authToken}`;
+                    }
+
+                    const response = await fetch(`${API_BASE}/users/me/profile-photo`, {
+                        method: 'POST',
+                        headers,
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) {
+                        const message = data.detail || data.message || 'Failed to upload profile photo.';
+                        throw new Error(message);
+                    }
+
+                    const newUrl = data.profile_photo_url || data.url;
+                    if (newUrl) {
+                        preview.innerHTML = `<img src="${newUrl}" alt="${escapeHtml(fullName || '')}" class="profile-photo-img">`;
+                        avatar.innerHTML = `<img src="${newUrl}" alt="${escapeHtml(fullName || '')}" class="profile-photo-img">`;
+
+                        // Persist on current user in local storage
+                        const updatedUser = user ? { ...user, profile_photo_url: newUrl } : { profile_photo_url: newUrl };
+                        currentUser = updatedUser;
+                        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                    }
+
+                    showNotification('Profile photo updated successfully!', 'success');
+                } catch (error) {
+                    console.error('Profile photo upload error:', error);
+                    showNotification(error.message || 'Failed to upload profile photo.', 'error');
+                } finally {
+                    input.value = '';
+                }
+            });
+        }
+        
+        function showCreateProfileForm() {
+            const container = document.getElementById('profileContent');
+            const user = getCurrentUser();
+            const isOrganizer = user && user.role === 'organizer';
+            
+            let formHTML = `<div class="card">
+                <h2 class="card-title">Create Your Profile</h2>
+                <p class="text-secondary" style="margin-bottom: 1.5rem;">Please provide some important information about ${isOrganizer ? 'your organization' : 'yourself'}.</p>
+                <form id="createProfileForm">
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Name *</label>
+                            <input type="text" class="form-input" name="name" required placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">${isOrganizer ? 'Looking for' : 'Category'} *</label>
+                            <input type="text" class="form-input" name="category" required placeholder="${isOrganizer ? 'Singers, Dancers, Actors, etc.' : 'Singer, Dancer, Actor, etc.'}">
+                            <small class="text-secondary">${isOrganizer ? 'What type of talent are you looking for?' : 'What type of artist are you?'}</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-input" name="location" required placeholder="City, Country">
+                            <small class="text-secondary">Where are you based?</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-input" name="phone" required placeholder="+1234567890">
+                            <small class="text-secondary">For bookings and contact</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Languages</label>
+                            <input type="text" class="form-input" name="languages" placeholder="English, Hindi, etc.">
+                            <small class="text-secondary">${isOrganizer ? 'Languages required for events' : 'Languages you can perform in'}</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Experience (Years)</label>
+                            <input type="number" class="form-input" name="experience_years" min="0" placeholder="0">
+                            <small class="text-secondary">${isOrganizer ? 'Years of experience organizing events' : 'Years of experience'}</small>
+                        </div>`;
+            
+            // Price fields only for artists
+            if (!isOrganizer) {
+                formHTML += `
+                        <div class="form-group">
+                            <label class="form-label">Min Price ($)</label>
+                            <input type="number" class="form-input" name="min_price" step="0.01" min="0" placeholder="0">
+                            <small class="text-secondary">Minimum booking price</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Price ($)</label>
+                            <input type="number" class="form-input" name="max_price" step="0.01" min="0" placeholder="0">
+                            <small class="text-secondary">Maximum booking price</small>
+                        </div>`;
+            }
+            
+            formHTML += `
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bio</label>
+                        <textarea class="form-textarea" name="bio" rows="4" placeholder="${isOrganizer ? 'Tell us about your organization, events you organize, and what you\'re looking for...' : 'Tell us about yourself, your experience, and what makes you unique...'}"></textarea>
+                        <small class="text-secondary">A brief description about ${isOrganizer ? 'your organization' : 'yourself'}</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Profile</button>
+                </form>
+            </div>`;
+            
+            container.innerHTML = formHTML;
+            
+            // Add logout section even when creating profile
+            container.innerHTML += `<div class="card">
+                <h3 class="card-title">Account Actions</h3>
+                <button type="button" class="btn btn-danger" id="logoutBtn" style="width: 100%;">
+                    <span style="margin-right: 0.5rem;">🚪</span>
+                    Log Out
+                </button>
+            </div>`;
+            
+            // Add logout event listener
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (typeof window.logout === 'function') {
+                        window.logout();
+                    } else {
+                        // Fallback logout
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUser');
+                        window.location.href = '/';
+                    }
+                });
+            }
+            
+            document.getElementById('createProfileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                
+                const user = getCurrentUser();
+                const isOrganizer = user && user.role === 'organizer';
+                
+                // Validate required fields
+                if (!data.name || !data.category || !data.location || !data.phone) {
+                    showNotification('Please fill in all required fields (marked with *)', 'error');
+                    return;
+                }
+                
+                // Convert price strings to numbers (only for artists)
+                if (!isOrganizer) {
+                    data.min_price = parseFloat(data.min_price) || 0;
+                    data.max_price = parseFloat(data.max_price) || 0;
+                } else {
+                    // Set to 0 for organizers (not used)
+                    data.min_price = 0;
+                    data.max_price = 0;
+                }
+                data.experience_years = parseInt(data.experience_years) || 0;
+                
+                try {
+                    await apiRequest('/users/profiles', {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                    showNotification('Profile created successfully!', 'success');
+                    setTimeout(() => loadProfile(), 1000);
+                } catch (error) {
+                    showNotification(error.message, 'error');
+                }
+            });
+        }
+        
+        function switchProfileTab(tab) {
+            // Update tab styles
+            document.querySelectorAll('.profile-tab').forEach(btn => {
+                if (btn.getAttribute('data-tab') === tab) {
+                    btn.style.color = '#0a66c2';
+                    btn.style.borderBottom = '2px solid #0a66c2';
+                    btn.classList.add('active');
+                } else {
+                    btn.style.color = '#666';
+                    btn.style.borderBottom = '2px solid transparent';
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Show/hide tab content
+            const postsTab = document.getElementById('postsTabContent');
+            const activityTab = document.getElementById('activityTabContent');
+            
+            if (tab === 'posts') {
+                postsTab.style.display = 'block';
+                activityTab.style.display = 'none';
+            } else {
+                postsTab.style.display = 'none';
+                activityTab.style.display = 'block';
+                loadUserActivity();
+            }
+        }
+        window.switchProfileTab = switchProfileTab;
+
+        async function loadUserPosts() {
+            const container = document.getElementById('userPosts');
+            if (!container) {
+                console.error('loadUserPosts: userPosts container not found');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Loading posts...</div>';
+            
+            try {
+                const user = getCurrentUser();
+                if (!user || !user.id) {
+                    console.error('loadUserPosts: no current user or missing id');
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);"><p>Unable to load posts. Please refresh.</p></div>';
+                    return;
+                }
+                
+                console.log('loadUserPosts: fetching posts for user_id:', user.id);
+                const userPosts = await apiRequest(`/posts?user_id=${user.id}&limit=20`);
+                console.log('loadUserPosts: received', userPosts.length, 'posts');
+                
+                if (!userPosts || userPosts.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
+                            <p>No posts yet. Create your first post!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                displayUserPosts(userPosts);
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <p>Error loading posts. Please try again.</p>
+                        <button class="btn btn-secondary" style="margin-top: 0.5rem;" onclick="loadUserPosts()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        window.loadUserPosts = loadUserPosts;
+        
+        function displayUserPosts(posts) {
+            const container = document.getElementById('userPosts');
+            if (!container) return;
+            
+            let html = '<div style="display: grid; gap: 1rem;">';
+            
+            posts.forEach(post => {
+                const mediaUrls = post.media_urls ? JSON.parse(post.media_urls) : [];
+                const timeAgo = getTimeAgo(post.created_at);
+                
+                let mediaHTML = '';
+                if (mediaUrls.length > 0) {
+                    mediaUrls.forEach(url => {
+                        if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                            mediaHTML += `<img src="${url}" alt="Post" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 0.5rem;">`;
+                        } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                            mediaHTML += `<video src="${url}" style="width: 100%; max-height: 300px; border-radius: 8px; margin-bottom: 0.5rem;" controls></video>`;
+                        }
+                    });
+                }
+                
+                const mediaLabel = post.media_type === 'image' ? '📷 Photo' : post.media_type === 'video' ? '🎥 Video' : '📝 Text';
+                
+                html += `
+                    <div class="card" style="padding: 1rem; border: 1px solid #e8e8e8; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <span style="font-size: 0.8rem; color: #666;">${timeAgo}</span>
+                            <span style="font-size: 0.75rem; color: #0a66c2; background: #e8f0fe; padding: 2px 8px; border-radius: 12px;">${mediaLabel}</span>
+                        </div>
+                        ${post.content ? `<p style="margin-bottom: 0.75rem; line-height: 1.5;">${escapeHtml(post.content)}</p>` : ''}
+                        ${mediaHTML}
+                        <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid #f0f0f0; font-size: 0.85rem; color: #666;">
+                            <span>👍 ${post.likes_count || 0} Like${(post.likes_count || 0) !== 1 ? 's' : ''}</span>
+                            <span>💬 ${post.comments_count || 0} Comment${(post.comments_count || 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        async function loadUserActivity() {
+            const container = document.getElementById('userActivity');
+            if (!container) return;
+            
+            container.innerHTML = '<div class="loading">Loading activity...</div>';
+            
+            try {
+                const user = getCurrentUser();
+                if (!user || !user.id) {
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);"><p>Unable to load activity.</p></div>';
+                    return;
+                }
+                
+                // Fetch recent posts (which include likes/comments counts as activity indicators)
+                const userPosts = await apiRequest(`/posts?user_id=${user.id}&limit=50`);
+                
+                // Build activity timeline from posts + interactions
+                let activities = [];
+                
+                // Add post creation activities
+                userPosts.forEach(post => {
+                    const mediaLabel = post.media_type === 'image' ? 'a photo' : post.media_type === 'video' ? 'a video' : 'an article';
+                    const icon = post.media_type === 'image' ? '📷' : post.media_type === 'video' ? '🎥' : '📝';
+                    activities.push({
+                        type: 'post',
+                        icon: icon,
+                        text: `You posted ${mediaLabel}`,
+                        detail: post.content ? (post.content.length > 80 ? post.content.substring(0, 80) + '...' : post.content) : '',
+                        time: post.created_at,
+                        stats: `👍 ${post.likes_count || 0} · 💬 ${post.comments_count || 0}`
+                    });
+                });
+                
+                // Sort by time descending
+                activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+                
+                if (activities.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                            <p>No activity yet. Start by creating a post!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '<div style="display: flex; flex-direction: column; gap: 0;">';
+                
+                activities.forEach((activity, index) => {
+                    const timeAgo = getTimeAgo(activity.time);
+                    const isLast = index === activities.length - 1;
+                    
+                    html += `
+                        <div style="display: flex; gap: 12px; padding: 12px 0; ${!isLast ? 'border-bottom: 1px solid #f0f0f0;' : ''}">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: #e8f0fe; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">
+                                ${activity.icon}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 0.9rem; font-weight: 500; color: #333;">${activity.text}</div>
+                                ${activity.detail ? `<div style="font-size: 0.82rem; color: #666; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(activity.detail)}</div>` : ''}
+                                <div style="display: flex; gap: 1rem; margin-top: 4px; font-size: 0.78rem; color: #999;">
+                                    <span>${timeAgo}</span>
+                                    ${activity.stats ? `<span>${activity.stats}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <p>Error loading activity.</p>
+                        <button class="btn btn-secondary" style="margin-top: 0.5rem;" onclick="loadUserActivity()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        window.loadUserActivity = loadUserActivity;
+        
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function openCreatePostModal() {
+            const modal = document.getElementById('createPostModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const textarea = document.getElementById('postContentInput');
+                if (textarea) {
+                    textarea.focus();
+                }
+                // Set user info
+                const user = getCurrentUser();
+                if (user) {
+                    const avatar = document.getElementById('modalUserAvatar');
+                    const name = document.getElementById('modalUserName');
+                    if (avatar) {
+                        avatar.textContent = user.email ? user.email.charAt(0).toUpperCase() : 'U';
+                    }
+                    if (name) {
+                        name.textContent = user.email ? user.email.split('@')[0] : 'Your Name';
+                    }
+                }
+            }
+        }
+        
+        function closeCreatePostModal() {
+            const modal = document.getElementById('createPostModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.getElementById('postContentInput').value = '';
+                document.getElementById('postImageInput').value = '';
+                document.getElementById('postVideoInput').value = '';
+                document.getElementById('postMediaPreview').innerHTML = '';
+                document.getElementById('postMediaType').value = 'text';
+            }
+        }
+        
+        // Make functions available globally
+        window.openCreatePostModal = openCreatePostModal;
+        window.closeCreatePostModal = closeCreatePostModal;
+        
+        loadProfile();
+    </script>
+</body>
+</html>
+

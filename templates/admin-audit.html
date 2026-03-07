@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - CeleCircle Admin</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1e293b;display:flex;min-height:100vh;}
+
+        /* ── Sidebar ── */
+        .sidebar{width:240px;background:#1e293b;color:#94a3b8;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+        .sidebar-brand{padding:20px 18px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px;}
+        .sidebar-brand .logo{width:32px;height:32px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+        .sidebar-brand span{font-size:16px;font-weight:700;color:#f1f5f9;}
+        .sidebar-nav{flex:1;padding:12px 0;}
+        .nav-section{padding:8px 18px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-top:8px;}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;color:#94a3b8;text-decoration:none;}
+        .nav-item:hover{background:#334155;color:#e2e8f0;}
+        .nav-item.active{background:#334155;color:#3b82f6;border-left-color:#3b82f6;font-weight:600;}
+        .nav-item .icon{width:18px;text-align:center;font-size:15px;}
+        .sidebar-footer{padding:14px 18px;border-top:1px solid #334155;font-size:12px;}
+        .sidebar-footer a{color:#f87171;text-decoration:none;font-weight:600;}
+
+        /* ── Main Content ── */
+        .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+        .topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+        .topbar-title{font-size:15px;font-weight:700;color:#1e293b;}
+        .topbar-user{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;}
+        .topbar-avatar{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+        .content{padding:24px;flex:1;}
+
+        /* ── Panel ── */
+        .panel{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px;overflow:hidden;}
+        .panel-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .panel-header h3{font-size:14px;font-weight:700;color:#1e293b;}
+        .panel-body{padding:0;}
+
+        /* ── Tables ── */
+        .tbl{width:100%;border-collapse:collapse;font-size:13px;}
+        .tbl th{background:#f8fafc;padding:10px 14px;text-align:left;font-weight:700;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;}
+        .tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;}
+        .tbl tr:hover td{background:#f8fafc;}
+        .tbl .mono{font-family:'SF Mono',Monaco,monospace;font-size:12px;color:#64748b;}
+        .tbl .money{font-weight:700;white-space:nowrap;}
+
+        /* ── Badges ── */
+        .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+        .badge-green{background:#d1fae5;color:#065f46;}
+        .badge-red{background:#fee2e2;color:#991b1b;}
+        .badge-orange{background:#fef3c7;color:#92400e;}
+        .badge-blue{background:#dbeafe;color:#1e40af;}
+        .badge-purple{background:#ede9fe;color:#5b21b6;}
+        .badge-gray{background:#f1f5f9;color:#475569;}
+
+        /* ── Buttons ── */
+        .btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+        .btn-sm{padding:4px 10px;font-size:11px;}
+        .btn-primary{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+        .btn-primary:hover{background:#2563eb;}
+        .btn-outline{background:#fff;color:#475569;border-color:#d1d5db;}
+        .btn-outline:hover{background:#f8fafc;}
+
+        /* ── Filters ── */
+        .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 20px;border-bottom:1px solid #f1f5f9;}
+        .filters input,.filters select{padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#fff;}
+        .filters input{min-width:120px;}
+        .filters select{min-width:120px;}
+
+        /* ── Pagination ── */
+        .pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid #f1f5f9;font-size:12px;color:#64748b;}
+        .pagination .pages{display:flex;gap:4px;}
+        .pagination .pg-btn{padding:4px 10px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;}
+        .pagination .pg-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+        .pagination .pg-btn:hover{background:#f1f5f9;}
+
+        /* ── Responsive ── */
+        @media(max-width:768px){
+            .sidebar{width:60px;}.sidebar-brand span,.nav-item span:not(.icon),.nav-section,.sidebar-footer span{display:none;}
+            .main{margin-left:60px;}.sidebar-brand{justify-content:center;padding:14px 0;}.nav-item{justify-content:center;padding:12px 0;border-left:none;}
+        }
+    </style>
+    <link rel="stylesheet" href="/static/admin-theme.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-brand"><div class="logo">CC</div><span>CeleCircle Admin</span></div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <a class="nav-item" href="/admin"><span class="icon">📊</span><span>Dashboard</span></a>
+            <div class="nav-section">Management</div>
+            <a class="nav-item" href="/admin/disputes"><span class="icon">⚖️</span><span>Disputes</span></a>
+            <a class="nav-item" href="/admin/settings"><span class="icon">💰</span><span>Settings</span></a>
+            <div class="nav-section">Analytics</div>
+            <a class="nav-item" href="/admin/finance"><span class="icon">💹</span><span>Finance</span></a>
+            <a class="nav-item" href="/admin/analytics"><span class="icon">📈</span><span>Analytics</span></a>
+            <a class="nav-item" href="/admin/reports"><span class="icon">📥</span><span>Reports</span></a>
+            <a class="nav-item active" href="/admin/audit-logs"><span class="icon">📋</span><span>Audit Logs</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <span style="display:block;margin-bottom:6px;color:#64748b;" id="adminName">Admin</span>
+            <a href="/feed" style="color:#94a3b8;text-decoration:none;font-size:12px;">← Back to App</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-title">Audit Logs</div>
+            <div class="topbar-user">
+                <div class="topbar-avatar" id="topbarAvatar">A</div>
+                <span id="topbarName">Admin</span>
+            </div>
+        </div>
+        <div class="content">
+            <div class="panel">
+                <div class="panel-header"><h3>System Audit Trail</h3></div>
+                <div class="filters">
+                    <select id="actionTypeFilter" onchange="loadAuditLogs()">
+                        <option value="">All Actions</option>
+                        <option value="verify_user">Verify User</option>
+                        <option value="suspend_user">Suspend User</option>
+                        <option value="activate_user">Activate User</option>
+                        <option value="delete_user">Delete User</option>
+                        <option value="override_booking_status">Override Status</option>
+                        <option value="cancel_booking">Cancel Booking</option>
+                        <option value="complete_booking">Complete Booking</option>
+                        <option value="issue_refund">Issue Refund</option>
+                        <option value="release_payout">Release Payout</option>
+                        <option value="update_pricing">Update Pricing</option>
+                        <option value="resolve_dispute">Resolve Dispute</option>
+                        <option value="export_bookings">Export Bookings</option>
+                        <option value="export_payments">Export Payments</option>
+                        <option value="export_revenue">Export Revenue</option>
+                        <option value="export_disputes">Export Disputes</option>
+                    </select>
+                </div>
+                <div class="panel-body" style="overflow-x:auto;">
+                    <table class="tbl">
+                        <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Entity</th><th>ID</th><th>Details</th></tr></thead>
+                        <tbody id="auditTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="auditPagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        var currentPage = 1;
+        var limit = 50;
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if (!isAuthenticated()) { window.location.href = '/login'; return; }
+            var u = getCurrentUser();
+            if (!u || u.role !== 'admin') { window.location.href = '/dashboard'; return; }
+            document.getElementById('adminName').textContent = u.email || 'Admin';
+            document.getElementById('topbarName').textContent = u.email || 'Admin';
+            document.getElementById('topbarAvatar').textContent = (u.email || 'A').charAt(0).toUpperCase();
+            loadAuditLogs();
+        });
+
+        function fmt(n) {
+            return (n === undefined || n === null) ? '' : Number(n).toLocaleString('en-IN');
+        }
+        function esc(t) {
+            if (t === undefined || t === null) return '';
+            var d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+        function fmtDateTime(d) {
+            if (!d) return '-';
+            var dt = new Date(d);
+            return dt.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function actionBadgeClass(actionType) {
+            if (!actionType) return 'badge-gray';
+            var s = String(actionType).toLowerCase();
+            if (s === 'verify_user' || s === 'activate_user' || s === 'complete_booking') return 'badge-blue';
+            if (s === 'suspend_user' || s === 'delete_user' || s === 'cancel_booking') return 'badge-red';
+            if (s === 'issue_refund' || s === 'release_payout') return 'badge-orange';
+            if (s === 'override_booking_status' || s === 'update_pricing' || s === 'resolve_dispute') return 'badge-purple';
+            if (s.indexOf('export_') === 0) return 'badge-gray';
+            return 'badge-gray';
+        }
+
+        function formatActionLabel(actionType) {
+            if (!actionType) return '-';
+            return String(actionType).replace(/_/g, ' ');
+        }
+
+        async function loadAuditLogs() {
+            var q = '/admin/audit-logs?page=' + currentPage + '&limit=' + limit;
+            var actionType = document.getElementById('actionTypeFilter').value;
+            if (actionType) q += '&action_type=' + encodeURIComponent(actionType);
+            try {
+                var res = await apiRequest(q);
+                var total = res.total || 0;
+                var logs = res.logs || [];
+                var tbody = document.getElementById('auditTableBody');
+                tbody.innerHTML = logs.map(function(l) {
+                    var metaStr = l.metadata ? JSON.stringify(l.metadata) : '';
+                    var metaShort = metaStr.length > 80 ? metaStr.substring(0, 80) + '…' : metaStr;
+                    var badgeCls = actionBadgeClass(l.action_type);
+                    var actionLabel = formatActionLabel(l.action_type);
+                    return '<tr>' +
+                        '<td style="white-space:nowrap;">' + fmtDateTime(l.created_at) + '</td>' +
+                        '<td class="mono">' + esc(l.admin_email || '-') + '</td>' +
+                        '<td><span class="badge ' + badgeCls + '">' + esc(actionLabel) + '</span></td>' +
+                        '<td>' + esc(l.affected_entity || '-') + '</td>' +
+                        '<td>' + (l.entity_id != null && l.entity_id !== '' ? esc(String(l.entity_id)) : '—') + '</td>' +
+                        '<td class="mono" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(metaStr) + '">' + esc(metaShort) + '</td>' +
+                        '</tr>';
+                }).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">No logs found</td></tr>';
+                renderPagination(total, res.page || 1);
+            } catch (e) {
+                console.error(e);
+                document.getElementById('auditTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#ef4444;">Failed to load audit logs</td></tr>';
+            }
+        }
+
+        function renderPagination(total, page) {
+            var el = document.getElementById('auditPagination');
+            var pages = Math.ceil(total / limit) || 1;
+            if (pages <= 1) {
+                el.innerHTML = '<span>' + total + ' total</span><div></div>';
+                return;
+            }
+            var from = (page - 1) * limit + 1;
+            var to = Math.min(page * limit, total);
+            var html = '<span>Showing ' + from + '–' + to + ' of ' + total + '</span><div class="pages">';
+            var maxBtns = 10;
+            var start = Math.max(1, page - Math.floor(maxBtns / 2));
+            var end = Math.min(pages, start + maxBtns - 1);
+            if (end - start + 1 < maxBtns) start = Math.max(1, end - maxBtns + 1);
+            for (var i = start; i <= end; i++) {
+                html += '<button class="pg-btn' + (i === page ? ' active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+            }
+            html += '</div>';
+            el.innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            loadAuditLogs();
+        }
+
+        window.goPage = goPage;
+        window.loadAuditLogs = loadAuditLogs;
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin CeleNews - CeleCircle</title>
+    <link rel="stylesheet" href="/static/eventnet.css">
+    <style>
+        body { font-family: Inter, Arial, sans-serif; background: #f4f7fb; margin: 0; color: #1f2937; }
+        .wrap { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+        .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05); }
+        .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid #eef2f7; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { border: 1px solid #cbd5e1; background: #fff; color: #334155; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .btn.primary { background: #0A66C2; border-color: #0A66C2; color: #fff; }
+        .btn.success { background: #10b981; border-color: #10b981; color: #fff; }
+        .btn.warn { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+        .btn.danger { background: #ef4444; border-color: #ef4444; color: #fff; }
+        .controls { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eef2f7; flex-wrap: wrap; }
+        .controls select, .controls input { padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: left; vertical-align: top; }
+        th { background: #f8fafc; color: #475569; }
+        .title-cell { max-width: 360px; }
+        .title-line { font-weight: 600; margin-bottom: 4px; }
+        .desc-line { color: #64748b; font-size: 12px; }
+        .meta { color: #64748b; font-size: 12px; white-space: nowrap; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+        .ok { background: #d1fae5; color: #065f46; }
+        .pending { background: #fee2e2; color: #991b1b; }
+        .featured { background: #dbeafe; color: #1e40af; margin-left: 6px; }
+        a { color: #0A66C2; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <script src="/static/app.js"></script>
+    <div class="wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h2 style="margin:0;">CeleNews Moderation</h2>
+            <a href="/admin" class="btn">Back to Admin</a>
+        </div>
+        <div class="card">
+            <div class="head">
+                <div style="font-weight:700;">Celebrity News Articles</div>
+                <div class="actions">
+                    <button class="btn primary" onclick="manualFetch()">Fetch Latest (GNews)</button>
+                </div>
+            </div>
+            <div class="controls">
+                <label for="statusFilter" style="font-size:13px;color:#475569;">Filter:</label>
+                <select id="statusFilter" onchange="loadNewsAdmin()">
+                    <option value="all">All</option>
+                    <option value="featured">Featured</option>
+                </select>
+                <span id="statusMsg" style="font-size:12px;color:#64748b;"></span>
+            </div>
+            <div style="overflow:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="newsBody">
+                        <tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:24px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!isAuthenticated()) { window.location.href = '/login'; return; }
+            const user = getCurrentUser();
+            if (!user || user.role !== 'admin') { window.location.href = '/feed'; return; }
+            loadNewsAdmin();
+        });
+
+        function esc(v) {
+            const d = document.createElement('div');
+            d.textContent = v || '';
+            return d.innerHTML;
+        }
+
+        async function loadNewsAdmin() {
+            const status = document.getElementById('statusFilter').value;
+            const body = document.getElementById('newsBody');
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:24px;">Loading...</td></tr>';
+            try {
+                const data = await apiRequest('/news/admin/articles?status=' + encodeURIComponent(status));
+                const rows = data.articles || [];
+                if (!rows.length) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:24px;">No records</td></tr>';
+                    return;
+                }
+                body.innerHTML = rows.map(function (r) {
+                    const statusBadge = r.is_approved ? '<span class="badge ok">Approved</span>' : '<span class="badge pending">Pending</span>';
+                    const featured = r.is_featured ? '<span class="badge featured">Featured</span>' : '';
+                    return '<tr>' +
+                        '<td class="title-cell">' +
+                            '<div class="title-line">' + esc(r.title) + '</div>' +
+                            '<div class="desc-line">' + esc((r.description || '').slice(0, 160)) + '</div>' +
+                            '<div style="margin-top:6px;"><a href="' + esc(r.article_url) + '" target="_blank" rel="noopener noreferrer">Open article</a></div>' +
+                        '</td>' +
+                        '<td class="meta">' + esc(r.source || '-') + '<br>' + esc(r.time_ago || '') + '</td>' +
+                        '<td>' + statusBadge + featured + '</td>' +
+                        '<td>' +
+                            '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+                                '<button class="btn warn" onclick="feature(' + r.id + ', ' + (!r.is_featured) + ')">' + (r.is_featured ? 'Unfeature' : 'Feature') + '</button>' +
+                                '<button class="btn" onclick="editHeadline(' + r.id + ', \'' + esc((r.title || '').replace(/'/g, "\\'")) + '\')">Edit title</button>' +
+                                '<button class="btn danger" onclick="removeNews(' + r.id + ')">Delete</button>' +
+                            '</div>' +
+                        '</td>' +
+                    '</tr>';
+                }).join('');
+            } catch (e) {
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:24px;">Failed to load</td></tr>';
+            }
+        }
+
+        async function manualFetch() {
+            const msg = document.getElementById('statusMsg');
+            msg.textContent = 'Fetching from GNews...';
+            try {
+                const res = await apiRequest('/news/admin/fetch?force=true', { method: 'POST' });
+                msg.textContent = 'Fetched. Inserted: ' + (res.inserted || 0);
+                loadNewsAdmin();
+            } catch (e) {
+                msg.textContent = e.message || 'Fetch failed';
+            }
+        }
+
+        async function feature(id, val) {
+            await apiRequest('/news/admin/articles/' + id + '/feature', {
+                method: 'PUT',
+                body: JSON.stringify({ featured: !!val })
+            });
+            loadNewsAdmin();
+        }
+
+        async function editHeadline(id, currentTitle) {
+            const title = prompt('Edit headline:', currentTitle || '');
+            if (!title) return;
+            await apiRequest('/news/admin/articles/' + id + '/headline', {
+                method: 'PUT',
+                body: JSON.stringify({ title: title })
+            });
+            loadNewsAdmin();
+        }
+
+        async function removeNews(id) {
+            if (!confirm('Delete this article?')) return;
+            await apiRequest('/news/admin/articles/' + id, { method: 'DELETE' });
+            loadNewsAdmin();
+        }
+    </script>
+</body>
+</html>

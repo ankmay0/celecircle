@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookings - CeleCircle</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+    <style>
+        .bk-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        /* ── Left Sidebar ── */
+        .bk-sidebar {
+            position: sticky;
+            top: 72px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .bk-sidebar-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .bk-sidebar-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e8e8e8;
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #111;
+        }
+        .bk-sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            font-size: 0.88rem;
+            color: #333;
+            cursor: pointer;
+            transition: background 0.15s;
+            text-decoration: none;
+        }
+        .bk-sidebar-item:hover { background: #f3f6f9; }
+        .bk-sidebar-item.active { background: #e8f0fe; color: #0a66c2; font-weight: 600; }
+        .bk-sidebar-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+
+        /* Earnings card */
+        .bk-earnings {
+            padding: 16px;
+        }
+        .bk-earnings-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 6px 0;
+            color: #444;
+        }
+        .bk-earnings-row .val { font-weight: 700; color: #0a66c2; }
+
+        /* ── Main Content ── */
+        .bk-main { min-width: 0; }
+
+        .bk-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .bk-page-title { font-size: 1.3rem; font-weight: 700; color: #111; margin: 0; }
+
+        /* Tabs */
+        .bk-tabs {
+            display: flex;
+            gap: 0;
+            background: #fff;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+        .bk-tab {
+            padding: 12px 20px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border: none;
+            background: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .bk-tab:hover { color: #111; background: #f8f8f8; }
+        .bk-tab.active { color: #0a66c2; border-bottom-color: #0a66c2; }
+        .bk-tab .tab-count {
+            display: inline-block;
+            background: #e0e0e0;
+            color: #555;
+            font-size: 0.72rem;
+            padding: 1px 7px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+        .bk-tab.active .tab-count { background: rgba(10,102,194,0.15); color: #0a66c2; }
+
+        /* Booking list */
+        .bk-list {
+            background: #fff;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+            min-height: 200px;
+        }
+        .bk-empty {
+            padding: 3rem 2rem;
+            text-align: center;
+            color: #999;
+            font-size: 0.92rem;
+        }
+        .bk-empty-icon { font-size: 3rem; margin-bottom: 8px; opacity: 0.4; }
+
+        /* Booking card */
+        .bk-card {
+            display: flex;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.12s;
+        }
+        .bk-card:last-child { border-bottom: none; }
+        .bk-card:hover { background: #fafbfc; }
+        .bk-card-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a66c2, #00a0dc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .bk-card-body { flex: 1; min-width: 0; }
+        .bk-card-name { font-weight: 700; font-size: 0.95rem; color: #111; margin-bottom: 2px; }
+        .bk-card-sub { font-size: 0.82rem; color: #666; margin-bottom: 6px; }
+        .bk-card-details { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.82rem; color: #555; margin-bottom: 8px; }
+        .bk-card-detail { display: flex; align-items: center; gap: 4px; }
+        .bk-card-detail .icon { font-size: 0.88rem; }
+
+        /* Money row */
+        .bk-card-money {
+            display: flex;
+            gap: 16px;
+            font-size: 0.82rem;
+            color: #444;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .bk-card-money strong { color: #111; }
+
+        /* Status badge */
+        .bk-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .bk-status-pending { background: #fff3e0; color: #e65100; }
+        .bk-status-awaiting_payment { background: #fff8e1; color: #f57f17; }
+        .bk-status-confirmed { background: #e8f5e9; color: #2e7d32; }
+        .bk-status-completed { background: #e3f2fd; color: #1565c0; }
+        .bk-status-cancelled { background: #ffebee; color: #c62828; }
+        .bk-status-disputed { background: #f3e5f5; color: #7b1fa2; }
+
+        /* Action buttons */
+        .bk-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .bk-btn {
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+        .bk-btn-primary { background: #0a66c2; color: #fff; }
+        .bk-btn-primary:hover { background: #004182; }
+        .bk-btn-secondary { background: #f0f0f0; color: #333; }
+        .bk-btn-secondary:hover { background: #e0e0e0; }
+        .bk-btn-success { background: #10b981; color: #fff; }
+        .bk-btn-success:hover { background: #059669; }
+        .bk-btn-danger { background: #ef4444; color: #fff; }
+        .bk-btn-danger:hover { background: #dc2626; }
+
+        /* Detail Modal */
+        .bk-detail-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 5000; display: none; align-items: center; justify-content: center;
+        }
+        .bk-detail-overlay.open { display: flex; }
+        .bk-detail-modal {
+            background: #fff; border-radius: 12px; width: 520px; max-width: 95vw;
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .bk-detail-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; border-bottom: 1px solid #e0e0e0;
+        }
+        .bk-detail-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+        .bk-detail-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #666; }
+        .bk-detail-body { padding: 20px 24px; }
+        .bk-detail-row {
+            display: flex; justify-content: space-between;
+            padding: 8px 0; font-size: 0.88rem; border-bottom: 1px solid #f5f5f5;
+        }
+        .bk-detail-row:last-child { border-bottom: none; }
+        .bk-detail-label { color: #666; }
+        .bk-detail-value { font-weight: 600; color: #111; text-align: right; }
+        .bk-detail-actions {
+            display: flex; gap: 10px; justify-content: flex-end;
+            padding: 16px 24px; border-top: 1px solid #e0e0e0;
+        }
+
+        /* Add-on pills in booking card */
+        .bk-addons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .bk-addon-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 12px; font-size: 0.72rem;
+            font-weight: 600; background: #e8f0fe; color: #0a66c2;
+        }
+
+        /* Payment status badge */
+        .bk-pay-status {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+        }
+        .bk-pay-unpaid { background: #ffebee; color: #c62828; }
+        .bk-pay-advance_paid { background: #fff8e1; color: #f57f17; }
+        .bk-pay-fully_paid { background: #e8f5e9; color: #2e7d32; }
+
+        /* Earnings stat card */
+        .earn-stat {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e8e8e8;
+            text-align: center;
+        }
+        .earn-stat-val {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #0a66c2;
+            margin-bottom: 2px;
+        }
+        .earn-stat-label {
+            font-size: 0.78rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* Earnings table */
+        .earn-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.84rem;
+        }
+        .earn-table th {
+            background: #f3f6f9;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+        }
+        .earn-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #444;
+        }
+        .earn-table tr:hover td { background: #fafbfc; }
+        .earn-table .money { font-weight: 700; color: #111; white-space: nowrap; }
+        .earn-table .money-green { font-weight: 700; color: #10b981; white-space: nowrap; }
+        .earn-table .money-orange { font-weight: 700; color: #f59e0b; white-space: nowrap; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .bk-layout { grid-template-columns: 1fr; }
+            .bk-sidebar { position: static; flex-direction: row; overflow-x: auto; gap: 0.5rem; }
+            .bk-sidebar-card { min-width: 220px; flex-shrink: 0; }
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <div class="bk-page-header">
+            <h1 class="bk-page-title">📅 Bookings</h1>
+        </div>
+
+        <div class="bk-layout">
+            <!-- Left Sidebar -->
+            <div class="bk-sidebar" id="bkSidebar"></div>
+
+            <!-- Main Content -->
+            <div class="bk-main">
+                <!-- Bookings View -->
+                <div id="bkBookingsView">
+                    <div class="bk-tabs" id="bkTabs"></div>
+                    <div class="bk-list" id="bkList">
+                        <div class="bk-empty">Loading bookings...</div>
+                    </div>
+                </div>
+
+                <!-- Earnings View (artist only) -->
+                <div id="bkEarningsView" style="display:none;">
+                    <div style="background:#fff;border-radius:8px;box-shadow:0 0 0 1px rgba(0,0,0,0.08);overflow:hidden;">
+                        <div style="padding:20px 24px;border-bottom:1px solid #e8e8e8;">
+                            <h2 style="margin:0;font-size:1.1rem;font-weight:700;color:#111;">💰 Earnings Dashboard</h2>
+                        </div>
+
+                        <!-- Stats Cards -->
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;padding:20px 24px;" id="earningsStats">
+                            <div class="bk-empty">Loading earnings...</div>
+                        </div>
+
+                        <!-- Earnings Table -->
+                        <div style="padding:0 24px 24px;">
+                            <h3 style="font-size:0.92rem;font-weight:700;color:#333;margin:8px 0 12px;">Booking-wise Earnings</h3>
+                            <div id="earningsTable" style="overflow-x:auto;">
+                                <div class="bk-empty">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div class="bk-detail-overlay" id="detailOverlay">
+        <div class="bk-detail-modal">
+            <div class="bk-detail-header">
+                <h2>Booking Details</h2>
+                <button class="bk-detail-close" onclick="closeDetail()">&times;</button>
+            </div>
+            <div class="bk-detail-body" id="detailBody"></div>
+            <div class="bk-detail-actions" id="detailActions"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var allBookings = [];
+        var currentTab = 'all';
+        var currentUser = null;
+        var earningsData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initHeader();
+            setActiveNavItem('bookings');
+
+            if (!isAuthenticated()) { window.location.href = '/login'; return; }
+            currentUser = getCurrentUser();
+            renderSidebar();
+            renderTabs();
+            loadBookings();
+            if (currentUser && currentUser.role === 'artist') {
+                loadEarnings();
+            }
+        });
+
+        /* ═══════════════════════════════════════
+           SIDEBAR
+           ═══════════════════════════════════════ */
+        function renderSidebar() {
+            var sidebar = document.getElementById('bkSidebar');
+            var isArtist = currentUser && currentUser.role === 'artist';
+
+            var html = '<div class="bk-sidebar-card">';
+            var headerLabel = isArtist ? '🎤 Artist Dashboard' : '📋 Bookings';
+            html += '<div class="bk-sidebar-header">' + headerLabel + '</div>';
+
+            if (isArtist) {
+                html += '<a class="bk-sidebar-item active" onclick="switchView(\'bookings\', this)"><span class="icon">📅</span> My Bookings</a>';
+                html += '<a class="bk-sidebar-item" onclick="switchView(\'earnings\', this)"><span class="icon">💰</span> Earnings</a>';
+                html += '<a class="bk-sidebar-item" onclick="switchView(\'bookings\', this)"><span class="icon">📆</span> Availability</a>';
+            } else {
+                html += '<a class="bk-sidebar-item active" onclick="switchView(\'bookings\', this)"><span class="icon">📅</span> My Bookings</a>';
+            }
+            html += '</div>';
+
+            // Earnings summary (artist only)
+            if (isArtist) {
+                html += '<div class="bk-sidebar-card"><div class="bk-sidebar-header">💰 Earnings Overview</div><div class="bk-earnings" id="earningsSummary"><div style="color:#999;font-size:0.85rem;padding:8px 0;">Loading...</div></div></div>';
+            }
+
+            sidebar.innerHTML = html;
+        }
+
+        function switchView(view, el) {
+            document.querySelectorAll('.bk-sidebar-item').forEach(function(i) { i.classList.remove('active'); });
+            if (el) el.classList.add('active');
+
+            var bookingsView = document.getElementById('bkBookingsView');
+            var earningsView = document.getElementById('bkEarningsView');
+
+            if (view === 'earnings') {
+                bookingsView.style.display = 'none';
+                earningsView.style.display = 'block';
+                renderEarningsView();
+            } else {
+                bookingsView.style.display = 'block';
+                earningsView.style.display = 'none';
+            }
+        }
+
+        async function loadEarnings() {
+            try {
+                earningsData = await apiRequest('/bookings/artist/earnings');
+                var el = document.getElementById('earningsSummary');
+                if (el && earningsData) {
+                    el.innerHTML = '' +
+                        '<div class="bk-earnings-row"><span>Total Earned</span><span class="val">₹' + (earningsData.total_earned || 0).toLocaleString('en-IN') + '</span></div>' +
+                        '<div class="bk-earnings-row"><span>Pending Payout</span><span class="val">₹' + (earningsData.pending_payout || 0).toLocaleString('en-IN') + '</span></div>' +
+                        '<div class="bk-earnings-row"><span>Completed</span><span class="val">' + (earningsData.completed_bookings || 0) + '</span></div>' +
+                        '<div class="bk-earnings-row"><span>Active</span><span class="val">' + (earningsData.active_bookings || 0) + '</span></div>';
+                }
+            } catch (e) {
+                console.error('Earnings error:', e);
+            }
+        }
+
+        function renderEarningsView() {
+            if (!earningsData) {
+                document.getElementById('earningsStats').innerHTML = '<div class="bk-empty">No earnings data yet.</div>';
+                document.getElementById('earningsTable').innerHTML = '';
+                return;
+            }
+
+            var d = earningsData;
+            document.getElementById('earningsStats').innerHTML = '' +
+                '<div class="earn-stat"><div class="earn-stat-val">₹' + (d.total_earned || 0).toLocaleString('en-IN') + '</div><div class="earn-stat-label">Total Earned</div></div>' +
+                '<div class="earn-stat"><div class="earn-stat-val">₹' + (d.pending_payout || 0).toLocaleString('en-IN') + '</div><div class="earn-stat-label">Pending Payout</div></div>' +
+                '<div class="earn-stat"><div class="earn-stat-val">' + (d.completed_bookings || 0) + '</div><div class="earn-stat-label">Completed</div></div>' +
+                '<div class="earn-stat"><div class="earn-stat-val">' + (d.active_bookings || 0) + '</div><div class="earn-stat-label">Active</div></div>' +
+                '<div class="earn-stat"><div class="earn-stat-val">' + (d.total_bookings || 0) + '</div><div class="earn-stat-label">Total Bookings</div></div>';
+
+            var completed = allBookings.filter(function(b) { return b.status === 'completed'; });
+            var confirmed = allBookings.filter(function(b) { return b.status === 'confirmed'; });
+            var earningsBookings = completed.concat(confirmed);
+
+            if (earningsBookings.length === 0) {
+                document.getElementById('earningsTable').innerHTML = '<div class="bk-empty" style="padding:1.5rem;">No completed or active bookings yet.</div>';
+                return;
+            }
+
+            var html = '<table class="earn-table"><thead><tr>' +
+                '<th>Organizer</th><th>Event</th><th>Date</th><th>Your Fee</th>' +
+                '<th>Received</th><th>Pending</th><th>Status</th></tr></thead><tbody>';
+
+            earningsBookings.forEach(function(b) {
+                var eventDate = new Date(b.event_date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+                var statusClass = 'bk-status-' + b.status;
+                var statusLabel = b.status.replace(/_/g, ' ');
+                var artFee = b.artist_fee || 0;
+                var artAdvance = artFee * 0.5;
+                var artReceived = b.payment_status === 'fully_paid' ? artFee : (b.payment_status === 'advance_paid' ? artAdvance : 0);
+                var artPending = artFee - artReceived;
+
+                html += '<tr>' +
+                    '<td>' + escapeHtml(b.organizer_name || 'Organizer') + '</td>' +
+                    '<td>' + escapeHtml(b.event_type || '-') + '</td>' +
+                    '<td>' + eventDate + '</td>' +
+                    '<td class="money">₹' + artFee.toLocaleString('en-IN') + '</td>' +
+                    '<td class="money-green">₹' + artReceived.toLocaleString('en-IN') + '</td>' +
+                    '<td class="money-orange">₹' + artPending.toLocaleString('en-IN') + '</td>' +
+                    '<td><span class="bk-status ' + statusClass + '">' + statusLabel + '</span></td>' +
+                    '</tr>';
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('earningsTable').innerHTML = html;
+        }
+
+        /* ═══════════════════════════════════════
+           TABS
+           ═══════════════════════════════════════ */
+        function renderTabs() {
+            var tabs = [
+                { key: 'all', label: 'All' },
+                { key: 'pending', label: 'Pending' },
+                { key: 'awaiting_payment', label: 'Awaiting Payment' },
+                { key: 'confirmed', label: 'Confirmed' },
+                { key: 'completed', label: 'Completed' },
+                { key: 'cancelled', label: 'Cancelled' },
+            ];
+            var html = '';
+            tabs.forEach(function(t) {
+                html += '<button class="bk-tab' + (t.key === currentTab ? ' active' : '') + '" onclick="switchTab(\'' + t.key + '\', this)">' +
+                    t.label + '<span class="tab-count" id="count_' + t.key + '">0</span></button>';
+            });
+            document.getElementById('bkTabs').innerHTML = html;
+        }
+
+        function switchTab(tab, el) {
+            currentTab = tab;
+            document.querySelectorAll('.bk-tab').forEach(function(t) { t.classList.remove('active'); });
+            if (el) el.classList.add('active');
+            renderBookings();
+        }
+
+        /* ═══════════════════════════════════════
+           LOAD & RENDER BOOKINGS
+           ═══════════════════════════════════════ */
+        async function loadBookings() {
+            try {
+                allBookings = await apiRequest('/bookings');
+                updateCounts();
+                renderBookings();
+            } catch (e) {
+                document.getElementById('bkList').innerHTML = '<div class="bk-empty"><div class="bk-empty-icon">⚠️</div>Error loading bookings.</div>';
+            }
+        }
+
+        function updateCounts() {
+            var counts = { all: allBookings.length, pending: 0, awaiting_payment: 0, confirmed: 0, completed: 0, cancelled: 0 };
+            allBookings.forEach(function(b) {
+                var s = b.status;
+                if (counts[s] !== undefined) counts[s]++;
+                // Count disputed under cancelled for simplicity
+                if (s === 'disputed') counts.cancelled++;
+            });
+            Object.keys(counts).forEach(function(k) {
+                var el = document.getElementById('count_' + k);
+                if (el) el.textContent = counts[k];
+            });
+        }
+
+        function renderBookings() {
+            var filtered = allBookings;
+            if (currentTab !== 'all') {
+                filtered = allBookings.filter(function(b) { return b.status === currentTab; });
+            }
+
+            if (filtered.length === 0) {
+                document.getElementById('bkList').innerHTML = '<div class="bk-empty"><div class="bk-empty-icon">📅</div>No bookings found.</div>';
+                return;
+            }
+
+            var isArtist = currentUser && currentUser.role === 'artist';
+            var html = '';
+            filtered.forEach(function(b) {
+                var name = isArtist ? (b.organizer_name || 'Organizer') : (b.artist_name || 'Artist');
+                var initial = name.charAt(0).toUpperCase();
+                var eventDate = new Date(b.event_date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+                var statusClass = 'bk-status-' + b.status;
+                var statusLabel = b.status.replace(/_/g, ' ');
+                var payStatus = b.payment_status || 'unpaid';
+                var payStatusClass = 'bk-pay-' + payStatus;
+
+                html += '<div class="bk-card">';
+                html += '<div class="bk-card-avatar">' + initial + '</div>';
+                html += '<div class="bk-card-body">';
+                html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">';
+                html += '<div><div class="bk-card-name">' + escapeHtml(name) + '</div>';
+                html += '<div class="bk-card-sub">' + escapeHtml(b.event_type || '') + (b.artist_category ? ' · ' + escapeHtml(b.artist_category) : '') + '</div></div>';
+                html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">';
+                html += '<span class="bk-status ' + statusClass + '">' + statusLabel + '</span>';
+                html += '<span class="bk-pay-status ' + payStatusClass + '">' + payStatus.replace(/_/g, ' ') + '</span>';
+                html += '</div></div>';
+
+                html += '<div class="bk-card-details">';
+                html += '<span class="bk-card-detail"><span class="icon">📅</span> ' + eventDate + '</span>';
+                html += '<span class="bk-card-detail"><span class="icon">📍</span> ' + escapeHtml(b.location || 'TBD') + '</span>';
+                if (b.duration) html += '<span class="bk-card-detail"><span class="icon">⏱️</span> ' + escapeHtml(b.duration) + '</span>';
+                html += '</div>';
+
+                // Add-on pills (artists see labels only, organizers see prices)
+                if (b.accommodation_selected || b.transport_selected || b.security_selected) {
+                    html += '<div class="bk-addons">';
+                    if (isArtist) {
+                        if (b.accommodation_selected) html += '<span class="bk-addon-pill">🏨 Accommodation</span>';
+                        if (b.transport_selected) html += '<span class="bk-addon-pill">🚗 Transport</span>';
+                        if (b.security_selected) html += '<span class="bk-addon-pill">🛡️ Security</span>';
+                    } else {
+                        if (b.accommodation_selected) html += '<span class="bk-addon-pill">🏨 Accommodation ₹' + (b.accommodation_price || 0).toLocaleString('en-IN') + '</span>';
+                        if (b.transport_selected) html += '<span class="bk-addon-pill">🚗 Transport ₹' + (b.transport_price || 0).toLocaleString('en-IN') + '</span>';
+                        if (b.security_selected) html += '<span class="bk-addon-pill">🛡️ Security ₹' + (b.security_price || 0).toLocaleString('en-IN') + '</span>';
+                    }
+                    html += '</div>';
+                }
+
+                html += '<div class="bk-card-money">';
+                if (isArtist) {
+                    var artistAdvance = (b.artist_fee || 0) * 0.5;
+                    var artistReceived = b.payment_status === 'fully_paid' ? (b.artist_fee || 0) : (b.payment_status === 'advance_paid' ? artistAdvance : 0);
+                    var artistPending = (b.artist_fee || 0) - artistReceived;
+                    html += '<span>Your Fee: <strong>₹' + (b.artist_fee || 0).toLocaleString('en-IN') + '</strong></span>';
+                    html += '<span>Received: <strong>₹' + artistReceived.toLocaleString('en-IN') + '</strong></span>';
+                    html += '<span>Pending: <strong>₹' + artistPending.toLocaleString('en-IN') + '</strong></span>';
+                } else {
+                    html += '<span>Total: <strong>₹' + (b.total_amount || 0).toLocaleString('en-IN') + '</strong></span>';
+                    html += '<span>Advance: <strong>₹' + (b.advance_paid || 0).toLocaleString('en-IN') + '</strong></span>';
+                    html += '<span>Remaining: <strong>₹' + (b.remaining_amount || 0).toLocaleString('en-IN') + '</strong></span>';
+                }
+                html += '</div>';
+
+                // Action buttons based on role & status
+                html += '<div class="bk-card-actions">';
+                html += '<button class="bk-btn bk-btn-secondary" onclick="viewDetail(' + b.id + ')">View Details</button>';
+                html += '<button class="bk-btn bk-btn-secondary" onclick="messageBooking(' + (isArtist ? b.organizer_id : b.artist_id) + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')">Message</button>';
+
+                if (isArtist) {
+                    if (b.status === 'pending') {
+                        html += '<button class="bk-btn bk-btn-success" onclick="acceptBooking(' + b.id + ')">Accept</button>';
+                        html += '<button class="bk-btn bk-btn-danger" onclick="rejectBooking(' + b.id + ')">Reject</button>';
+                    }
+                    if (b.status === 'confirmed' && !b.artist_completed) {
+                        html += '<button class="bk-btn bk-btn-success" onclick="markComplete(' + b.id + ')">Mark Completed</button>';
+                    }
+                    if (b.status === 'confirmed' && b.artist_completed && !b.organizer_completed) {
+                        html += '<span style="font-size:0.78rem;color:#666;padding:6px;">Waiting for organizer confirmation</span>';
+                    }
+                } else {
+                    // Organizer actions
+                    if (b.status === 'awaiting_payment' && !(currentUser && currentUser.role === 'admin')) {
+                        html += '<button class="bk-btn bk-btn-success" onclick="payAdvance(' + b.id + ')">Pay Advance</button>';
+                    }
+                    if (b.remaining_amount > 0 && (b.status === 'confirmed' || b.status === 'completed') && b.payment_status !== 'fully_paid') {
+                        html += '<button class="bk-btn bk-btn-primary" onclick="payRemaining(' + b.id + ')">Pay Remaining</button>';
+                    }
+                    if (b.status === 'confirmed' && !b.organizer_completed) {
+                        html += '<button class="bk-btn bk-btn-success" onclick="markComplete(' + b.id + ')">Mark Completed</button>';
+                    }
+                    if (b.status === 'confirmed' && b.organizer_completed && !b.artist_completed) {
+                        html += '<span style="font-size:0.78rem;color:#666;padding:6px;">Waiting for artist confirmation</span>';
+                    }
+                    if (b.status === 'pending' || b.status === 'awaiting_payment' || b.status === 'confirmed') {
+                        html += '<button class="bk-btn bk-btn-danger" onclick="cancelBooking(' + b.id + ')">Cancel</button>';
+                    }
+                }
+                html += '</div>';
+                html += '</div></div>';
+            });
+
+            document.getElementById('bkList').innerHTML = html;
+        }
+
+        /* ═══════════════════════════════════════
+           BOOKING ACTIONS
+           ═══════════════════════════════════════ */
+        async function acceptBooking(id) {
+            try {
+                await apiRequest('/bookings/' + id + '/accept', { method: 'PUT' });
+                showNotification('Booking accepted!', 'success');
+                loadBookings();
+            } catch (e) { showNotification(e.message || 'Error', 'error'); }
+        }
+
+        async function rejectBooking(id) {
+            if (!confirm('Are you sure you want to reject this booking?')) return;
+            try {
+                await apiRequest('/bookings/' + id + '/reject', { method: 'PUT' });
+                showNotification('Booking rejected', 'success');
+                loadBookings();
+            } catch (e) { showNotification(e.message || 'Error', 'error'); }
+        }
+
+        async function payAdvance(id) {
+            var booking = allBookings.find(function(b) { return b.id === id; });
+            var advanceAmt = booking ? (booking.advance_amount || 0) : 0;
+            showPaymentModal(id, advanceAmt);
+        }
+
+        function showPaymentModal(bookingId, amount) {
+            var existing = document.getElementById('payModal');
+            if (existing) existing.remove();
+
+            var overlay = document.createElement('div');
+            overlay.id = 'payModal';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+            overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:440px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
+                + '<div style="padding:18px 20px;border-bottom:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;">'
+                + '<h3 style="margin:0;font-size:1.05rem;font-weight:700;">Pay Advance</h3>'
+                + '<button onclick="document.getElementById(\'payModal\').remove()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#666;">&times;</button></div>'
+                + '<div id="payModalBody" style="padding:20px;"></div></div>';
+            document.body.appendChild(overlay);
+
+            document.getElementById('payModalBody').innerHTML = '<h4 style="text-align:center;font-size:0.95rem;margin:0 0 14px;">Choose Payment Method</h4>'
+                + '<div style="display:flex;flex-direction:column;gap:10px;">'
+                + '<label id="pmUpi" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid #0a66c2;border-radius:10px;cursor:pointer;background:#f0f7ff;">'
+                + '<input type="radio" name="bkPayMethod" value="upi" checked style="width:16px;height:16px;accent-color:#0a66c2;" onchange="bkSelectPay()">'
+                + '<div style="font-size:1.4rem;">📱</div><div><div style="font-weight:700;font-size:0.9rem;">UPI / PhonePe</div><div style="font-size:0.75rem;color:#666;">Scan QR & pay via PhonePe, GPay, Paytm</div></div></label>'
+                + '<label id="pmCard" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;background:#fff;">'
+                + '<input type="radio" name="bkPayMethod" value="card" style="width:16px;height:16px;accent-color:#0a66c2;" onchange="bkSelectPay()">'
+                + '<div style="font-size:1.4rem;">💳</div><div><div style="font-weight:700;font-size:0.9rem;">Credit / Debit Card</div><div style="font-size:0.75rem;color:#666;">Visa, Mastercard, RuPay</div></div></label></div>'
+                + '<div style="text-align:center;margin-top:14px;"><div style="background:#f8f9fa;border-radius:8px;padding:10px;border:1px solid #e8e8e8;display:inline-block;">'
+                + '<span style="font-size:0.8rem;color:#666;">Amount:</span> <strong style="color:#0a66c2;font-size:1rem;">₹' + amount.toLocaleString('en-IN') + '</strong></div></div>'
+                + '<div style="text-align:center;margin-top:14px;">'
+                + '<button class="bk-btn bk-btn-success" style="padding:10px 28px;font-size:0.9rem;" onclick="bkProceedPay(' + bookingId + ')">Proceed</button></div>';
+        }
+
+        window.bkSelectPay = function() {
+            var radios = document.querySelectorAll('input[name="bkPayMethod"]');
+            radios.forEach(function(r) {
+                var lbl = r.closest('label');
+                if (r.checked) { lbl.style.borderColor = '#0a66c2'; lbl.style.background = '#f0f7ff'; }
+                else { lbl.style.borderColor = '#e0e0e0'; lbl.style.background = '#fff'; }
+            });
+        };
+
+        window.bkProceedPay = async function(bookingId) {
+            var method = document.querySelector('input[name="bkPayMethod"]:checked').value;
+            var body = document.getElementById('payModalBody');
+            var booking = allBookings.find(function(b) { return b.id === bookingId; });
+            var amt = booking ? (booking.advance_amount || 0) : 0;
+
+            try {
+                await apiRequest('/bookings/' + bookingId + '/pay-advance?payment_method=' + method, { method: 'POST' });
+
+                if (method === 'upi') {
+                    body.innerHTML = '<div style="text-align:center;">'
+                        + '<h4 style="font-size:1rem;font-weight:700;margin:0 0 4px;">Scan & Pay via UPI</h4>'
+                        + '<p style="font-size:0.8rem;color:#666;margin:0 0 10px;">Pay <strong>₹' + amt.toLocaleString('en-IN') + '</strong> using PhonePe, GPay, or Paytm</p>'
+                        + '<div style="background:#000;border-radius:12px;padding:16px;display:inline-block;">'
+                        + '<img src="/static/phonepe-qr.png" alt="PhonePe QR" style="width:200px;height:200px;border-radius:8px;"></div>'
+                        + '<div style="margin-top:8px;font-size:0.8rem;color:#666;"><strong>Payee:</strong> OM PRAKASH SAHOO</div>'
+                        + '<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-top:10px;font-size:0.8rem;color:#92400e;">'
+                        + '⏳ Admin will verify & confirm your booking after payment.</div>'
+                        + '<div style="margin-top:12px;">'
+                        + '<button class="bk-btn bk-btn-success" style="padding:10px 24px;" onclick="bkPayDone(' + bookingId + ')">I\'ve Completed Payment</button></div></div>';
+                } else {
+                    body.innerHTML = '<div style="text-align:center;">'
+                        + '<h4 style="font-size:1rem;font-weight:700;margin:0 0 4px;">Card Payment</h4>'
+                        + '<p style="font-size:0.8rem;color:#666;margin:0 0 12px;">Pay <strong>₹' + amt.toLocaleString('en-IN') + '</strong></p>'
+                        + '<div style="max-width:300px;margin:0 auto;text-align:left;">'
+                        + '<div style="margin-bottom:8px;"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:3px;">Card Number</label><input type="text" placeholder="1234 5678 9012 3456" maxlength="19" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;"></div>'
+                        + '<div style="display:flex;gap:8px;margin-bottom:8px;"><div style="flex:1;"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:3px;">Expiry</label><input type="text" placeholder="MM/YY" maxlength="5" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;"></div>'
+                        + '<div style="flex:1;"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:3px;">CVV</label><input type="password" placeholder="•••" maxlength="4" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;"></div></div>'
+                        + '<div style="margin-bottom:8px;"><label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:3px;">Name on Card</label><input type="text" placeholder="Full name" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;"></div></div>'
+                        + '<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-top:10px;font-size:0.8rem;color:#92400e;">⏳ Admin will verify & confirm your booking.</div>'
+                        + '<div style="margin-top:12px;"><button class="bk-btn bk-btn-success" style="padding:10px 24px;" onclick="bkPayDone(' + bookingId + ')">Pay ₹' + amt.toLocaleString('en-IN') + '</button></div></div>';
+                }
+            } catch (e) {
+                showNotification(e.message || 'Payment error', 'error');
+            }
+        };
+
+        var bkPollTimer = null;
+
+        window.bkPayDone = function(bookingId) {
+            var body = document.getElementById('payModalBody');
+            body.innerHTML = '<div style="text-align:center;padding:10px 0;">'
+                + '<div style="font-size:3rem;margin-bottom:10px;">⏳</div>'
+                + '<h3 style="font-size:1.1rem;font-weight:700;color:#111;margin:0 0 6px;">Waiting for Admin Confirmation</h3>'
+                + '<p style="font-size:0.85rem;color:#666;max-width:340px;margin:0 auto;">Your payment has been submitted. The admin is verifying — please wait.</p>'
+                + '<div style="margin-top:14px;"><div style="display:inline-block;width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#0a66c2;border-radius:50%;animation:bkSpin 1s linear infinite;"></div></div>'
+                + '<style>@keyframes bkSpin{to{transform:rotate(360deg);}}</style>'
+                + '<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:0.82rem;color:#92400e;max-width:340px;margin-left:auto;margin-right:auto;">'
+                + 'This will update automatically once the admin confirms your payment.</div>'
+                + '<div style="margin-top:12px;"><button class="bk-btn bk-btn-secondary" onclick="document.getElementById(\'payModal\').remove();loadBookings();">Go to Bookings</button></div>'
+                + '</div>';
+
+            if (bkPollTimer) clearInterval(bkPollTimer);
+            bkPollTimer = setInterval(async function() {
+                try {
+                    var b = await apiRequest('/bookings/' + bookingId);
+                    if (b.status === 'confirmed' || b.payment_status === 'advance_paid') {
+                        clearInterval(bkPollTimer);
+                        bkPollTimer = null;
+                        bkShowConfirmed(bookingId);
+                    }
+                } catch (e) {}
+            }, 5000);
+        };
+
+        function bkShowConfirmed(bookingId) {
+            var body = document.getElementById('payModalBody');
+            if (!body) return;
+            body.innerHTML = '<div style="text-align:center;padding:10px 0;">'
+                + '<div style="font-size:3rem;margin-bottom:10px;">✅</div>'
+                + '<h3 style="font-size:1.1rem;font-weight:700;color:#111;margin:0 0 6px;">Booking Confirmed!</h3>'
+                + '<p style="font-size:0.85rem;color:#666;max-width:340px;margin:0 auto;">Your payment has been verified and the booking is now confirmed.</p>'
+                + '<div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:0.82rem;color:#065f46;max-width:340px;margin-left:auto;margin-right:auto;">'
+                + '✔ Booking confirmed — the artist\'s date has been locked.</div>'
+                + '<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">'
+                + '<button class="bk-btn bk-btn-primary" onclick="bkDownloadInvoice(' + bookingId + ')">📄 Download Invoice</button>'
+                + '<button class="bk-btn bk-btn-secondary" onclick="document.getElementById(\'payModal\').remove();loadBookings();">Close</button>'
+                + '</div></div>';
+        }
+
+        window.bkDownloadInvoice = async function(bookingId) {
+            try {
+                var inv = await apiRequest('/bookings/' + bookingId + '/invoice');
+                bkGenerateInvoicePDF(inv);
+            } catch (e) { showNotification(e.message || 'Error generating invoice', 'error'); }
+        };
+
+        function bkGenerateInvoicePDF(inv) {
+            var w = window.open('', '_blank', 'width=800,height=900');
+            var addonRows = '';
+            if (inv.accommodation_selected) addonRows += '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">🏨 Accommodation</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">₹' + (inv.accommodation_price||0).toLocaleString('en-IN') + '</td></tr>';
+            if (inv.transport_selected) addonRows += '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">🚗 Transport</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">₹' + (inv.transport_price||0).toLocaleString('en-IN') + '</td></tr>';
+            if (inv.security_selected) addonRows += '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">🛡️ Security</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">₹' + (inv.security_price||0).toLocaleString('en-IN') + '</td></tr>';
+
+            var html = '<!DOCTYPE html><html><head><title>Invoice ' + inv.invoice_number + '</title><style>'
+                + 'body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;margin:0;padding:40px;color:#1e293b;background:#fff;}'
+                + '.inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;padding-bottom:20px;border-bottom:3px solid #0a66c2;}'
+                + '.inv-logo{font-size:28px;font-weight:800;color:#0a66c2;}.inv-num{text-align:right;}'
+                + '.inv-num h2{margin:0;font-size:22px;}.inv-num p{margin:2px 0;font-size:13px;color:#64748b;}'
+                + '.inv-table{width:100%;border-collapse:collapse;margin-bottom:20px;}'
+                + '.inv-table th{background:#f1f5f9;padding:10px 12px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;color:#475569;border-bottom:2px solid #e2e8f0;}'
+                + '.inv-total-row td{font-weight:800;font-size:15px;border-top:2px solid #1e293b;padding-top:12px;}'
+                + '@media print{body{padding:20px;}.no-print{display:none !important;}}'
+                + '</style></head><body>'
+                + '<div class="no-print" style="text-align:right;margin-bottom:16px;"><button onclick="window.print()" style="padding:8px 20px;background:#0a66c2;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600;">🖨 Print / Save PDF</button></div>'
+                + '<div class="inv-header"><div class="inv-logo">CeleCircle</div><div class="inv-num"><h2>' + inv.invoice_number + '</h2><p>Date: ' + inv.date + '</p><p>Status: ' + (inv.status||'').toUpperCase() + '</p></div></div>'
+                + '<div style="display:flex;justify-content:space-between;margin-bottom:24px;"><div><h4 style="margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;">Billed To</h4><p style="margin:2px 0;font-size:13px;font-weight:700;">' + (inv.organizer_name||'') + '</p><p style="margin:2px 0;font-size:13px;">' + (inv.organizer_email||'') + '</p></div>'
+                + '<div style="text-align:right;"><h4 style="margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;">Artist</h4><p style="margin:2px 0;font-size:13px;font-weight:700;">' + (inv.artist_name||'') + '</p><p style="margin:2px 0;font-size:13px;">' + (inv.artist_category||'') + '</p></div></div>'
+                + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;"><strong>Event:</strong> ' + (inv.event_type||'') + ' | <strong>Date:</strong> ' + (inv.event_date||'') + ' | <strong>Location:</strong> ' + (inv.location||'') + '</div>'
+                + '<table class="inv-table"><thead><tr><th>Description</th><th style="text-align:right;">Amount</th></tr></thead><tbody>'
+                + '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">🎤 Artist Performance Fee</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">₹' + (inv.artist_fee||0).toLocaleString('en-IN') + '</td></tr>'
+                + '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">🔧 Platform & Support Fee</td><td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">₹' + (inv.platform_fee||0).toLocaleString('en-IN') + '</td></tr>'
+                + addonRows
+                + '<tr class="inv-total-row"><td style="padding:8px 12px;">TOTAL</td><td style="padding:8px 12px;text-align:right;">₹' + (inv.total_amount||0).toLocaleString('en-IN') + '</td></tr></tbody></table>'
+                + '<div style="display:flex;gap:20px;margin-bottom:20px;">'
+                + '<div style="flex:1;background:#d1fae5;border-radius:8px;padding:12px 16px;"><div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;">Advance Paid</div><div style="font-size:18px;font-weight:800;color:#065f46;">₹' + (inv.advance_paid||0).toLocaleString('en-IN') + '</div></div>'
+                + '<div style="flex:1;background:#fef3c7;border-radius:8px;padding:12px 16px;"><div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;">Remaining</div><div style="font-size:18px;font-weight:800;color:#92400e;">₹' + (inv.remaining_amount||0).toLocaleString('en-IN') + '</div></div></div>'
+                + '<div style="margin-top:30px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;text-align:center;">CeleCircle — India\'s Premier Celebrity Booking Platform<br>This is a computer-generated invoice.</div>'
+                + '</body></html>';
+            w.document.write(html);
+            w.document.close();
+        }
+
+        async function cancelBooking(id) {
+            if (!confirm('Are you sure you want to cancel this booking?')) return;
+            try {
+                await apiRequest('/bookings/' + id + '/cancel', { method: 'PUT' });
+                showNotification('Booking cancelled', 'success');
+                loadBookings();
+            } catch (e) { showNotification(e.message || 'Error', 'error'); }
+        }
+
+        async function markComplete(id) {
+            try {
+                var res = await apiRequest('/bookings/' + id + '/complete', { method: 'PUT' });
+                if (res.status === 'completed') {
+                    showNotification('Booking completed! Payment released.', 'success');
+                } else {
+                    showNotification('Marked as completed. Waiting for other party to confirm.', 'success');
+                }
+                loadBookings();
+                if (currentUser && currentUser.role === 'artist') loadEarnings();
+            } catch (e) { showNotification(e.message || 'Error', 'error'); }
+        }
+
+        async function payRemaining(id) {
+            if (!confirm('Confirm remaining payment? This will complete the full payment.')) return;
+            try {
+                await apiRequest('/bookings/' + id + '/pay-remaining', { method: 'POST' });
+                showNotification('Remaining payment completed!', 'success');
+                loadBookings();
+            } catch (e) { showNotification(e.message || 'Payment error', 'error'); }
+        }
+
+        function messageBooking(userId, name) {
+            window.location.href = '/chat?open_user=' + userId + '&name=' + encodeURIComponent(name);
+        }
+
+        /* ═══════════════════════════════════════
+           DETAIL MODAL
+           ═══════════════════════════════════════ */
+        async function viewDetail(id) {
+            try {
+                var b = await apiRequest('/bookings/' + id);
+                var isArtist = currentUser && currentUser.role === 'artist';
+                var name = isArtist ? (b.organizer_name || 'Organizer') : (b.artist_name || 'Artist');
+                var eventDate = new Date(b.event_date).toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+                var statusClass = 'bk-status-' + b.status;
+                var payStatus = b.payment_status || 'unpaid';
+                var payStatusClass = 'bk-pay-' + payStatus;
+
+                var body = document.getElementById('detailBody');
+                var detailHtml = '' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">' + (isArtist ? 'Organizer' : 'Artist') + '</span><span class="bk-detail-value">' + escapeHtml(name) + '</span></div>' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">Status</span><span class="bk-detail-value"><span class="bk-status ' + statusClass + '">' + b.status.replace(/_/g, ' ') + '</span></span></div>' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">Payment</span><span class="bk-detail-value"><span class="bk-pay-status ' + payStatusClass + '">' + payStatus.replace(/_/g, ' ') + '</span></span></div>' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">Event Type</span><span class="bk-detail-value">' + escapeHtml(b.event_type || '-') + '</span></div>' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">Event Date</span><span class="bk-detail-value">' + eventDate + '</span></div>' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">Location</span><span class="bk-detail-value">' + escapeHtml(b.location || '-') + '</span></div>' +
+                    (b.duration ? '<div class="bk-detail-row"><span class="bk-detail-label">Duration</span><span class="bk-detail-value">' + escapeHtml(b.duration) + '</span></div>' : '') +
+                    (b.audience_size ? '<div class="bk-detail-row"><span class="bk-detail-label">Audience Size</span><span class="bk-detail-value">' + escapeHtml(b.audience_size) + '</span></div>' : '') +
+                    (b.event_details ? '<div class="bk-detail-row"><span class="bk-detail-label">Details</span><span class="bk-detail-value" style="text-align:left;max-width:280px;">' + escapeHtml(b.event_details) + '</span></div>' : '') +
+                    '<div style="border-top:2px solid #e0e0e0;margin:12px 0;"></div>';
+
+                if (isArtist) {
+                    var artFee = b.artist_fee || 0;
+                    var artAdvance = artFee * 0.5;
+                    var artReceived = b.payment_status === 'fully_paid' ? artFee : (b.payment_status === 'advance_paid' ? artAdvance : 0);
+                    var artPending = artFee - artReceived;
+
+                    detailHtml += '<div style="font-weight:700;font-size:0.88rem;color:#333;margin-bottom:6px;">💰 Your Earnings</div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">Your Fee</span><span class="bk-detail-value" style="font-size:1rem;color:#0a66c2;">₹' + artFee.toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">Advance (50%)</span><span class="bk-detail-value">₹' + artAdvance.toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">After Event (50%)</span><span class="bk-detail-value">₹' + artAdvance.toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += '<div class="bk-detail-row" style="border-top:1px solid #e0e0e0;padding-top:8px;margin-top:4px;"><span class="bk-detail-label" style="font-weight:700;">Received</span><span class="bk-detail-value" style="color:#10b981;">₹' + artReceived.toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label" style="font-weight:700;">Pending</span><span class="bk-detail-value" style="color:#f59e0b;">₹' + artPending.toLocaleString('en-IN') + '</span></div>';
+
+                    if (b.accommodation_selected || b.transport_selected || b.security_selected) {
+                        detailHtml += '<div style="border-top:1px solid #f0f0f0;margin:8px 0;"></div>';
+                        detailHtml += '<div style="font-size:0.8rem;color:#666;margin-bottom:4px;">Included Services</div>';
+                        if (b.accommodation_selected) detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">🏨 Accommodation</span><span class="bk-detail-value" style="color:#10b981;">Provided</span></div>';
+                        if (b.transport_selected) detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">🚗 Transport</span><span class="bk-detail-value" style="color:#10b981;">Provided</span></div>';
+                        if (b.security_selected) detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">🛡️ Security</span><span class="bk-detail-value" style="color:#10b981;">Provided</span></div>';
+                    }
+                } else {
+                    var addonHtml = '';
+                    if (b.accommodation_selected) addonHtml += '<div class="bk-detail-row"><span class="bk-detail-label">🏨 Accommodation</span><span class="bk-detail-value">₹' + (b.accommodation_price || 0).toLocaleString('en-IN') + '</span></div>';
+                    if (b.transport_selected) addonHtml += '<div class="bk-detail-row"><span class="bk-detail-label">🚗 Transport</span><span class="bk-detail-value">₹' + (b.transport_price || 0).toLocaleString('en-IN') + '</span></div>';
+                    if (b.security_selected) addonHtml += '<div class="bk-detail-row"><span class="bk-detail-label">🛡️ Security</span><span class="bk-detail-value">₹' + (b.security_price || 0).toLocaleString('en-IN') + '</span></div>';
+
+                    detailHtml += '<div style="font-weight:700;font-size:0.88rem;color:#333;margin-bottom:6px;">💰 Financial Breakdown</div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">Artist Fee</span><span class="bk-detail-value">₹' + (b.artist_fee || 0).toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">Platform & Support</span><span class="bk-detail-value">₹' + (b.platform_fee || 0).toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += addonHtml;
+                    detailHtml += '<div class="bk-detail-row" style="border-top:1px solid #e0e0e0;padding-top:8px;margin-top:4px;"><span class="bk-detail-label" style="font-weight:700;">Total Amount</span><span class="bk-detail-value" style="font-size:1rem;color:#0a66c2;">₹' + (b.total_amount || 0).toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">Advance Paid</span><span class="bk-detail-value" style="color:#10b981;">₹' + (b.advance_paid || 0).toLocaleString('en-IN') + '</span></div>';
+                    detailHtml += '<div class="bk-detail-row"><span class="bk-detail-label">Remaining</span><span class="bk-detail-value">₹' + (b.remaining_amount || 0).toLocaleString('en-IN') + '</span></div>';
+                }
+
+                detailHtml += '<div style="border-top:1px solid #f0f0f0;margin:8px 0;"></div>' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">Booking ID</span><span class="bk-detail-value">#' + b.id + '</span></div>' +
+                    '<div class="bk-detail-row"><span class="bk-detail-label">Created</span><span class="bk-detail-value">' + new Date(b.created_at).toLocaleDateString('en-IN') + '</span></div>';
+                body.innerHTML = detailHtml;
+
+                // Actions
+                var actions = document.getElementById('detailActions');
+                var actHtml = '<button class="bk-btn bk-btn-secondary" onclick="closeDetail()">Close</button>';
+                actHtml += '<button class="bk-btn bk-btn-secondary" onclick="closeDetail(); messageBooking(' + (isArtist ? b.organizer_id : b.artist_id) + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')">Message</button>';
+                if (!isArtist && b.remaining_amount > 0 && (b.status === 'confirmed' || b.status === 'completed') && b.payment_status !== 'fully_paid') {
+                    actHtml += '<button class="bk-btn bk-btn-primary" onclick="closeDetail(); payRemaining(' + b.id + ')">Pay Remaining</button>';
+                }
+                actions.innerHTML = actHtml;
+
+                document.getElementById('detailOverlay').classList.add('open');
+            } catch (e) {
+                showNotification('Error loading details', 'error');
+            }
+        }
+
+        function closeDetail() {
+            document.getElementById('detailOverlay').classList.remove('open');
+        }
+
+        document.getElementById('detailOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeDetail();
+        });
+
+        /* ═══════════════════════════════════════
+           UTILITIES
+           ═══════════════════════════════════════ */
+        function escapeHtml(text) {
+            if (!text) return '';
+            var d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // Expose to global
+        window.switchTab = switchTab;
+        window.switchView = switchView;
+        window.viewDetail = viewDetail;
+        window.closeDetail = closeDetail;
+        window.acceptBooking = acceptBooking;
+        window.rejectBooking = rejectBooking;
+        window.payAdvance = payAdvance;
+        window.cancelBooking = cancelBooking;
+        window.markComplete = markComplete;
+        window.payRemaining = payRemaining;
+        window.messageBooking = messageBooking;
+
+    })();
+    </script>
+</body>
+</html>
+

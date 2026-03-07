@@ -1,0 +1,60 @@
+/* Global fallback theme overrides for pages with utility-only styling */
+
+:root[data-theme="dark"] body {
+    background: #0b1220 !important;
+    color: #e5e7eb !important;
+}
+
+:root[data-theme="dark"] main,
+:root[data-theme="dark"] header,
+:root[data-theme="dark"] section,
+:root[data-theme="dark"] article {
+    color: #e5e7eb !important;
+}
+
+:root[data-theme="dark"] [class*="bg-white"],
+:root[data-theme="dark"] [class*="bg-slate-50"],
+:root[data-theme="dark"] [class*="bg-slate-100"] {
+    background-color: #0f172a !important;
+}
+
+:root[data-theme="dark"] [class*="bg-slate-900"] {
+    background-color: #111827 !important;
+}
+
+:root[data-theme="dark"] [class*="text-slate-900"],
+:root[data-theme="dark"] [class*="text-gray-900"],
+:root[data-theme="dark"] [class*="text-textPrimary"] {
+    color: #f8fafc !important;
+}
+
+:root[data-theme="dark"] [class*="text-slate-700"],
+:root[data-theme="dark"] [class*="text-slate-600"],
+:root[data-theme="dark"] [class*="text-slate-500"],
+:root[data-theme="dark"] [class*="text-gray-600"],
+:root[data-theme="dark"] [class*="text-gray-500"],
+:root[data-theme="dark"] [class*="text-textSecondary"] {
+    color: #cbd5e1 !important;
+}
+
+:root[data-theme="dark"] [class*="border-slate-"],
+:root[data-theme="dark"] [class*="border-gray-"] {
+    border-color: #334155 !important;
+}
+
+:root[data-theme="dark"] a {
+    color: #93c5fd;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    border-color: #334155 !important;
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+    color: #94a3b8 !important;
+}
