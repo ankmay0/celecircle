@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Analytics - CeleLink Admin</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1e293b;display:flex;min-height:100vh;}
+
+        /* ── Sidebar ── */
+        .sidebar{width:240px;background:#1e293b;color:#94a3b8;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+        .sidebar-brand{padding:20px 18px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px;}
+        .sidebar-brand .logo{width:32px;height:32px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+        .sidebar-brand span{font-size:16px;font-weight:700;color:#f1f5f9;}
+        .sidebar-nav{flex:1;padding:12px 0;}
+        .nav-section{padding:8px 18px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-top:8px;}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;color:#94a3b8;text-decoration:none;}
+        .nav-item:hover{background:#334155;color:#e2e8f0;}
+        .nav-item.active{background:#334155;color:#3b82f6;border-left-color:#3b82f6;font-weight:600;}
+        .nav-item .icon{width:18px;text-align:center;font-size:15px;}
+        .sidebar-footer{padding:14px 18px;border-top:1px solid #334155;font-size:12px;}
+        .sidebar-footer a{color:#f87171;text-decoration:none;font-weight:600;}
+
+        /* ── Main Content ── */
+        .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+        .topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+        .topbar-title{font-size:15px;font-weight:700;color:#1e293b;}
+        .topbar-user{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;}
+        .topbar-avatar{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+        .content{padding:24px;flex:1;}
+
+        /* ── Cards ── */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+        .stat-card{background:#fff;border-radius:10px;padding:18px;border:1px solid #e2e8f0;}
+        .stat-card .label{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+        .stat-card .value{font-size:24px;font-weight:800;color:#1e293b;margin-top:4px;}
+        .stat-card .value.blue{color:#3b82f6;}
+        .stat-card .value.green{color:#10b981;}
+        .stat-card .value.orange{color:#f59e0b;}
+        .stat-card .value.red{color:#ef4444;}
+        .stat-card .value.purple{color:#8b5cf6;}
+
+        /* ── Panel ── */
+        .panel{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px;overflow:hidden;}
+        .panel-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .panel-header h3{font-size:14px;font-weight:700;color:#1e293b;}
+        .panel-body{padding:0;}
+
+        /* ── Tables ── */
+        .tbl{width:100%;border-collapse:collapse;font-size:13px;}
+        .tbl th{background:#f8fafc;padding:10px 14px;text-align:left;font-weight:700;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;}
+        .tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;}
+        .tbl tr:hover td{background:#f8fafc;}
+        .tbl .mono{font-family:'SF Mono',Monaco,monospace;font-size:12px;color:#64748b;}
+        .tbl .money{font-weight:700;white-space:nowrap;}
+
+        /* ── Badges ── */
+        .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+        .badge-green{background:#d1fae5;color:#065f46;}
+        .badge-red{background:#fee2e2;color:#991b1b;}
+        .badge-orange{background:#fef3c7;color:#92400e;}
+        .badge-blue{background:#dbeafe;color:#1e40af;}
+        .badge-purple{background:#ede9fe;color:#5b21b6;}
+        .badge-gray{background:#f1f5f9;color:#475569;}
+
+        /* ── Chart (vertical bars) ── */
+        .chart-bars{display:flex;align-items:flex-end;gap:4px;height:200px;padding:20px;}
+        .chart-bar{flex:1;border-radius:4px 4px 0 0;min-width:16px;position:relative;transition:all .3s;cursor:pointer;}
+        .chart-bar:hover{filter:brightness(0.9);}
+        .chart-bar-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:#64748b;white-space:nowrap;}
+        .chart-bar-val{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:#1e293b;white-space:nowrap;opacity:0;transition:opacity .15s;}
+        .chart-bar:hover .chart-bar-val{opacity:1;}
+        .h-bar-list{display:flex;flex-direction:column;gap:10px;}
+        .h-bar-row{display:flex;align-items:center;gap:12px;}
+        .h-bar-label{width:140px;font-size:12px;font-weight:600;color:#334155;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
+        .h-bar-track{flex:1;height:24px;background:#f1f5f9;border-radius:4px;overflow:hidden;position:relative;}
+        .h-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;display:flex;align-items:center;padding:0 8px;}
+        .h-bar-value{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;}
+        .h-bar-amount{width:100px;font-size:12px;font-weight:700;color:#1e293b;text-align:right;flex-shrink:0;}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+
+        /* ── Responsive ── */
+        @media(max-width:768px){
+            .sidebar{width:60px;}.sidebar-brand span,.nav-item span:not(.icon),.nav-section,.sidebar-footer span{display:none;}
+            .main{margin-left:60px;}.sidebar-brand{justify-content:center;padding:14px 0;}.nav-item{justify-content:center;padding:12px 0;border-left:none;}
+            .stats-grid{grid-template-columns:repeat(2,1fr);}
+        }
+    </style>
+    <link rel="stylesheet" href="/static/admin-theme.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-brand"><div class="logo">CL</div><span>CeleLink Admin</span></div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <a class="nav-item" href="/admin"><span class="icon">📊</span><span>Dashboard</span></a>
+            <div class="nav-section">Management</div>
+            <a class="nav-item" href="/admin/disputes"><span class="icon">⚖️</span><span>Disputes</span></a>
+            <a class="nav-item" href="/admin/settings"><span class="icon">💰</span><span>Settings</span></a>
+            <div class="nav-section">Analytics</div>
+            <a class="nav-item" href="/admin/finance"><span class="icon">💹</span><span>Finance</span></a>
+            <a class="nav-item active" href="/admin/analytics"><span class="icon">📈</span><span>Analytics</span></a>
+            <a class="nav-item" href="/admin/reports"><span class="icon">📥</span><span>Reports</span></a>
+            <a class="nav-item" href="/admin/audit-logs"><span class="icon">📋</span><span>Audit Logs</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <span style="display:block;margin-bottom:6px;color:#64748b;" id="adminName">Admin</span>
+            <a href="/feed" style="color:#94a3b8;text-decoration:none;font-size:12px;">← Back to App</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-title">Advanced Analytics</div>
+            <div class="topbar-user">
+                <div class="topbar-avatar" id="topbarAvatar">A</div>
+                <span id="topbarName">Admin</span>
+            </div>
+        </div>
+        <div class="content">
+            <div class="stats-grid" id="kpiCards"></div>
+
+            <div class="panel">
+                <div class="panel-header"><h3>Revenue by Month</h3></div>
+                <div class="chart-bars" id="revenueByMonthChart"></div>
+            </div>
+
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><h3>Top Booked Artists</h3></div>
+                    <div class="panel-body" style="overflow-x:auto;">
+                        <table class="tbl">
+                            <thead><tr><th>Artist</th><th>Category</th><th>Bookings</th><th>Revenue</th><th>Rating</th></tr></thead>
+                            <tbody id="topArtistsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h3>Most Active Organizers</h3></div>
+                    <div class="panel-body" style="overflow-x:auto;">
+                        <table class="tbl">
+                            <thead><tr><th>Organizer</th><th>Email</th><th>Bookings</th><th>Total Spend</th></tr></thead>
+                            <tbody id="topOrganizersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><h3>Revenue by Region</h3></div>
+                <div class="panel-body" style="padding:20px;">
+                    <div class="h-bar-list" id="revenueByRegionChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if(!isAuthenticated()){window.location.href='/login';return;}
+            var u=getCurrentUser();
+            if(!u||u.role!=='admin'){window.location.href='/dashboard';return;}
+            document.getElementById('adminName').textContent=u.email||'Admin';
+            document.getElementById('topbarName').textContent=u.email||'Admin';
+            document.getElementById('topbarAvatar').textContent=(u.email||'A').charAt(0).toUpperCase();
+            loadAnalytics();
+        });
+
+        function fmt(n){return (n||0).toLocaleString('en-IN');}
+        function esc(t){if(!t)return '';var d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+
+        async function loadAnalytics(){
+            try{
+                var d=await apiRequest('/admin/analytics');
+                renderAll(d);
+            }catch(e){
+                console.error(e);
+                document.getElementById('kpiCards').innerHTML='<div class="stat-card" style="grid-column:1/-1;"><div class="label">Error</div><div class="value">Failed to load analytics.</div></div>';
+            }
+        }
+
+        function renderAll(d){
+            d=d||{};
+
+            /* KPI cards */
+            var kpi='';
+            kpi+='<div class="stat-card"><div class="label">Total Bookings</div><div class="value">'+fmt(d.total_bookings)+'</div></div>';
+            kpi+='<div class="stat-card"><div class="label">Conversion Rate</div><div class="value green">'+(d.conversion_rate!=null?fmt(d.conversion_rate):'-')+'%</div></div>';
+            kpi+='<div class="stat-card"><div class="label">Avg Booking Value</div><div class="value blue">₹'+fmt(d.average_booking_value)+'</div></div>';
+            kpi+='<div class="stat-card"><div class="label">Add-on Attachment Rate</div><div class="value purple">'+(d.addon_attachment_rate!=null?fmt(d.addon_attachment_rate):'-')+'%</div></div>';
+            document.getElementById('kpiCards').innerHTML=kpi;
+
+            /* Revenue by Month (vertical bars, 12 from revenue_by_month, label first 3 chars) */
+            renderBars('revenueByMonthChart',d.revenue_by_month||[],'revenue','₹');
+
+            /* Top Artists table */
+            var artists=d.top_artists||[];
+            document.getElementById('topArtistsBody').innerHTML=artists.length
+                ? artists.map(function(a){
+                    return '<tr><td>'+esc(a.name)+'</td><td>'+esc(a.category||'-')+'</td><td>'+fmt(a.bookings)+'</td><td class="money">₹'+fmt(a.revenue)+'</td><td>'+(a.rating!=null?a.rating.toFixed(1):'-')+'</td></tr>';
+                }).join('')
+                : '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">No data</td></tr>';
+
+            /* Top Organizers table */
+            var orgs=d.top_organizers||[];
+            document.getElementById('topOrganizersBody').innerHTML=orgs.length
+                ? orgs.map(function(o){
+                    return '<tr><td>'+esc(o.name)+'</td><td class="mono">'+esc(o.email||'-')+'</td><td>'+fmt(o.bookings)+'</td><td class="money">₹'+fmt(o.total_spend)+'</td></tr>';
+                }).join('')
+                : '<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;">No data</td></tr>';
+
+            /* Revenue by Region (horizontal bars) */
+            renderHBars('revenueByRegionChart',d.revenue_by_region||[],'region','#3b82f6');
+        }
+
+        function renderBars(containerId,data,field,prefix){
+            var el=document.getElementById(containerId);
+            if(!el)return;
+            if(!data||!data.length){el.innerHTML='<span style="color:#94a3b8;font-size:12px;">No data</span>';return;}
+            var max=Math.max.apply(null,data.map(function(d){return d[field]||0;}))||1;
+            el.innerHTML=data.map(function(d){
+                var val=d[field]||0;
+                var h=Math.max((val/max)*100,4);
+                var lbl=(d.label||'').substring(0,3);
+                return '<div class="chart-bar" style="height:'+h+'%;background:#3b82f6;"><span class="chart-bar-val">'+(prefix||'')+fmt(val)+'</span><span class="chart-bar-label">'+esc(lbl)+'</span></div>';
+            }).join('');
+        }
+
+        function renderHBars(containerId,data,labelKey,color){
+            var el=document.getElementById(containerId);
+            if(!el)return;
+            if(!data||!data.length){el.innerHTML='<div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px;">No data</div>';return;}
+            var max=Math.max.apply(null,data.map(function(d){return d.revenue||0;}))||1;
+            var html='';
+            data.forEach(function(d){
+                var rev=d.revenue||0;
+                var pct=Math.max((rev/max)*100,2);
+                var label=esc(d[labelKey]||'Unknown');
+                html+='<div class="h-bar-row">'+
+                    '<div class="h-bar-label" title="'+label+'">'+label+'</div>'+
+                    '<div class="h-bar-track"><div class="h-bar-fill" style="width:'+pct+'%;background:'+color+';"><span class="h-bar-value">'+(pct>15?'₹'+fmt(rev):'')+'</span></div></div>'+
+                    '<div class="h-bar-amount">₹'+fmt(rev)+'</div>'+
+                    '</div>';
+            });
+            el.innerHTML=html;
+        }
+    })();
+    </script>
+</body>
+</html>

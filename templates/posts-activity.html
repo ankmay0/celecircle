@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts & Activity - CeleLink</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+    <style>
+        .pa-tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 1.25rem;
+        }
+        .pa-tab {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .pa-tab.active {
+            color: #0a66c2;
+            border-bottom-color: #0a66c2;
+        }
+        .pa-tab:hover:not(.active) {
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .post-card-item {
+            padding: 1rem;
+            border: 1px solid #e8e8e8;
+            border-radius: 10px;
+            background: #fff;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.15s;
+        }
+        .post-card-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        .post-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+        }
+        .post-time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .media-badge {
+            font-size: 0.75rem;
+            color: #0a66c2;
+            background: #e8f0fe;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        .post-text {
+            margin-bottom: 0.75rem;
+            line-height: 1.55;
+            color: #333;
+        }
+        .post-media-img {
+            width: 100%;
+            max-height: 350px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .post-media-vid {
+            width: 100%;
+            max-height: 350px;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .post-stats-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 0;
+        }
+        .activity-item:not(:last-child) {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .activity-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #e8f0fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+        .activity-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .activity-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #333;
+        }
+        .activity-detail {
+            font-size: 0.82rem;
+            color: #666;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .activity-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 4px;
+            font-size: 0.78rem;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary, #666);
+        }
+        .empty-state-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .empty-state p {
+            margin: 0;
+        }
+
+        .create-post-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <div class="create-post-row">
+            <h1 style="margin: 0;">Posts & Activity</h1>
+            <button class="btn btn-primary" onclick="openCreatePostModal()">
+                <span style="margin-right: 0.4rem;">➕</span> Create Post
+            </button>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <div class="pa-tabs" style="padding: 0 1rem;">
+                <button class="pa-tab active" data-tab="posts" onclick="switchTab('posts')">Posts</button>
+                <button class="pa-tab" data-tab="activity" onclick="switchTab('activity')">Activity</button>
+            </div>
+            <div style="padding: 1rem;">
+                <div id="postsTab">
+                    <div class="loading">Loading posts...</div>
+                </div>
+                <div id="activityTab" style="display:none;">
+                    <div class="loading">Loading activity...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Post Modal -->
+    <div id="createPostModal" class="modal" style="display: none;">
+        <div class="modal-content create-post-modal">
+            <div class="modal-header">
+                <h2>Create a post</h2>
+                <button class="close-modal" onclick="closeCreatePostModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="create-post-user">
+                    <div class="user-avatar-small" id="modalUserAvatar">U</div>
+                    <div>
+                        <div class="modal-user-name" id="modalUserName">Your Name</div>
+                        <select class="audience-select">
+                            <option>Anyone</option>
+                            <option>Connections only</option>
+                        </select>
+                    </div>
+                </div>
+                <textarea id="postContentInput" class="post-content-textarea" placeholder="What do you want to talk about?"></textarea>
+                <input type="hidden" id="postMediaType" value="text">
+                <div class="post-media-preview" id="postMediaPreview"></div>
+                <div class="post-actions-modal">
+                    <label for="postImageInput" class="action-icon-btn">
+                        <span>📷</span>
+                        <input type="file" id="postImageInput" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+                    </label>
+                    <label for="postVideoInput" class="action-icon-btn">
+                        <span>🎥</span>
+                        <input type="file" id="postVideoInput" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
+                    </label>
+                    <label class="action-icon-btn">
+                        <span>📝</span> Article
+                    </label>
+                    <button class="btn btn-primary" onclick="submitPost()">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+            loadPosts();
+        });
+
+        /* ── Tab switching ── */
+        function switchTab(tab) {
+            document.querySelectorAll('.pa-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+            });
+            document.getElementById('postsTab').style.display = tab === 'posts' ? 'block' : 'none';
+            document.getElementById('activityTab').style.display = tab === 'activity' ? 'block' : 'none';
+
+            if (tab === 'activity') loadActivity();
+        }
+
+        /* ── Load posts ── */
+        async function loadPosts() {
+            const container = document.getElementById('postsTab');
+            container.innerHTML = '<div class="loading">Loading posts...</div>';
+
+            try {
+                const user = getCurrentUser();
+                if (!user || !user.id) {
+                    container.innerHTML = '<div class="empty-state"><p>Please log in to see your posts.</p></div>';
+                    return;
+                }
+
+                const posts = await apiRequest(`/posts?user_id=${user.id}&limit=30`);
+
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <h3>No posts yet</h3>
+                            <p>Create your first post to see it here!</p>
+                        </div>`;
+                    return;
+                }
+
+                let html = '';
+                posts.forEach(post => {
+                    const mediaUrls = post.media_urls ? JSON.parse(post.media_urls) : [];
+                    const timeAgo = getTimeAgo(post.created_at);
+                    const mediaLabel = post.media_type === 'image' ? '📷 Photo'
+                                     : post.media_type === 'video' ? '🎥 Video'
+                                     : '📝 Text';
+
+                    let mediaHTML = '';
+                    mediaUrls.forEach(url => {
+                        if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                            mediaHTML += `<img src="${url}" alt="Post" class="post-media-img">`;
+                        } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                            mediaHTML += `<video src="${url}" class="post-media-vid" controls></video>`;
+                        }
+                    });
+
+                    html += `
+                        <div class="post-card-item">
+                            <div class="post-card-header">
+                                <span class="post-time">${timeAgo}</span>
+                                <span class="media-badge">${mediaLabel}</span>
+                            </div>
+                            ${post.content ? `<p class="post-text">${escapeHtml(post.content)}</p>` : ''}
+                            ${mediaHTML}
+                            <div class="post-stats-row">
+                                <span>👍 ${post.likes_count || 0} Like${(post.likes_count||0) !== 1 ? 's' : ''}</span>
+                                <span>💬 ${post.comments_count || 0} Comment${(post.comments_count||0) !== 1 ? 's' : ''}</span>
+                            </div>
+                        </div>`;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Error loading posts:', err);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading posts.</p>
+                        <button class="btn btn-secondary" style="margin-top:.5rem" onclick="loadPosts()">Retry</button>
+                    </div>`;
+            }
+        }
+
+        /* ── Load activity ── */
+        async function loadActivity() {
+            const container = document.getElementById('activityTab');
+            container.innerHTML = '<div class="loading">Loading activity...</div>';
+
+            try {
+                const user = getCurrentUser();
+                if (!user || !user.id) {
+                    container.innerHTML = '<div class="empty-state"><p>Please log in to see your activity.</p></div>';
+                    return;
+                }
+
+                const posts = await apiRequest(`/posts?user_id=${user.id}&limit=50`);
+                let activities = [];
+
+                posts.forEach(post => {
+                    const label = post.media_type === 'image' ? 'a photo'
+                                : post.media_type === 'video' ? 'a video'
+                                : 'an article';
+                    const icon = post.media_type === 'image' ? '📷'
+                               : post.media_type === 'video' ? '🎥'
+                               : '📝';
+                    activities.push({
+                        icon,
+                        text: `You posted ${label}`,
+                        detail: post.content ? (post.content.length > 100 ? post.content.substring(0, 100) + '...' : post.content) : '',
+                        time: post.created_at,
+                        stats: `👍 ${post.likes_count || 0}  ·  💬 ${post.comments_count || 0}`
+                    });
+                });
+
+                activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+                if (activities.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <h3>No activity yet</h3>
+                            <p>Start by creating a post!</p>
+                        </div>`;
+                    return;
+                }
+
+                let html = '';
+                activities.forEach(a => {
+                    html += `
+                        <div class="activity-item">
+                            <div class="activity-icon">${a.icon}</div>
+                            <div class="activity-body">
+                                <div class="activity-text">${a.text}</div>
+                                ${a.detail ? `<div class="activity-detail">${escapeHtml(a.detail)}</div>` : ''}
+                                <div class="activity-meta">
+                                    <span>${getTimeAgo(a.time)}</span>
+                                    <span>${a.stats}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Error loading activity:', err);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading activity.</p>
+                        <button class="btn btn-secondary" style="margin-top:.5rem" onclick="loadActivity()">Retry</button>
+                    </div>`;
+            }
+        }
+
+        /* ── Create-post modal helpers ── */
+        function openCreatePostModal() {
+            const modal = document.getElementById('createPostModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const ta = document.getElementById('postContentInput');
+                if (ta) ta.focus();
+                const user = getCurrentUser();
+                if (user) {
+                    const av = document.getElementById('modalUserAvatar');
+                    const nm = document.getElementById('modalUserName');
+                    if (av) av.textContent = (user.email || 'U').charAt(0).toUpperCase();
+                    if (nm) nm.textContent = user.email ? user.email.split('@')[0] : 'You';
+                }
+            }
+        }
+
+        function closeCreatePostModal() {
+            const modal = document.getElementById('createPostModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.getElementById('postContentInput').value = '';
+                document.getElementById('postImageInput').value = '';
+                document.getElementById('postVideoInput').value = '';
+                document.getElementById('postMediaPreview').innerHTML = '';
+                document.getElementById('postMediaType').value = 'text';
+            }
+        }
+
+        function handleImageUpload(event) {
+            const files = Array.from(event.target.files);
+            const preview = document.getElementById('postMediaPreview');
+            preview.innerHTML = '';
+            document.getElementById('postMediaType').value = 'image';
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'max-height:120px;border-radius:6px;margin-right:8px;';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('postMediaPreview');
+            preview.innerHTML = '';
+            document.getElementById('postMediaType').value = 'video';
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const vid = document.createElement('video');
+                    vid.src = e.target.result;
+                    vid.controls = true;
+                    vid.style.cssText = 'max-height:150px;border-radius:6px;';
+                    preview.appendChild(vid);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function submitPost() {
+            const content = document.getElementById('postContentInput').value.trim();
+            const imageInput = document.getElementById('postImageInput');
+            const videoInput = document.getElementById('postVideoInput');
+            const mediaType = document.getElementById('postMediaType').value || 'text';
+
+            if (!content && !imageInput.files.length && !videoInput.files.length) {
+                showNotification('Please add some content to your post', 'error');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('content', content);
+
+                let finalType = mediaType;
+                if (imageInput.files.length) {
+                    finalType = 'image';
+                    Array.from(imageInput.files).forEach(f => formData.append('files', f));
+                } else if (videoInput.files.length) {
+                    finalType = 'video';
+                    formData.append('files', videoInput.files[0]);
+                }
+                formData.append('media_type', finalType);
+
+                const res = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                    body: formData
+                });
+                if (!res.ok) throw new Error('Failed to create post');
+
+                showNotification('Post created successfully!', 'success');
+                closeCreatePostModal();
+                loadPosts();                // refresh posts list
+                switchTab('posts');          // switch to posts tab
+            } catch (err) {
+                showNotification('Error creating post: ' + err.message, 'error');
+            }
+        }
+
+        /* ── Utilities ── */
+        function getTimeAgo(dateString) {
+            const diff = Date.now() - new Date(dateString).getTime();
+            const mins = Math.floor(diff / 60000);
+            const hrs  = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            if (mins < 1)  return 'Just now';
+            if (mins < 60) return `${mins}m ago`;
+            if (hrs  < 24) return `${hrs}h ago`;
+            if (days < 7)  return `${days}d ago`;
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

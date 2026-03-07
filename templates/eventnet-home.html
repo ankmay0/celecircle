@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventNet - Home Feed</title>
+  <script>
+    window.tailwind = window.tailwind || {};
+    window.tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primaryBlue: "#0A66C2",
+            accentOrange: "#FF4500",
+            textPrimary: "#191919",
+            textSecondary: "#666666",
+            surfaceGray: "#F3F2EF"
+          },
+          boxShadow: {
+            diffuse: "0px 4px 12px rgba(0, 0, 0, 0.05)"
+          },
+          borderRadius: {
+            card: "12px"
+          },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui"]
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/eventnet.css" />
+</head>
+<body class="bg-[#f7f8fa] pb-20 lg:pb-8">
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
+    <div class="eventnet-shell px-4 py-3 flex items-center gap-3">
+      <button id="enOpenLeft" class="lg:hidden en-btn-icon" aria-label="Open navigation">☰</button>
+      <a href="/eventnet" class="font-extrabold text-xl tracking-tight text-primaryBlue">CeleBook</a>
+      <div class="flex-1 max-w-2xl">
+        <div class="en-pill-input flex items-center px-4 py-2 gap-2">
+          <span class="text-gray-500">🔍</span>
+          <input class="w-full bg-transparent outline-none text-sm" placeholder="Search events, venues, planners..." />
+        </div>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <button class="en-btn-icon relative" aria-label="Notifications">
+          🔔
+          <span class="en-notify-badge absolute -top-1 -right-1">3</span>
+        </button>
+        <button class="en-btn-icon" aria-label="Messages">✉️</button>
+        <button id="enOpenRight" class="en-btn-icon lg:hidden" aria-label="Open widgets">⋯</button>
+        <button class="hidden lg:flex items-center gap-2 rounded-full border border-gray-200 px-2 py-1.5">
+          <img src="https://i.pravatar.cc/60?img=15" class="h-7 w-7 rounded-full" alt="profile" />
+          <span class="text-sm font-medium">Alex</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="eventnet-shell px-4 pt-5 grid grid-cols-1 lg:grid-cols-[20%_60%_20%] gap-5">
+    <aside class="en-desktop-col">
+      <div class="en-sticky-top space-y-4">
+        <div class="en-card p-4">
+          <div class="flex items-start gap-3">
+            <img src="https://i.pravatar.cc/100?img=15" class="h-14 w-14 rounded-full" alt="Alex Chen" />
+            <div>
+              <h3 class="font-bold text-[15px]">Alex Chen</h3>
+              <p class="text-sm text-textSecondary">Senior Event Planner</p>
+              <p class="text-xs text-textSecondary mt-1">San Francisco Bay Area</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t text-xs text-textSecondary space-y-1">
+            <p><strong class="text-textPrimary">1.2k</strong> Connections</p>
+            <p><strong class="text-textPrimary">45</strong> Events Hosted</p>
+          </div>
+        </div>
+
+        <nav class="en-card p-3 space-y-1 text-sm">
+          <a class="en-sidebar-link active flex items-center justify-between px-3 py-2" href="#"><span>🏠 Home Feed</span></a>
+          <a class="en-sidebar-link flex items-center px-3 py-2" href="#"><span>👥 My Network</span></a>
+          <a class="en-sidebar-link flex items-center px-3 py-2" href="#"><span>📅 Events</span></a>
+          <a class="en-sidebar-link flex items-center justify-between px-3 py-2" href="#">
+            <span>🗓️ Bookings</span><span class="text-[11px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-semibold">3 New</span>
+          </a>
+          <a class="en-sidebar-link flex items-center px-3 py-2" href="#"><span>💬 Communities</span></a>
+          <a class="en-sidebar-link flex items-center px-3 py-2" href="#"><span>🔖 Saved Items</span></a>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="space-y-4">
+      <section class="en-card p-4">
+        <div class="flex items-center gap-3">
+          <img src="https://i.pravatar.cc/80?img=15" class="h-10 w-10 rounded-full" alt="Alex Chen" />
+          <input class="flex-1 en-field px-4 py-2.5 text-sm" placeholder="Share an update, event opportunity, or collaboration request..." />
+          <button class="en-btn-primary px-4 py-2 text-sm">Post</button>
+        </div>
+      </section>
+
+      <article class="en-card p-4 space-y-3">
+        <header class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <img src="https://i.pravatar.cc/100?img=33" class="h-11 w-11 rounded-full" alt="Sarah Jenkins" />
+            <div>
+              <p class="font-semibold text-sm">Sarah Jenkins <span class="text-textSecondary font-medium">• 1st</span></p>
+              <p class="text-xs text-textSecondary">Venue Owner at The Historic Foundry • Los Angeles</p>
+              <p class="text-xs text-textSecondary mt-0.5">2h • Public</p>
+            </div>
+          </div>
+          <button class="en-btn-icon">⋯</button>
+        </header>
+
+        <div>
+          <h2 class="font-bold text-[18px] leading-tight">Seeking Recommendations: Reliable Catering Partners for High-Touch Corporate Events</h2>
+          <p class="text-sm text-textSecondary mt-2 leading-relaxed">
+            We are curating preferred vendors for Q2 executive offsites and invite-only summits.
+            Looking for teams with strong dietary flexibility, premium service flow, and proven on-site coordination with AV and venue ops.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <span class="en-tag">📅 Corporate Event</span>
+          <span class="en-tag">🍴 Catering</span>
+          <span class="en-tag">📍 Los Angeles</span>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t pt-3 text-sm">
+          <div data-vote-group class="flex items-center gap-2">
+            <button data-vote="up" class="en-vote-btn">⬆️</button>
+            <span data-vote-count class="font-semibold">342</span>
+            <button data-vote="down" class="en-vote-btn">⬇️</button>
+          </div>
+          <div class="flex items-center gap-4 text-textSecondary">
+            <button class="en-interaction-icon">💬 58 Comments</button>
+            <button class="en-interaction-icon">↗️ Share</button>
+          </div>
+          <button class="en-interaction-icon text-textSecondary">🔖 Save</button>
+        </div>
+
+        <div class="en-card-flat p-3 space-y-3">
+          <div class="flex items-start gap-2">
+            <img src="https://i.pravatar.cc/60?img=12" class="h-8 w-8 rounded-full" alt="David Lee" />
+            <div>
+              <p class="text-sm font-semibold">David Lee <span class="text-xs text-textSecondary font-medium">(Corporate Planner)</span></p>
+              <p class="text-sm text-textSecondary">Try <strong>Velvet Table Co.</strong> - they handled our 900-attendee leadership summit flawlessly.</p>
+            </div>
+          </div>
+          <div class="ml-10 flex items-start gap-2">
+            <img src="https://i.pravatar.cc/60?img=33" class="h-7 w-7 rounded-full" alt="Sarah Jenkins" />
+            <div class="text-sm text-textSecondary">
+              <p class="font-semibold text-textPrimary">Sarah Jenkins <span class="text-xs text-textSecondary font-medium">(OP)</span></p>
+              Great lead, David. Do they support zero-waste plating standards?
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="en-card p-4 space-y-3">
+        <header class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <img src="https://i.pravatar.cc/100?img=52" class="h-11 w-11 rounded-full" alt="Maya Rodriguez" />
+            <div>
+              <p class="font-semibold text-sm">Maya Rodriguez <span class="text-textSecondary font-medium">• 2nd</span></p>
+              <p class="text-xs text-textSecondary">Brand Partnerships Lead • EventNet Verified</p>
+              <p class="text-xs text-textSecondary mt-0.5">5h • Public</p>
+            </div>
+          </div>
+          <button class="en-btn-icon">⋯</button>
+        </header>
+        <h2 class="font-bold text-[18px] leading-tight">Open Call: Beauty & Lifestyle Brands for Spring Influencer Showcase</h2>
+        <p class="text-sm text-textSecondary">
+          Looking for brands to activate immersive booths, sampling bars, and creator filming corners. Priority to sustainable packaging and Gen-Z focused launches.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <span class="en-tag">✨ Brand Activation</span>
+          <span class="en-tag">🎤 Influencer Event</span>
+          <span class="en-tag">🌿 Sustainability</span>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t pt-3 text-sm">
+          <div data-vote-group class="flex items-center gap-2">
+            <button data-vote="up" class="en-vote-btn">⬆️</button>
+            <span data-vote-count class="font-semibold">187</span>
+            <button data-vote="down" class="en-vote-btn">⬇️</button>
+          </div>
+          <div class="flex items-center gap-4 text-textSecondary">
+            <button class="en-interaction-icon">💬 26 Comments</button>
+            <button class="en-interaction-icon">↗️ Share</button>
+          </div>
+          <button class="en-interaction-icon text-textSecondary">🔖 Save</button>
+        </div>
+      </article>
+    </main>
+
+    <aside class="en-desktop-col">
+      <div class="en-sticky-top space-y-4">
+        <section class="en-card p-4">
+          <h3 class="font-bold text-sm mb-3">Trending Categories</h3>
+          <ul class="space-y-2 text-sm text-textSecondary">
+            <li>#LuxuryWeddings</li>
+            <li>#CorporateRetreats</li>
+            <li>#BrandLaunches</li>
+            <li>#LiveEntertainment</li>
+          </ul>
+        </section>
+        <section class="en-card p-4">
+          <h3 class="font-bold text-sm mb-3">Suggested Connections</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <img src="https://i.pravatar.cc/50?img=11" class="h-8 w-8 rounded-full" alt="Ariana Kline" />
+                <span class="text-sm">Ariana Kline</span>
+              </div>
+              <button class="en-btn-secondary px-3 py-1 text-xs">Connect</button>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <img src="https://i.pravatar.cc/50?img=23" class="h-8 w-8 rounded-full" alt="Noah Patel" />
+                <span class="text-sm">Noah Patel</span>
+              </div>
+              <button class="en-btn-secondary px-3 py-1 text-xs">Connect</button>
+            </div>
+          </div>
+        </section>
+        <section class="en-card p-4">
+          <h3 class="font-bold text-sm mb-3">Upcoming Events Near You</h3>
+          <p class="text-sm text-textSecondary">Bay Area Venue Expo • Mar 18</p>
+          <p class="text-sm text-textSecondary mt-2">Experiential Summit • Apr 06</p>
+        </section>
+        <section class="en-card p-0 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1519167758481-83f29c7883e5?q=80&w=1200&auto=format&fit=crop" alt="Featured venue" class="h-28 w-full object-cover" />
+          <div class="p-4">
+            <h3 class="font-bold text-sm">Featured Venue: Skyline Terrace</h3>
+            <p class="text-xs text-textSecondary mt-1">Save 20% on weekday bookings this month.</p>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <aside id="enLeftDrawer" class="en-mobile-drawer left lg:hidden p-4">
+    <div class="space-y-4">
+      <div class="en-card p-4">
+        <h3 class="font-bold">Alex Chen</h3>
+        <p class="text-sm text-textSecondary">Senior Event Planner</p>
+      </div>
+      <nav class="en-card p-3 space-y-1 text-sm">
+        <a class="en-sidebar-link active block px-3 py-2" href="#">🏠 Home Feed</a>
+        <a class="en-sidebar-link block px-3 py-2" href="#">👥 My Network</a>
+        <a class="en-sidebar-link block px-3 py-2" href="#">📅 Events</a>
+        <a class="en-sidebar-link block px-3 py-2" href="#">🗓️ Bookings</a>
+      </nav>
+    </div>
+  </aside>
+
+  <aside id="enRightDrawer" class="en-mobile-drawer right lg:hidden p-4">
+    <div class="space-y-4">
+      <section class="en-card p-4">
+        <h3 class="font-bold text-sm mb-2">Trending</h3>
+        <p class="text-sm text-textSecondary">#CorporateRetreats</p>
+        <p class="text-sm text-textSecondary">#LiveEntertainment</p>
+      </section>
+      <section class="en-card p-4">
+        <h3 class="font-bold text-sm mb-2">Upcoming Events</h3>
+        <p class="text-sm text-textSecondary">Bay Area Venue Expo • Mar 18</p>
+      </section>
+    </div>
+  </aside>
+
+  <nav class="en-mobile-bottom fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden justify-around py-2 text-xs">
+    <a href="/eventnet" class="flex flex-col items-center text-primaryBlue">🏠<span>Home</span></a>
+    <a href="#" class="flex flex-col items-center text-textSecondary">👥<span>Network</span></a>
+    <a href="#" class="flex flex-col items-center text-primaryBlue font-bold">➕<span>Post</span></a>
+    <a href="#" class="flex flex-col items-center text-textSecondary">📅<span>Events</span></a>
+    <a href="/eventnet/profile" class="flex flex-col items-center text-textSecondary">👤<span>Profile</span></a>
+  </nav>
+
+  <script src="/static/eventnet.js"></script>
+</body>
+</html>

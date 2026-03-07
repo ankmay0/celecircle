@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language - CeleLink</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <h1>Language Settings</h1>
+        <div class="card">
+            <div class="form-group">
+                <label class="form-label">Select Language</label>
+                <select class="form-select">
+                    <option>English</option>
+                    <option>Hindi</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                </select>
+            </div>
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CeleLink - Entertainment Industry Marketplace</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .landing-shell {
+            background: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15), #ffffff 45%, #ffffff 100%);
+            padding: 4.5rem 2rem 4rem;
+        }
+
+        .landing-title {
+            font-size: clamp(2.35rem, 5.4vw, 3.3rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.08;
+            margin-bottom: 1rem;
+        }
+
+        .landing-subtitle {
+            font-size: 1.1rem;
+            color: #6b7280;
+            max-width: 44rem;
+            margin: 0.9rem auto 0;
+            line-height: 1.7;
+        }
+
+        .landing-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .landing-btn-primary {
+            background: #2563eb;
+            border: 1px solid #2563eb;
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.8rem 1.45rem;
+            font-size: 0.96rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .landing-btn-outline {
+            background: #fff;
+            border: 1px solid #2563eb;
+            color: #2563eb;
+            border-radius: 999px;
+            padding: 0.8rem 1.45rem;
+            font-size: 0.96rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .landing-btn-outline:hover {
+            background: #eff6ff;
+        }
+
+        .landing-feed-link {
+            margin-top: 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .landing-feed-link:hover {
+            color: #2563eb;
+        }
+
+        .landing-feature-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #f3f4f6;
+            padding: 2rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .landing-feature-card:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        .landing-feature-title {
+            color: #111827;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="header-left">
+                <a href="/" class="logo-header">
+                    <span class="logo-icon">CB</span>
+                    <span class="logo-text" style="font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; color: #111827;">CeleBook</span>
+                </a>
+            </div>
+            <nav class="header-nav">
+                <a href="/login" class="nav-item-header">
+                    <span class="nav-label">Sign In</span>
+                </a>
+                <a href="/register" class="nav-item-header" style="background: var(--primary-color); color: white; border-radius: 8px; padding: 0.5rem 1rem;">
+                    <span class="nav-label">Join Now</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-container landing-shell">
+        <div class="text-center" style="max-width: 800px; margin: 0 auto;">
+                <h1 class="landing-title">
+                <span style="color: #111827;">Connect. Create.</span>
+                <span style="color: #2563eb;">Celebrate.</span>
+            </h1>
+            <p class="landing-subtitle">
+                The premier marketplace connecting artists, celebrities, and entertainment professionals with event organizers, producers, and brands.
+            </p>
+            
+            <div class="landing-actions">
+                <a href="/register?role=artist" class="landing-btn-primary">
+                    Join as Artist
+                </a>
+                <a href="/register?role=organizer" class="landing-btn-outline">
+                    Join as Organizer
+                </a>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="/login?redirect=/feed" class="landing-feed-link">
+                    Explore Feed <span aria-hidden="true">→</span>
+                </a>
+            </div>
+
+            <div class="grid grid-3" style="margin-top: 4rem;">
+                <a href="#" class="group block bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="8" r="3"></circle>
+                            <path d="M5 20a7 7 0 0 1 14 0"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">For Artists</h3>
+                    <p class="text-gray-500 leading-relaxed">
+                        Showcase your talent, connect with opportunities, and get paid securely. Build your portfolio.
+                    </p>
+                    <div class="mt-4 text-sm font-semibold text-blue-600 group-hover:underline flex items-center gap-1">
+                        Learn more <span aria-hidden="true">&rarr;</span>
+                    </div>
+                </a>
+                <a href="#" class="group block bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+                            <path d="M8 7h8"></path>
+                            <path d="M8 11h8"></path>
+                            <path d="M8 15h5"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">For Organizers</h3>
+                    <p class="text-gray-500 leading-relaxed">
+                        Find the perfect talent for your events. Browse verified profiles, post gigs, and manage bookings.
+                    </p>
+                    <div class="mt-4 text-sm font-semibold text-blue-600 group-hover:underline flex items-center gap-1">
+                        Learn more <span aria-hidden="true">&rarr;</span>
+                    </div>
+                </a>
+                <a href="/secure-payments" class="group block bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3l7 4v5c0 5-3.5 8.7-7 9-3.5-.3-7-4-7-9V7l7-4z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Secure &amp; Trusted</h3>
+                    <p class="text-gray-500 leading-relaxed">
+                        Escrow payment system ensures artists get paid and organizers are protected. AI-driven contract management.
+                    </p>
+                    <div class="mt-4 text-sm font-semibold text-blue-600 group-hover:underline flex items-center gap-1">
+                        Learn more <span aria-hidden="true">&rarr;</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <section class="bg-gray-50 py-12">
+        <div class="max-w-7xl mx-auto px-4 md:px-8">
+            <p class="text-center text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
+                Trusted by top event organizers & brands
+            </p>
+            <div class="flex justify-center gap-8 md:gap-16 items-center flex-wrap text-gray-400">
+                <span class="opacity-60 hover:opacity-100 transition-opacity grayscale font-semibold">Acme Corp</span>
+                <span class="opacity-60 hover:opacity-100 transition-opacity grayscale font-semibold">Global Events</span>
+                <span class="opacity-60 hover:opacity-100 transition-opacity grayscale font-semibold">Studio 54</span>
+                <span class="opacity-60 hover:opacity-100 transition-opacity grayscale font-semibold">Starline</span>
+                <span class="opacity-60 hover:opacity-100 transition-opacity grayscale font-semibold">Aura Group</span>
+                <span class="opacity-60 hover:opacity-100 transition-opacity grayscale font-semibold">NextStage</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 md:px-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 text-center mb-16">
+                How CeleBook Works
+            </h2>
+            <div class="grid md:grid-cols-3 gap-12 relative">
+                <a href="/register" class="group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-transparent hover:border-gray-100">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 text-2xl transition-transform duration-300 group-hover:scale-110 group-hover:bg-blue-100">👤</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Create Your Profile</h3>
+                    <p class="text-gray-500 leading-relaxed">Set up your portfolio, set your rates, and showcase your best work.</p>
+                    <div class="mt-4 flex items-center gap-1 text-sm font-semibold text-blue-600 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                        Learn more <span aria-hidden="true">→</span>
+                    </div>
+                </a>
+                <a href="/login" class="group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-transparent hover:border-gray-100">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 text-2xl transition-transform duration-300 group-hover:scale-110 group-hover:bg-blue-100">🔎</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Discover &amp; Connect</h3>
+                    <p class="text-gray-500 leading-relaxed">Organizers find you, or you apply directly to top local gigs.</p>
+                    <div class="mt-4 flex items-center gap-1 text-sm font-semibold text-blue-600 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                        Learn more <span aria-hidden="true">→</span>
+                    </div>
+                </a>
+                <a href="/secure-payments" class="group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-transparent hover:border-gray-100">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 text-2xl transition-transform duration-300 group-hover:scale-110 group-hover:bg-blue-100">🛡️</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Get Booked &amp; Paid</h3>
+                    <p class="text-gray-500 leading-relaxed">Secure escrow payments ensure you get paid on time, every time.</p>
+                    <div class="mt-4 flex items-center gap-1 text-sm font-semibold text-blue-600 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                        Learn more <span aria-hidden="true">→</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 md:px-8">
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-2xl font-bold text-gray-900">Explore Top Categories</h2>
+                <a href="/browse-gigs" class="text-blue-600 font-medium hover:underline">View All</a>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+                <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all duration-300">
+                    <img src="https://images.unsplash.com/photo-1547153760-18fc86324498?q=80&w=800&auto=format&fit=crop" alt="Dancers" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 text-white font-bold text-xl tracking-wide">Dancers</div>
+                </div>
+                <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all duration-300">
+                    <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=800&auto=format&fit=crop" alt="Live Bands" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 text-white font-bold text-xl tracking-wide">Live Bands</div>
+                </div>
+                <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all duration-300">
+                    <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop" alt="Anchors / Hosts" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 text-white font-bold text-xl tracking-wide">Anchors / Hosts</div>
+                </div>
+                <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all duration-300">
+                    <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=800&auto=format&fit=crop" alt="Premium Venues" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 text-white font-bold text-xl tracking-wide">Premium Venues</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 mb-12">
+        <div class="max-w-7xl mx-auto px-4 md:px-8">
+            <div class="bg-blue-600 rounded-3xl p-10 md:p-16 text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-16 -left-12 w-72 h-72 rounded-full bg-blue-400/30 blur-3xl"></div>
+                <div class="absolute -bottom-16 -right-12 w-72 h-72 rounded-full bg-blue-800/30 blur-3xl"></div>
+                <div class="relative z-10">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to elevate your next event?</h2>
+                    <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+                        Join thousands of professionals already using CeleBook to connect, create, and celebrate.
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-4">
+                        <a href="/register" class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:bg-blue-50">
+                            Get Started for Free
+                        </a>
+                        <a href="/contact-sales" class="border border-blue-400 text-white px-8 py-3 rounded-full font-bold transition-all duration-300 hover:-translate-y-1 hover:bg-white/10">
+                            Contact Sales
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-10">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div>
+                    <a href="/" class="inline-flex items-center gap-2.5 text-gray-900 no-underline">
+                        <span class="w-8 h-8 rounded-lg bg-blue-600 text-white inline-flex items-center justify-center text-xs font-bold">CB</span>
+                        <span class="font-bold text-lg tracking-tight">CeleBook</span>
+                    </a>
+                    <p class="text-sm text-gray-500 mt-3">Connecting artists and organizers with trusted, secure bookings.</p>
+                </div>
+                <nav class="flex flex-wrap items-center gap-5 text-sm font-medium text-gray-600">
+                    <a href="/login" class="hover:text-blue-600 transition-colors">Sign In</a>
+                    <a href="/register" class="hover:text-blue-600 transition-colors">Join Now</a>
+                    <a href="/secure-payments" class="hover:text-blue-600 transition-colors">Secure Payments</a>
+                    <a href="/contact-sales" class="hover:text-blue-600 transition-colors">Contact Sales</a>
+                </nav>
+            </div>
+            <div class="mt-8 pt-5 border-t border-gray-100 text-xs text-gray-500">
+                © 2026 CeleBook. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
+

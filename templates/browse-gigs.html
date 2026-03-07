@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Gigs - CeleLink</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+    <style>
+        .people-section { margin-bottom: 1.5rem; }
+        .people-section h2 { margin-bottom: 1rem; font-size: 1.2rem; color: #333; }
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .person-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1.2rem;
+            transition: box-shadow 0.2s, transform 0.15s;
+            cursor: pointer;
+        }
+        .person-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+            transform: translateY(-2px);
+        }
+        .person-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        .person-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a66c2, #00a0dc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .person-info h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #111;
+        }
+        .person-info .person-category {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 2px;
+        }
+        .person-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            font-size: 0.82rem;
+            color: #555;
+            margin-bottom: 0.8rem;
+        }
+        .person-meta span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .person-card .btn-sm {
+            padding: 6px 16px;
+            font-size: 0.82rem;
+        }
+        .section-divider {
+            border: none;
+            border-top: 1px solid #e8e8e8;
+            margin: 1.5rem 0;
+        }
+        .gigs-section h2 { margin-bottom: 1rem; font-size: 1.2rem; color: #333; }
+    </style>
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <h1 style="margin-bottom: 2rem;">Browse Gigs</h1>
+        
+        <div class="card mb-3">
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" class="form-input" id="filterCategory" placeholder="Singer, Dancer, etc.">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-input" id="filterLocation" placeholder="City, State">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="performSearch()">Search</button>
+        </div>
+        
+        <!-- People matching the search -->
+        <div id="peopleSection" class="people-section" style="display: none;">
+            <h2 id="peopleSectionTitle">People</h2>
+            <div id="peopleGrid" class="people-grid"></div>
+        </div>
+
+        <hr id="sectionDivider" class="section-divider" style="display: none;">
+
+        <!-- Gigs matching the search -->
+        <div class="gigs-section">
+            <h2 id="gigsSectionTitle" style="display: none;">Gigs</h2>
+            <div id="gigsList">
+                <div class="loading"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('gigs');
+        });
+        
+        if (!isAuthenticated()) {
+            window.location.href = '/login';
+        }
+
+        // Allow pressing Enter in inputs to trigger search
+        document.getElementById('filterCategory').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') performSearch();
+        });
+        document.getElementById('filterLocation').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        async function performSearch() {
+            const category = document.getElementById('filterCategory').value.trim();
+            const location = document.getElementById('filterLocation').value.trim();
+
+            // Run both API calls in parallel
+            const gigsPromise = loadGigs(category, location);
+            const peoplePromise = loadPeople(category, location);
+
+            await Promise.all([gigsPromise, peoplePromise]);
+        }
+
+        async function loadPeople(category, location) {
+            const peopleSection = document.getElementById('peopleSection');
+            const peopleSectionTitle = document.getElementById('peopleSectionTitle');
+            const peopleGrid = document.getElementById('peopleGrid');
+            const divider = document.getElementById('sectionDivider');
+
+            // Only search people if a category or location is provided
+            if (!category && !location) {
+                peopleSection.style.display = 'none';
+                divider.style.display = 'none';
+                return;
+            }
+
+            let url = '/users/profiles?';
+            if (category) url += `category=${encodeURIComponent(category)}&`;
+            if (location) url += `location=${encodeURIComponent(location)}&`;
+            url += 'limit=20';
+
+            try {
+                const profiles = await apiRequest(url);
+
+                if (profiles.length === 0) {
+                    peopleSection.style.display = 'none';
+                    divider.style.display = 'none';
+                    return;
+                }
+
+                const searchLabel = category || location;
+                peopleSectionTitle.textContent = `People matching "${searchLabel}"`;
+                peopleSection.style.display = 'block';
+                divider.style.display = 'block';
+
+                let html = '';
+                profiles.forEach(profile => {
+                    const initials = profile.name
+                        ? profile.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
+                        : '?';
+                    const ratingStars = profile.average_rating > 0
+                        ? `&#9733; ${profile.average_rating.toFixed(1)}`
+                        : '';
+                    const expText = profile.experience_years > 0
+                        ? `${profile.experience_years} yr${profile.experience_years > 1 ? 's' : ''} exp`
+                        : '';
+                    const profileLink = profile.id
+                        ? `/view-profile?profile_id=${profile.id}`
+                        : `/view-profile?user_id=${profile.user_id}`;
+
+                    html += `<div class="person-card" onclick="window.location.href='${profileLink}'">
+                        <div class="person-card-header">
+                            <div class="person-avatar">${initials}</div>
+                            <div class="person-info">
+                                <h3>${escapeHtml(profile.name)}</h3>
+                                <div class="person-category">${escapeHtml(profile.category)}</div>
+                            </div>
+                        </div>
+                        <div class="person-meta">
+                            ${profile.location ? `<span>&#128205; ${escapeHtml(profile.location)}</span>` : ''}
+                            ${ratingStars ? `<span>${ratingStars}</span>` : ''}
+                            ${expText ? `<span>${expText}</span>` : ''}
+                            ${profile.total_hires > 0 ? `<span>${profile.total_hires} hire${profile.total_hires > 1 ? 's' : ''}</span>` : ''}
+                        </div>
+                        <a href="${profileLink}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">View Profile</a>
+                    </div>`;
+                });
+
+                peopleGrid.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading people:', error);
+                peopleSection.style.display = 'none';
+                divider.style.display = 'none';
+            }
+        }
+
+        async function loadGigs(category, location) {
+            // Called from performSearch with explicit params, or on initial load
+            if (category === undefined) category = document.getElementById('filterCategory').value.trim();
+            if (location === undefined) location = document.getElementById('filterLocation').value.trim();
+
+            const gigsSectionTitle = document.getElementById('gigsSectionTitle');
+            const hasSearchTerm = category || location;
+
+            let url = '/gigs?';
+            if (category) url += `category=${encodeURIComponent(category)}&`;
+            if (location) url += `location=${encodeURIComponent(location)}&`;
+            
+            try {
+                const gigs = await apiRequest(url);
+                // Show "Gigs" heading when search is active
+                gigsSectionTitle.style.display = hasSearchTerm ? 'block' : 'none';
+                displayGigs(gigs, hasSearchTerm);
+            } catch (error) {
+                document.getElementById('gigsList').innerHTML = `<div class="card"><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        function displayGigs(gigs, hasSearchTerm) {
+            const container = document.getElementById('gigsList');
+            
+            if (gigs.length === 0) {
+                container.innerHTML = '<div class="card"><p>No gigs found.</p></div>';
+                return;
+            }
+            
+            let html = '';
+            gigs.forEach(gig => {
+                html += `<div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">${gig.title}</h2>
+                        <span class="badge badge-primary">${gig.status}</span>
+                    </div>
+                    <p>${gig.description.substring(0, 200)}${gig.description.length > 200 ? '...' : ''}</p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <span><strong>Category:</strong> ${gig.category}</span>
+                        <span><strong>Location:</strong> ${gig.location}</span>
+                        <span><strong>Date:</strong> ${formatDate(gig.event_date)}</span>
+                        <span><strong>Budget:</strong> ${formatCurrency(gig.budget_min)} - ${formatCurrency(gig.budget_max)}</span>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <a href="/gig-detail?id=${gig.id}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+        
+        // Load gigs on initial page load (no people search until user searches)
+        loadGigs();
+    </script>
+</body>
+</html>
+

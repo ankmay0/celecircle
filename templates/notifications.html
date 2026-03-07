@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - CeleLink</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 style="margin: 0;">Notifications</h1>
+            <button class="btn btn-secondary" onclick="markAllAsRead()" id="markAllBtn" style="display: none;">Mark all as read</button>
+        </div>
+
+        <div class="card mb-3">
+            <div style="display: flex; gap: 1rem; border-bottom: 1px solid #e0e0e0; padding-bottom: 1rem;">
+                <button class="btn btn-primary" onclick="showTab('all')" id="tabAll">All</button>
+                <button class="btn btn-secondary" onclick="showTab('unread')" id="tabUnread">Unread</button>
+            </div>
+        </div>
+
+        <div id="notificationsContent">
+            <div class="loading">Loading notifications...</div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('notifications');
+            loadNotifications();
+        });
+
+        let currentTab = 'all';
+
+        function showTab(tab) {
+            currentTab = tab;
+            
+            // Update button styles
+            document.getElementById('tabAll').className = tab === 'all' ? 'btn btn-primary' : 'btn btn-secondary';
+            document.getElementById('tabUnread').className = tab === 'unread' ? 'btn btn-primary' : 'btn btn-secondary';
+            
+            loadNotifications();
+        }
+
+        async function loadNotifications() {
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const container = document.getElementById('notificationsContent');
+            container.innerHTML = '<div class="loading">Loading notifications...</div>';
+
+            try {
+                const unreadOnly = currentTab === 'unread';
+                const notifications = await apiRequest(`/chat/notifications?unread_only=${unreadOnly}`);
+                
+                if (notifications.length === 0) {
+                    container.innerHTML = `<div class="card"><p>No ${unreadOnly ? 'unread' : ''} notifications.</p></div>`;
+                    document.getElementById('markAllBtn').style.display = 'none';
+                    return;
+                }
+
+                // Show mark all button if there are unread notifications
+                const hasUnread = notifications.some(n => !n.is_read);
+                document.getElementById('markAllBtn').style.display = hasUnread ? 'block' : 'none';
+
+                let html = '';
+                for (const notif of notifications) {
+                    const timeAgo = getTimeAgo(notif.created_at);
+                    const icon = getNotificationIcon(notif.type);
+                    const isUnread = !notif.is_read;
+                    
+                    html += `
+                        <div class="card ${isUnread ? 'notification-unread' : ''}" style="margin-bottom: 1rem; cursor: pointer; ${isUnread ? 'background-color: #e8f4f8;' : ''}" onclick="handleNotificationClick(${notif.id}, '${notif.link || ''}')">
+                            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                <div style="font-size: 2rem; flex-shrink: 0;">${icon}</div>
+                                <div style="flex: 1;">
+                                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">${escapeHtml(notif.title)}</h3>
+                                    <p style="margin: 0 0 0.5rem 0; color: #666;">${escapeHtml(notif.message)}</p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="font-size: 0.85rem; color: #999;">${timeAgo}</span>
+                                        ${isUnread ? '<span class="badge badge-primary" style="font-size: 0.75rem;">New</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                container.innerHTML = `<div class="card"><p>Error: ${error.message}</p></div>`;
+            }
+        }
+
+        function getNotificationIcon(type) {
+            const icons = {
+                'message': '💬',
+                'application': '📝',
+                'payment': '💰',
+                'review': '⭐',
+                'gig': '💼',
+                'connection': '👥',
+                'default': '🔔'
+            };
+            return icons[type] || icons.default;
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function handleNotificationClick(notificationId, link) {
+            try {
+                // Mark as read
+                await apiRequest(`/chat/notifications/${notificationId}/read`, {
+                    method: 'PUT'
+                });
+                
+                // Navigate to link if provided
+                if (link) {
+                    window.location.href = link;
+                } else {
+                    // Reload notifications
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error handling notification:', error);
+                if (link) {
+                    window.location.href = link;
+                }
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                await apiRequest('/chat/notifications/read-all', {
+                    method: 'PUT'
+                });
+                showNotification('All notifications marked as read', 'success');
+                loadNotifications();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+    </script>
+    <style>
+        .notification-unread {
+            border-left: 4px solid #0077b5;
+        }
+    </style>
+</body>
+</html>
+

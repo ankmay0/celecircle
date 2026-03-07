@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CeleLink</title>
+    <link rel="stylesheet" href="/static/eventnet.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1e293b;display:flex;min-height:100vh;}
+
+        /* ── Sidebar ── */
+        .sidebar{width:240px;background:#1e293b;color:#94a3b8;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+        .sidebar-brand{padding:20px 18px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px;}
+        .sidebar-brand .logo{width:32px;height:32px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+        .sidebar-brand span{font-size:16px;font-weight:700;color:#f1f5f9;}
+        .sidebar-nav{flex:1;padding:12px 0;}
+        .nav-section{padding:8px 18px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-top:8px;}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;color:#94a3b8;text-decoration:none;}
+        .nav-item:hover{background:#334155;color:#e2e8f0;}
+        .nav-item.active{background:#334155;color:#3b82f6;border-left-color:#3b82f6;font-weight:600;}
+        .nav-item .icon{width:18px;text-align:center;font-size:15px;}
+        .sidebar-footer{padding:14px 18px;border-top:1px solid #334155;font-size:12px;}
+        .sidebar-footer a{color:#f87171;text-decoration:none;font-weight:600;}
+
+        /* ── Main Content ── */
+        .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+        .topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+        .topbar-title{font-size:15px;font-weight:700;color:#1e293b;}
+        .topbar-user{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;}
+        .topbar-avatar{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+        .content{padding:24px;flex:1;}
+
+        /* ── Page sections ── */
+        .page{display:none;}
+        .page.active{display:block;}
+
+        /* ── Cards ── */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+        .stat-card{background:#fff;border-radius:10px;padding:18px;border:1px solid #e2e8f0;}
+        .stat-card .label{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+        .stat-card .value{font-size:24px;font-weight:800;color:#1e293b;margin-top:4px;}
+        .stat-card .value.blue{color:#3b82f6;}
+        .stat-card .value.green{color:#10b981;}
+        .stat-card .value.orange{color:#f59e0b;}
+        .stat-card .value.red{color:#ef4444;}
+        .stat-card .value.purple{color:#8b5cf6;}
+
+        /* ── Panel ── */
+        .panel{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px;overflow:hidden;}
+        .panel-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .panel-header h3{font-size:14px;font-weight:700;color:#1e293b;}
+        .panel-body{padding:0;}
+
+        /* ── Tables ── */
+        .tbl{width:100%;border-collapse:collapse;font-size:13px;}
+        .tbl th{background:#f8fafc;padding:10px 14px;text-align:left;font-weight:700;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;}
+        .tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;}
+        .tbl tr:hover td{background:#f8fafc;}
+        .tbl .mono{font-family:'SF Mono',Monaco,monospace;font-size:12px;color:#64748b;}
+        .tbl .money{font-weight:700;white-space:nowrap;}
+
+        /* ── Badges ── */
+        .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+        .badge-green{background:#d1fae5;color:#065f46;}
+        .badge-red{background:#fee2e2;color:#991b1b;}
+        .badge-orange{background:#fef3c7;color:#92400e;}
+        .badge-blue{background:#dbeafe;color:#1e40af;}
+        .badge-purple{background:#ede9fe;color:#5b21b6;}
+        .badge-gray{background:#f1f5f9;color:#475569;}
+
+        /* ── Buttons ── */
+        .btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+        .btn-sm{padding:4px 10px;font-size:11px;}
+        .btn-primary{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+        .btn-primary:hover{background:#2563eb;}
+        .btn-success{background:#10b981;color:#fff;}
+        .btn-success:hover{background:#059669;}
+        .btn-danger{background:#ef4444;color:#fff;}
+        .btn-danger:hover{background:#dc2626;}
+        .btn-outline{background:#fff;color:#475569;border-color:#d1d5db;}
+        .btn-outline:hover{background:#f8fafc;}
+        .btn-warning{background:#f59e0b;color:#fff;}
+        .btn-warning:hover{background:#d97706;}
+
+        /* ── Filters ── */
+        .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 20px;border-bottom:1px solid #f1f5f9;}
+        .filters input,.filters select{padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#fff;}
+        .filters input{min-width:120px;}
+        .filters select{min-width:120px;}
+
+        /* ── Actions dropdown ── */
+        .bk-actions-wrap{position:relative;display:inline-block;}
+        .bk-act-trigger{font-size:16px!important;padding:2px 8px!important;line-height:1;letter-spacing:1px;}
+        .bk-act-menu{display:none;position:absolute;right:0;top:100%;min-width:170px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:120;padding:4px 0;}
+        .bk-act-menu.open{display:block;}
+        .bk-act-menu a{display:block;padding:7px 14px;font-size:12px;color:#334155;cursor:pointer;text-decoration:none;transition:background .1s;}
+        .bk-act-menu a:hover{background:#f1f5f9;color:#1e293b;}
+
+        /* ── Drawer sections ── */
+        .dw-section{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f1f5f9;}
+        .dw-heading{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:8px;}
+
+        /* ── Pagination ── */
+        .pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid #f1f5f9;font-size:12px;color:#64748b;}
+        .pagination .pages{display:flex;gap:4px;}
+        .pagination .pg-btn{padding:4px 10px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;}
+        .pagination .pg-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+        .pagination .pg-btn:hover{background:#f1f5f9;}
+
+        /* ── Form fields ── */
+        .form-group{margin-bottom:16px;}
+        .form-group label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px;}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+        /* ── Pricing cards ── */
+        .pricing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:20px;}
+        .pricing-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;}
+        .pricing-card .pc-label{font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:6px;}
+        .pricing-card .pc-input{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-weight:700;}
+        .pricing-card .pc-desc{font-size:11px;color:#94a3b8;margin-top:4px;}
+        .pricing-card .pc-toggle{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:12px;}
+
+        /* ── Mini chart bars ── */
+        .chart-bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding:20px;}
+        .chart-bar{flex:1;background:#3b82f6;border-radius:4px 4px 0 0;min-width:30px;position:relative;transition:height .3s;}
+        .chart-bar:hover{background:#2563eb;}
+        .chart-bar-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:#64748b;white-space:nowrap;}
+        .chart-bar-val{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:#1e293b;white-space:nowrap;}
+
+        /* ── Modal ── */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;}
+        .modal-overlay.open{display:flex;}
+        .modal{background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+        .modal-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .modal-header h3{font-size:15px;font-weight:700;}
+        .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+        .modal-close:hover{background:#f1f5f9;}
+        .modal-body{padding:20px;}
+        .modal-footer{padding:14px 20px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;}
+
+        .detail-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #f8fafc;}
+        .detail-row .dl{color:#64748b;}
+        .detail-row .dv{font-weight:600;color:#1e293b;text-align:right;}
+
+        /* ── Responsive ── */
+        @media(max-width:768px){
+            .sidebar{width:60px;}.sidebar-brand span,.nav-item span:not(.icon),.nav-section,.sidebar-footer span{display:none;}
+            .main{margin-left:60px;}.sidebar-brand{justify-content:center;padding:14px 0;}.nav-item{justify-content:center;padding:12px 0;border-left:none;}
+            .stats-grid{grid-template-columns:repeat(2,1fr);}
+        }
+
+        /* EventNet admin rollout overrides */
+        :root{
+            --en-primary:#0A66C2;
+            --en-primary-dark:#084d93;
+            --en-bg:#f4f7fb;
+            --en-surface:#ffffff;
+            --en-border:#dbe3ef;
+            --en-text:#191919;
+            --en-muted:#5f6b7a;
+            --en-sidebar:#0f172a;
+            --en-sidebar-soft:#1e293b;
+        }
+        body{background:var(--en-bg);color:var(--en-text);}
+        .sidebar{background:var(--en-sidebar);color:#c3cedd;}
+        .sidebar-brand{border-bottom-color:#2b3648;}
+        .sidebar-brand .logo{background:var(--en-primary);}
+        .nav-section{color:#8ca0bd;}
+        .nav-item{color:#b9c7da;}
+        .nav-item:hover{background:var(--en-sidebar-soft);color:#eef4ff;}
+        .nav-item.active{background:rgba(10,102,194,.18);color:#8ac4ff;border-left-color:var(--en-primary);}
+        .sidebar-footer{border-top-color:#2b3648;}
+        .topbar,.panel,.stat-card,.modal{border:1px solid var(--en-border);box-shadow:0 2px 10px rgba(15,23,42,.06);}
+        .topbar-title,.panel-header h3,.stat-card .value,.detail-row .dv{color:#1d2430;}
+        .stat-card .label,.topbar-user,.detail-row .dl,.dw-heading,.pagination{color:var(--en-muted);}
+        .tbl th{background:#f5f8fc;border-bottom-color:var(--en-border);}
+        .tbl tr:hover td{background:#f7fbff;}
+        .btn-primary,.pagination .pg-btn.active{background:var(--en-primary);border-color:var(--en-primary);}
+        .btn-primary:hover{background:var(--en-primary-dark);}
+        .btn-outline,.pagination .pg-btn{border-color:#c8d5e8;}
+        .filters input,.filters select,.form-group input,.form-group select,.form-group textarea{border-color:#c8d5e8;border-radius:10px;}
+        .panel,.stat-card,.pricing-card,.modal{border-radius:14px;}
+    </style>
+    <link rel="stylesheet" href="/static/admin-theme.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo">CL</div>
+            <span>CeleLink Admin</span>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <a class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span><span>Dashboard</span></a>
+
+            <div class="nav-section">Management</div>
+            <a class="nav-item" onclick="showPage('users',this)"><span class="icon">👥</span><span>Users</span></a>
+            <a class="nav-item" onclick="showPage('bookings',this)"><span class="icon">📅</span><span>Bookings</span></a>
+            <a class="nav-item" onclick="showPage('payments',this)"><span class="icon">💳</span><span>Payments</span></a>
+
+            <div class="nav-section">Management</div>
+            <a class="nav-item" href="/admin/disputes"><span class="icon">⚖️</span><span>Disputes</span></a>
+            <a class="nav-item" href="/admin/settings"><span class="icon">💰</span><span>Settings</span></a>
+
+            <div class="nav-section">Analytics</div>
+            <a class="nav-item" href="/admin/finance"><span class="icon">💹</span><span>Finance</span></a>
+            <a class="nav-item" href="/admin/analytics"><span class="icon">📈</span><span>Analytics</span></a>
+            <a class="nav-item" href="/admin/reports"><span class="icon">📥</span><span>Reports</span></a>
+            <a class="nav-item" href="/admin/audit-logs"><span class="icon">📋</span><span>Audit Logs</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <span style="display:block;margin-bottom:6px;color:#64748b;" id="adminName">Admin</span>
+            <a href="/feed" style="color:#94a3b8;text-decoration:none;font-size:12px;">← Back to App</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-title" id="pageTitle">Dashboard</div>
+            <div class="topbar-user">
+                <div class="topbar-avatar" id="topbarAvatar">A</div>
+                <span id="topbarName">Admin</span>
+            </div>
+        </div>
+        <div class="content">
+
+            <!-- ═══ DASHBOARD ═══ -->
+            <div class="page active" id="pg-dashboard">
+                <div class="stats-grid" id="dashStats"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                    <div class="panel">
+                        <div class="panel-header"><h3>Monthly Revenue</h3></div>
+                        <div class="chart-bars" id="revenueChart"></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><h3>Monthly Bookings</h3></div>
+                        <div class="chart-bars" id="bookingsChart"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><h3>Recent Bookings</h3></div>
+                    <div class="panel-body"><table class="tbl" id="recentBookingsTable"><tbody></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- ═══ USERS ═══ -->
+            <div class="page" id="pg-users">
+                <div class="panel">
+                    <div class="panel-header"><h3>User Management</h3></div>
+                    <div class="filters" id="userFilters">
+                        <input type="text" placeholder="Search by name or email..." id="userSearch" oninput="debounceUsers()">
+                        <select id="userRoleFilter" onchange="loadUsers()"><option value="">All Roles</option><option value="artist">Artist</option><option value="organizer">Organizer</option><option value="admin">Admin</option></select>
+                        <select id="userStatusFilter" onchange="loadUsers()"><option value="">All Status</option><option value="true">Active</option><option value="false">Suspended</option></select>
+                    </div>
+                    <div class="panel-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Verified</th><th>Status</th><th>Bookings</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
+                    <div class="pagination" id="usersPagination"></div>
+                </div>
+            </div>
+
+            <!-- ═══ BOOKINGS ═══ -->
+            <div class="page" id="pg-bookings" style="position:relative;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Booking Management</h3>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn btn-outline btn-sm" onclick="resetBookingFilters()">Reset Filters</button>
+                        </div>
+                    </div>
+                    <!-- Advanced Filter Bar -->
+                    <div class="filters" style="flex-wrap:wrap;gap:8px;">
+                        <input type="date" id="bkDateFrom" onchange="loadBookings()" title="From date" style="min-width:130px;">
+                        <input type="date" id="bkDateTo" onchange="loadBookings()" title="To date" style="min-width:130px;">
+                        <select id="bookingStatusFilter" onchange="loadBookings()"><option value="">All Status</option><option value="pending">Pending</option><option value="awaiting_payment">Awaiting Payment</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="disputed">Disputed</option></select>
+                        <select id="bkPayStatusFilter" onchange="loadBookings()"><option value="">All Payment</option><option value="unpaid">Unpaid</option><option value="payment_pending">Payment Pending</option><option value="advance_paid">Advance Paid</option><option value="fully_paid">Fully Paid</option><option value="refunded">Refunded</option></select>
+                        <input type="text" id="bkCityFilter" placeholder="City..." onkeyup="debounceBookings()" style="min-width:120px;max-width:140px;">
+                        <input type="text" id="bkArtistSearch" placeholder="Artist name..." onkeyup="debounceBookings()" style="min-width:140px;max-width:160px;">
+                        <input type="text" id="bkOrgSearch" placeholder="Organizer..." onkeyup="debounceBookings()" style="min-width:140px;max-width:160px;">
+                        <select id="bkSortBy" onchange="loadBookings()"><option value="created_at">Sort: Latest</option><option value="event_date">Sort: Event Date</option><option value="total_amount">Sort: Total Amount</option></select>
+                        <select id="bkSortDir" onchange="loadBookings()"><option value="desc">Desc</option><option value="asc">Asc</option></select>
+                    </div>
+                    <div class="panel-body" style="overflow-x:auto;">
+                        <table class="tbl" id="bkTable">
+                            <thead><tr>
+                                <th>ID</th><th>Artist</th><th>Organizer</th><th>City</th>
+                                <th>Event Date</th><th>Total</th>
+                                <th>Advance Amt</th><th>Advance Status</th>
+                                <th>Remaining Amt</th><th>Remaining Status</th>
+                                <th>Booking Status</th><th>Created</th><th style="min-width:90px;">Actions</th>
+                            </tr></thead>
+                            <tbody id="bookingsTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="bookingsPagination"></div>
+                </div>
+
+                <!-- Side Drawer -->
+                <div id="bkDrawerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:150;display:none;" onclick="closeDrawer()"></div>
+                <div id="bkDrawer" style="position:fixed;top:0;right:-520px;width:500px;max-width:95vw;height:100vh;background:#fff;z-index:160;box-shadow:-4px 0 24px rgba(0,0,0,.12);transition:right .25s ease;display:flex;flex-direction:column;">
+                    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="margin:0;font-size:15px;font-weight:700;" id="drawerTitle">Booking Details</h3>
+                        <button onclick="closeDrawer()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">&times;</button>
+                    </div>
+                    <div id="drawerBody" style="flex:1;overflow-y:auto;padding:20px;font-size:13px;"></div>
+                    <div id="drawerFooter" style="padding:14px 20px;border-top:1px solid #e2e8f0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;"></div>
+                </div>
+            </div>
+
+            <!-- ═══ PAYMENTS ═══ -->
+            <div class="page" id="pg-payments">
+                <div class="panel">
+                    <div class="panel-header"><h3>Payment Transactions</h3><button class="btn btn-outline btn-sm" onclick="exportPayments()">📥 Export CSV</button></div>
+                    <div class="filters">
+                        <select id="paymentStatusFilter" onchange="loadPayments()"><option value="">All Status</option><option value="paid">Paid</option><option value="pending">Pending</option><option value="refunded">Refunded</option><option value="failed">Failed</option></select>
+                        <select id="paymentTypeFilter" onchange="loadPayments()"><option value="">All Types</option><option value="advance">Advance</option><option value="final">Final</option></select>
+                    </div>
+                    <div class="panel-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>ID</th><th>Booking</th><th>Type</th><th>Amount</th><th>Status</th><th>Transaction ID</th><th>Artist</th><th>Organizer</th><th>Paid At</th></tr></thead><tbody id="paymentsTableBody"></tbody></table></div>
+                    <div class="pagination" id="paymentsPagination"></div>
+                </div>
+            </div>
+
+            <!-- ═══ DISPUTES ═══ -->
+            <div class="page" id="pg-disputes">
+                <div class="panel">
+                    <div class="panel-header"><h3>Dispute Management</h3></div>
+                    <div class="filters">
+                        <select id="disputeStatusFilter" onchange="loadDisputes()"><option value="">All Status</option><option value="open">Open</option><option value="under_review">Under Review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
+                    </div>
+                    <div class="panel-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>ID</th><th>Booking</th><th>Raised By</th><th>Reason</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="disputesTableBody"></tbody></table></div>
+                    <div class="pagination" id="disputesPagination"></div>
+                </div>
+            </div>
+
+            <!-- ═══ PRICING ═══ -->
+            <div class="page" id="pg-pricing">
+                <div class="panel">
+                    <div class="panel-header"><h3>Pricing & Add-on Control</h3><button class="btn btn-primary btn-sm" onclick="savePricing()">Save Changes</button></div>
+                    <div class="pricing-grid" id="pricingGrid"></div>
+                </div>
+            </div>
+
+            <!-- ═══ REPORTS ═══ -->
+            <div class="page" id="pg-reports">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="panel"><div class="panel-header"><h3>Top Performing Artists</h3></div><div class="panel-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Artist</th><th>Category</th><th>Bookings</th><th>Revenue</th><th>Rating</th></tr></thead><tbody id="topArtistsBody"></tbody></table></div></div>
+                    <div class="panel"><div class="panel-header"><h3>Most Booked Categories</h3></div><div class="panel-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Category</th><th>Bookings</th></tr></thead><tbody id="categoriesBody"></tbody></table></div></div>
+                </div>
+                <div class="panel" style="margin-top:16px;"><div class="panel-header"><h3>Add-on Revenue Breakdown</h3></div><div class="panel-body" style="padding:20px;" id="addonRevenueBody"></div></div>
+            </div>
+
+            <!-- ═══ AUDIT LOGS ═══ -->
+            <div class="page" id="pg-audit">
+                <div class="panel">
+                    <div class="panel-header"><h3>Audit Logs</h3></div>
+                    <div class="filters">
+                        <select id="auditActionFilter" onchange="loadAuditLogs()"><option value="">All Actions</option><option value="verify_user">Verify User</option><option value="suspend_user">Suspend User</option><option value="activate_user">Activate User</option><option value="delete_user">Delete User</option><option value="override_booking_status">Override Status</option><option value="cancel_booking">Cancel Booking</option><option value="complete_booking">Complete Booking</option><option value="issue_refund">Issue Refund</option><option value="update_pricing">Update Pricing</option><option value="resolve_dispute">Resolve Dispute</option><option value="export_payments">Export Payments</option></select>
+                    </div>
+                    <div class="panel-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Entity</th><th>ID</th><th>Details</th></tr></thead><tbody id="auditTableBody"></tbody></table></div>
+                    <div class="pagination" id="auditPagination"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalTitle">Details</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        var currentPage = {users:1,bookings:1,payments:1,disputes:1,audit:1};
+        var debounceTimer = null;
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if(!isAuthenticated()){window.location.href='/login';return;}
+            var u=getCurrentUser();
+            if(!u||u.role!=='admin'){window.location.href='/dashboard';return;}
+            document.getElementById('adminName').textContent=u.email;
+            document.getElementById('topbarName').textContent=u.email;
+            document.getElementById('topbarAvatar').textContent=(u.email||'A').charAt(0).toUpperCase();
+            loadDashboard();
+        });
+
+        /* ── Navigation ── */
+        function showPage(id,el){
+            document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+            document.getElementById('pg-'+id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+            if(el)el.classList.add('active');
+            var titles={dashboard:'Dashboard',users:'User Management',bookings:'Booking Management',payments:'Payment Transactions',disputes:'Dispute Management',pricing:'Pricing Control',reports:'Reports & Analytics',audit:'Audit Logs'};
+            document.getElementById('pageTitle').textContent=titles[id]||id;
+            if(id==='dashboard')loadDashboard();
+            else if(id==='users')loadUsers();
+            else if(id==='bookings')loadBookings();
+            else if(id==='payments')loadPayments();
+            else if(id==='disputes')loadDisputes();
+            else if(id==='pricing')loadPricing();
+            else if(id==='reports')loadReports();
+            else if(id==='audit')loadAuditLogs();
+        }
+
+        /* ═══ DASHBOARD ═══ */
+        async function loadDashboard(){
+            try{
+                var d=await apiRequest('/admin/dashboard');
+                var s=document.getElementById('dashStats');
+                s.innerHTML=''+
+                    sc('Total Users',d.total_users,'')+sc('Artists',d.total_artists,'blue')+sc('Organizers',d.total_organizers,'blue')+
+                    sc('Total Bookings',d.total_bookings,'')+sc('Confirmed',d.confirmed_bookings,'green')+
+                    sc('Revenue','₹'+fmt(d.total_revenue),'green')+sc('Platform Fees','₹'+fmt(d.platform_fees),'blue')+
+                    sc('Add-on Revenue','₹'+fmt(d.addon_revenue),'blue')+sc('Pending Disputes',d.pending_disputes,'orange')+
+                    sc('Pending Payouts','₹'+fmt(d.pending_payouts),'orange');
+
+                renderBars('revenueChart',d.monthly_revenue,'revenue','₹');
+                renderBars('bookingsChart',d.monthly_bookings,'count','');
+
+                var tb=document.querySelector('#recentBookingsTable tbody');
+                tb.innerHTML='<tr><th>ID</th><th>Artist</th><th>Event</th><th>Date</th><th>Amount</th><th>Status</th></tr>'+
+                    (d.recent_bookings||[]).map(function(b){
+                        return '<tr><td>#'+b.id+'</td><td>'+esc(b.artist_name||'-')+'</td><td>'+esc(b.event_type||'-')+'</td><td>'+fmtDate(b.event_date)+'</td><td class="money">₹'+fmt(b.total_amount)+'</td><td>'+badge(b.status)+'</td></tr>';
+                    }).join('');
+            }catch(e){console.error(e);}
+        }
+
+        function sc(label,value,color){return '<div class="stat-card"><div class="label">'+label+'</div><div class="value '+(color||'')+'">'+value+'</div></div>';}
+
+        function renderBars(id,data,field,prefix){
+            var el=document.getElementById(id);
+            if(!data||!data.length){el.innerHTML='<span style="color:#94a3b8;font-size:12px;">No data</span>';return;}
+            var max=Math.max.apply(null,data.map(function(d){return d[field]||0;}))||1;
+            el.innerHTML=data.map(function(d){
+                var h=Math.max(((d[field]||0)/max)*100,4);
+                var lbl=d.month?d.month.substring(5):'';
+                return '<div class="chart-bar" style="height:'+h+'%"><span class="chart-bar-val">'+(prefix||'')+fmt(d[field])+'</span><span class="chart-bar-label">'+lbl+'</span></div>';
+            }).join('');
+        }
+
+        /* ═══ USERS ═══ */
+        function debounceUsers(){clearTimeout(debounceTimer);debounceTimer=setTimeout(loadUsers,300);}
+
+        async function loadUsers(){
+            var q='/admin/users?page='+currentPage.users+'&limit=25';
+            var role=document.getElementById('userRoleFilter').value;
+            var status=document.getElementById('userStatusFilter').value;
+            var search=document.getElementById('userSearch').value;
+            if(role)q+='&role='+role;
+            if(status)q+='&active='+status;
+            if(search)q+='&search='+encodeURIComponent(search);
+            try{
+                var res=await apiRequest(q);
+                var tb=document.getElementById('usersTableBody');
+                tb.innerHTML=(res.users||[]).map(function(u){
+                    return '<tr>'+
+                        '<td>'+esc(u.name||u.email)+'</td>'+
+                        '<td class="mono">'+esc(u.email)+'</td>'+
+                        '<td>'+badge(u.role)+'</td>'+
+                        '<td>'+(u.is_verified?'<span class="badge badge-green">Yes</span>':'<span class="badge badge-gray">No</span>')+'</td>'+
+                        '<td>'+(u.is_active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-red">Suspended</span>')+'</td>'+
+                        '<td>'+u.total_bookings+'</td>'+
+                        '<td>'+fmtDate(u.created_at)+'</td>'+
+                        '<td>'+userActions(u)+'</td></tr>';
+                }).join('')||'<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;">No users found</td></tr>';
+                renderPagination('usersPagination',res.total,res.page,25,'users');
+            }catch(e){console.error(e);}
+        }
+
+        function userActions(u){
+            var h='';
+            if(u.role!=='admin'){
+                if(!u.is_verified)h+='<button class="btn btn-success btn-sm" onclick="adminAction(\'verify\','+u.id+')">Verify</button> ';
+                if(u.is_active)h+='<button class="btn btn-warning btn-sm" onclick="adminAction(\'suspend\','+u.id+')">Suspend</button> ';
+                else h+='<button class="btn btn-success btn-sm" onclick="adminAction(\'activate\','+u.id+')">Activate</button> ';
+                h+='<button class="btn btn-danger btn-sm" onclick="adminAction(\'delete\','+u.id+')">Delete</button>';
+            }
+            return h||'<span style="color:#94a3b8;font-size:11px;">Admin</span>';
+        }
+
+        async function adminAction(action,userId){
+            if(action==='delete'&&!confirm('Permanently soft-delete this user?'))return;
+            if(action==='suspend'&&!confirm('Suspend this user?'))return;
+            try{
+                if(action==='verify')await apiRequest('/admin/users/'+userId+'/verify',{method:'PUT'});
+                else if(action==='suspend')await apiRequest('/admin/users/'+userId+'/suspend',{method:'PUT'});
+                else if(action==='activate')await apiRequest('/admin/users/'+userId+'/activate',{method:'PUT'});
+                else if(action==='delete')await apiRequest('/admin/users/'+userId,{method:'DELETE'});
+                loadUsers();
+            }catch(e){alert(e.message||'Error');}
+        }
+
+        /* ═══ BOOKINGS ═══ */
+        var _bkTimer=null;
+        function debounceBookings(){clearTimeout(_bkTimer);_bkTimer=setTimeout(loadBookings,350);}
+
+        function resetBookingFilters(){
+            document.getElementById('bkDateFrom').value='';
+            document.getElementById('bkDateTo').value='';
+            document.getElementById('bookingStatusFilter').value='';
+            document.getElementById('bkPayStatusFilter').value='';
+            document.getElementById('bkCityFilter').value='';
+            document.getElementById('bkArtistSearch').value='';
+            document.getElementById('bkOrgSearch').value='';
+            document.getElementById('bkSortBy').value='created_at';
+            document.getElementById('bkSortDir').value='desc';
+            currentPage.bookings=1;
+            loadBookings();
+        }
+
+        async function loadBookings(){
+            var q='/admin/bookings?page='+currentPage.bookings+'&limit=20';
+            var st=document.getElementById('bookingStatusFilter').value;
+            if(st)q+='&status='+st;
+            var ps=document.getElementById('bkPayStatusFilter').value;
+            if(ps)q+='&payment_status='+ps;
+            var city=document.getElementById('bkCityFilter').value.trim();
+            if(city)q+='&city='+encodeURIComponent(city);
+            var art=document.getElementById('bkArtistSearch').value.trim();
+            if(art)q+='&artist_search='+encodeURIComponent(art);
+            var org=document.getElementById('bkOrgSearch').value.trim();
+            if(org)q+='&organizer_search='+encodeURIComponent(org);
+            var df=document.getElementById('bkDateFrom').value;
+            if(df)q+='&date_from='+df;
+            var dt=document.getElementById('bkDateTo').value;
+            if(dt)q+='&date_to='+dt;
+            var sb=document.getElementById('bkSortBy').value;
+            if(sb)q+='&sort_by='+sb;
+            var sd=document.getElementById('bkSortDir').value;
+            if(sd)q+='&sort_dir='+sd;
+            try{
+                var res=await apiRequest(q);
+                document.getElementById('bookingsTableBody').innerHTML=(res.bookings||[]).map(function(b){
+                    var advPaid=b.advance_paid||0;
+                    var advDue=b.advance_amount||0;
+                    var remAmt=(b.total_amount||0)-advPaid;
+                    if(remAmt<0)remAmt=0;
+                    var advIsOk=advPaid>=advDue&&advDue>0;
+                    var advNotConfirmed=b.payment_status!=='advance_paid'&&b.payment_status!=='fully_paid'&&b.status!=='completed'&&b.status!=='cancelled';
+                    var advStatusHtml=advIsOk
+                        ?'<span class="badge badge-green">Paid</span><div style="margin-top:2px;"><span class="badge badge-green" style="font-size:9px;">Booking Confirmed</span></div>'
+                        :(advNotConfirmed
+                            ?'<span class="badge '+(b.payment_status==='payment_pending'?'badge-purple">Pending':'badge-red">Unpaid')+'</span><br><button class="btn btn-success btn-sm" style="margin-top:4px;padding:2px 8px;font-size:10px;" onclick="event.stopPropagation();confirmAdvancePayment('+b.id+')">✓ Confirm &amp; Confirm Booking</button>'
+                            :(advPaid>0?'<span class="badge badge-orange">Partial</span>':'<span class="badge badge-red">Unpaid</span>'));
+                    var remIsCleared=remAmt<=0;
+                    var remStatusHtml=remIsCleared
+                        ?'<span class="badge badge-green">Cleared</span>'
+                        :(b.payment_status==='fully_paid'
+                            ?'<span class="badge badge-green">Paid</span>'
+                            :(advIsOk
+                                ?'<span class="badge badge-orange">Pending</span><br><button class="btn btn-success btn-sm" style="margin-top:4px;padding:2px 8px;font-size:10px;" onclick="event.stopPropagation();confirmRemainingPayment('+b.id+')">✓ Confirm</button>'
+                                :'<span class="badge badge-gray">Awaiting Advance</span>'));
+                    return '<tr>'+
+                        '<td><a href="javascript:void(0)" onclick="openDrawer('+b.id+')" style="color:#3b82f6;font-weight:600;text-decoration:none;">#'+b.id+'</a></td>'+
+                        '<td>'+esc(b.artist_name||'-')+'</td>'+
+                        '<td>'+esc(b.organizer_name||b.organizer_email||'-')+'</td>'+
+                        '<td>'+esc(b.location||'-')+'</td>'+
+                        '<td style="white-space:nowrap;">'+fmtDate(b.event_date)+'</td>'+
+                        '<td class="money">₹'+fmt(b.total_amount)+'</td>'+
+                        '<td class="money">₹'+fmt(advPaid)+' / ₹'+fmt(advDue)+'</td>'+
+                        '<td style="text-align:center;">'+advStatusHtml+'</td>'+
+                        '<td class="money">₹'+fmt(remAmt)+'</td>'+
+                        '<td style="text-align:center;">'+remStatusHtml+'</td>'+
+                        '<td>'+statusBadge(b.status)+'</td>'+
+                        '<td style="white-space:nowrap;font-size:11px;color:#94a3b8;">'+fmtDate(b.created_at)+'</td>'+
+                        '<td><div class="bk-actions-wrap"><button class="btn btn-outline btn-sm bk-act-trigger" onclick="toggleActMenu(event,'+b.id+')">⋮</button>'+
+                            '<div class="bk-act-menu" id="actMenu'+b.id+'">'+
+                                '<a onclick="openDrawer('+b.id+')">View Full Details</a>'+
+                                '<a onclick="promptOverride('+b.id+',\''+esc(b.status)+'\')">Override Status</a>'+
+                                (b.status!=='completed'&&b.status!=='cancelled'?'<a onclick="bookingAction('+b.id+',\'complete\')">Mark Completed</a>':'')+
+                                (b.status!=='cancelled'?'<a onclick="bookingAction('+b.id+',\'cancel\')">Cancel Booking</a>':'')+
+                                (b.advance_paid>0&&b.payment_status!=='refunded'?'<a onclick="bookingAction('+b.id+',\'refund\')">Initiate Refund</a>':'')+
+                                '<a onclick="bookingAction('+b.id+',\'dispute\')">Open Dispute Panel</a>'+
+                            '</div></div></td></tr>';
+                }).join('')||'<tr><td colspan="13" style="text-align:center;padding:32px;color:#94a3b8;">No bookings match your filters</td></tr>';
+                renderPagination('bookingsPagination',res.total,res.page,20,'bookings');
+            }catch(e){console.error(e);}
+        }
+
+        function payBadge(s){
+            if(!s)return badge('unpaid');
+            var m={'paid':'badge-green','fully_paid':'badge-green','advance_paid':'badge-orange','payment_pending':'badge-purple','unpaid':'badge-red','refunded':'badge-gray','partial':'badge-orange'};
+            var cls=m[s]||'badge-gray';
+            return '<span class="badge '+cls+'">'+s.replace(/_/g,' ')+'</span>';
+        }
+        function statusBadge(s){
+            if(!s)return badge('-');
+            var m={'pending':'badge-orange','awaiting_payment':'badge-orange','confirmed':'badge-green','completed':'badge-blue','cancelled':'badge-red','disputed':'badge-purple'};
+            var cls=m[s]||'badge-gray';
+            return '<span class="badge '+cls+'">'+s.replace(/_/g,' ')+'</span>';
+        }
+
+        function toggleActMenu(e,id){
+            e.stopPropagation();
+            document.querySelectorAll('.bk-act-menu.open').forEach(function(el){if(el.id!=='actMenu'+id)el.classList.remove('open');});
+            var m=document.getElementById('actMenu'+id);
+            if(m)m.classList.toggle('open');
+        }
+        document.addEventListener('click',function(){document.querySelectorAll('.bk-act-menu.open').forEach(function(el){el.classList.remove('open');});});
+
+        /* ── Drawer ── */
+        function closeDrawer(){
+            document.getElementById('bkDrawer').style.right='-520px';
+            document.getElementById('bkDrawerOverlay').style.display='none';
+        }
+
+        async function openDrawer(id){
+            document.querySelectorAll('.bk-act-menu.open').forEach(function(el){el.classList.remove('open');});
+            document.getElementById('drawerBody').innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;">Loading...</div>';
+            document.getElementById('drawerFooter').innerHTML='';
+            document.getElementById('bkDrawerOverlay').style.display='block';
+            document.getElementById('bkDrawer').style.right='0';
+
+            try{
+                var b=await apiRequest('/admin/bookings/'+id);
+                document.getElementById('drawerTitle').textContent='Booking #'+b.id;
+
+                var h='';
+                h+='<div class="dw-section"><div class="dw-heading">Event Info</div>';
+                h+=dr('Booking ID','#'+b.id);
+                h+=dr('Artist',esc(b.artist_name||'-'));
+                h+=dr('Organizer',esc(b.organizer_name||b.organizer_email||'-'));
+                h+=dr('Event Date',fmtDate(b.event_date));
+                h+=dr('Location',esc(b.location||'-'));
+                if(b.duration)h+=dr('Duration',esc(b.duration));
+                if(b.event_type)h+=dr('Event Type',esc(b.event_type));
+                h+=dr('Status',statusBadge(b.status));
+                h+=dr('Payment',payBadge(b.payment_status));
+                h+='</div>';
+
+                h+='<div class="dw-section"><div class="dw-heading">Financial Breakdown</div>';
+                h+=dr('Artist Fee','₹'+fmt(b.artist_fee));
+                h+=dr('Platform Fee','₹'+fmt(b.platform_fee));
+                if(b.accommodation_selected)h+=dr('Accommodation','₹'+fmt(b.accommodation_price));
+                if(b.transport_selected)h+=dr('Transport','₹'+fmt(b.transport_price));
+                if(b.security_selected)h+=dr('Security','₹'+fmt(b.security_price));
+                h+=dr('Total','<strong>₹'+fmt(b.total_amount)+'</strong>');
+                h+='</div>';
+
+                var dwAdv=b.advance_paid||0;
+                var dwAdvDue=b.advance_amount||0;
+                var dwRem=(b.total_amount||0)-dwAdv;
+                if(dwRem<0)dwRem=0;
+                var dwAdvOk=dwAdv>=dwAdvDue&&dwAdvDue>0;
+
+                h+='<div class="dw-section" style="background:#f0fdf4;border-radius:6px;padding:12px;margin:8px 0;">';
+                h+='<div class="dw-heading" style="color:#065f46;">Advance Payment</div>';
+                h+=dr('Advance Due','₹'+fmt(dwAdvDue));
+                h+=dr('Advance Paid','<strong>₹'+fmt(dwAdv)+'</strong>');
+                var dwCanConfirmAdv=b.payment_status!=='advance_paid'&&b.payment_status!=='fully_paid'&&b.status!=='completed'&&b.status!=='cancelled';
+                if(dwAdvOk){
+                    h+=dr('Status','<span class="badge badge-green">Paid</span>');
+                    h+=dr('Booking','<span class="badge badge-green">Confirmed</span>');
+                }else if(dwCanConfirmAdv){
+                    h+=dr('Status',b.payment_status==='payment_pending'?'<span class="badge badge-purple">Pending Confirmation</span>':'<span class="badge badge-red">Unpaid</span>');
+                    h+='<div style="text-align:right;margin-top:8px;"><button class="btn btn-success btn-sm" style="font-size:11px;padding:6px 14px;" onclick="confirmAdvancePayment('+b.id+')">✓ Confirm Advance &amp; Confirm Booking</button></div>';
+                    h+='<div style="font-size:10px;color:#6b7280;text-align:right;margin-top:4px;">Confirming advance will mark this booking as <strong>Confirmed</strong></div>';
+                }else{
+                    h+=dr('Status',dwAdv>0?'<span class="badge badge-orange">Partial</span>':'<span class="badge badge-red">Unpaid</span>');
+                }
+                h+='</div>';
+
+                h+='<div class="dw-section" style="background:#fffbeb;border-radius:6px;padding:12px;margin:8px 0;">';
+                h+='<div class="dw-heading" style="color:#92400e;">Remaining Payment</div>';
+                h+=dr('Remaining Amount','<strong>₹'+fmt(dwRem)+'</strong>');
+                if(dwRem<=0){
+                    h+=dr('Status','<span class="badge badge-green">Cleared</span>');
+                }else if(b.payment_status==='fully_paid'){
+                    h+=dr('Status','<span class="badge badge-green">Paid</span>');
+                }else if(dwAdvOk){
+                    h+=dr('Status','<span class="badge badge-orange">Pending</span>');
+                    h+='<div style="text-align:right;margin-top:6px;"><button class="btn btn-success btn-sm" style="font-size:11px;" onclick="confirmRemainingPayment('+b.id+')">✓ Confirm Remaining Payment</button></div>';
+                }else{
+                    h+=dr('Status','<span class="badge badge-gray">Awaiting Advance</span>');
+                }
+                h+='</div>';
+
+                if(b.payments&&b.payments.length){
+                    h+='<div class="dw-section"><div class="dw-heading">Payment Timeline</div>';
+                    h+='<div style="border-left:2px solid #e2e8f0;margin-left:6px;padding-left:14px;">';
+                    b.payments.forEach(function(p){
+                        h+='<div style="margin-bottom:10px;position:relative;">';
+                        h+='<div style="position:absolute;left:-20px;top:4px;width:8px;height:8px;border-radius:50%;background:'+(p.status==='paid'||p.status==='completed'?'#10b981':'#f59e0b')+';"></div>';
+                        h+='<div style="font-weight:600;font-size:12px;text-transform:uppercase;">'+esc(p.type||'Payment')+' — '+payBadge(p.status)+'</div>';
+                        h+='<div style="margin-top:2px;">₹'+fmt(p.amount)+'</div>';
+                        if(p.transaction_id)h+='<div class="mono" style="font-size:10px;color:#94a3b8;">TXN: '+esc(p.transaction_id)+'</div>';
+                        if(p.paid_at)h+='<div style="font-size:10px;color:#94a3b8;">'+fmtDateTime(p.paid_at)+'</div>';
+                        h+='</div>';
+                    });
+                    h+='</div></div>';
+                }
+
+                if(b.audit_actions>0)h+=dr('Audit Actions',b.audit_actions+' recorded');
+                if(b.created_at)h+=dr('Created',fmtDateTime(b.created_at));
+                if(b.updated_at)h+=dr('Last Updated',fmtDateTime(b.updated_at));
+
+                document.getElementById('drawerBody').innerHTML=h;
+
+                var ft='';
+                var statuses=['pending','awaiting_payment','confirmed','completed','cancelled','disputed'];
+                ft+='<select id="drawerStatusOverride" style="padding:5px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;flex:1;min-width:120px;">';
+                ft+='<option value="">Override Status...</option>';
+                statuses.forEach(function(s){ft+='<option value="'+s+'"'+(s===b.status?' disabled':'')+'>'+s.replace(/_/g,' ')+'</option>';});
+                ft+='</select>';
+                ft+='<button class="btn btn-primary btn-sm" onclick="drawerOverride('+b.id+')">Apply</button>';
+                if(b.status!=='completed'&&b.status!=='cancelled')ft+='<button class="btn btn-success btn-sm" onclick="bookingAction('+b.id+',\'complete\')">Complete</button>';
+                if(b.status!=='cancelled')ft+='<button class="btn btn-danger btn-sm" onclick="bookingAction('+b.id+',\'cancel\')">Cancel</button>';
+                if(b.advance_paid>0&&b.payment_status!=='refunded')ft+='<button class="btn btn-warning btn-sm" onclick="bookingAction('+b.id+',\'refund\')">Refund</button>';
+
+                document.getElementById('drawerFooter').innerHTML=ft;
+            }catch(e){
+                document.getElementById('drawerBody').innerHTML='<div style="padding:20px;color:#ef4444;">Error loading booking details.</div>';
+            }
+        }
+
+        async function bookingAction(id,action){
+            if(!confirm('Are you sure you want to '+action.replace(/_/g,' ')+' this booking?'))return;
+            try{
+                if(action==='complete')await apiRequest('/admin/bookings/'+id+'/complete',{method:'PUT'});
+                else if(action==='cancel')await apiRequest('/admin/bookings/'+id+'/cancel',{method:'PUT'});
+                else if(action==='refund')await apiRequest('/admin/bookings/'+id+'/refund',{method:'POST'});
+                else if(action==='dispute'){closeDrawer();showPage('disputes');return;}
+                closeDrawer();loadBookings();
+            }catch(e){alert(e.message||'Error');}
+        }
+
+        async function confirmAdvancePayment(id){
+            if(!confirm('Confirm ADVANCE payment for booking #'+id+'?\n\nThis will:\n• Mark advance payment as PAID\n• Mark booking status as CONFIRMED'))return;
+            try{
+                var res=await fetch('/api/bookings/'+id+'/confirm-payment',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('authToken'),'Content-Type':'application/json'}});
+                var data=await res.json();
+                if(!res.ok)throw new Error(data.detail||'Failed');
+                alert('Advance payment confirmed!\nBooking #'+id+' is now CONFIRMED.');
+                closeDrawer();loadBookings();
+            }catch(e){alert(e.message||'Error confirming advance payment');}
+        }
+
+        async function confirmRemainingPayment(id){
+            if(!confirm('Confirm that REMAINING payment has been received for booking #'+id+'? This will mark the booking as fully paid.'))return;
+            try{
+                var res=await fetch('/api/bookings/'+id+'/confirm-remaining',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('authToken'),'Content-Type':'application/json'}});
+                var data=await res.json();
+                if(!res.ok)throw new Error(data.detail||'Failed');
+                alert('Remaining payment confirmed! Booking is now fully paid.');
+                closeDrawer();loadBookings();
+            }catch(e){alert(e.message||'Error confirming remaining payment');}
+        }
+
+        async function drawerOverride(id){
+            var sel=document.getElementById('drawerStatusOverride');
+            if(!sel||!sel.value){alert('Select a status first');return;}
+            if(!confirm('Override booking status to "'+sel.value.replace(/_/g,' ')+'"?'))return;
+            try{
+                await apiRequest('/admin/bookings/'+id+'/status?new_status='+sel.value,{method:'PUT'});
+                closeDrawer();loadBookings();
+            }catch(e){alert(e.message||'Error');}
+        }
+
+        function promptOverride(id,currentStatus){
+            document.querySelectorAll('.bk-act-menu.open').forEach(function(el){el.classList.remove('open');});
+            openDrawer(id);
+        }
+
+        /* ═══ PAYMENTS ═══ */
+        async function loadPayments(){
+            var q='/admin/payments?page='+currentPage.payments+'&limit=25';
+            var st=document.getElementById('paymentStatusFilter').value;
+            var tp=document.getElementById('paymentTypeFilter').value;
+            if(st)q+='&status='+st;
+            if(tp)q+='&payment_type='+tp;
+            try{
+                var res=await apiRequest(q);
+                document.getElementById('paymentsTableBody').innerHTML=(res.payments||[]).map(function(p){
+                    return '<tr><td>#'+p.id+'</td><td>#'+p.booking_id+'</td><td>'+badge(p.payment_type)+'</td>'+
+                        '<td class="money">₹'+fmt(p.amount)+'</td><td>'+badge(p.status)+'</td>'+
+                        '<td class="mono">'+(p.transaction_id||'-')+'</td><td>'+esc(p.artist_name||'-')+'</td>'+
+                        '<td class="mono">'+esc(p.organizer_email||'-')+'</td><td>'+fmtDate(p.paid_at)+'</td></tr>';
+                }).join('')||'<tr><td colspan="9" style="text-align:center;padding:24px;color:#94a3b8;">No payments</td></tr>';
+                renderPagination('paymentsPagination',res.total,res.page,25,'payments');
+            }catch(e){console.error(e);}
+        }
+
+        function exportPayments(){
+            var token=localStorage.getItem('auth_token');
+            window.open('/api/admin/payments/export?token='+token,'_blank');
+        }
+
+        /* ═══ DISPUTES ═══ */
+        async function loadDisputes(){
+            var q='/admin/disputes?page='+currentPage.disputes+'&limit=25';
+            var st=document.getElementById('disputeStatusFilter').value;
+            if(st)q+='&status='+st;
+            try{
+                var res=await apiRequest(q);
+                document.getElementById('disputesTableBody').innerHTML=(res.disputes||[]).map(function(d){
+                    return '<tr><td>#'+d.id+'</td><td>#'+d.booking_id+'</td><td>'+esc(d.raised_by_email||'-')+'</td>'+
+                        '<td>'+esc(d.reason||'-')+'</td><td class="money">₹'+fmt(d.total_amount)+'</td>'+
+                        '<td>'+badge(d.status)+'</td><td>'+fmtDate(d.created_at)+'</td>'+
+                        '<td><button class="btn btn-outline btn-sm" onclick="viewDispute('+d.id+')">View</button></td></tr>';
+                }).join('')||'<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;">No disputes</td></tr>';
+                renderPagination('disputesPagination',res.total,res.page,25,'disputes');
+            }catch(e){console.error(e);}
+        }
+
+        async function viewDispute(id){
+            try{
+                var d=await apiRequest('/admin/disputes/'+id);
+                var html=dr('Dispute ID','#'+d.id)+dr('Status',badge(d.status))+dr('Raised By',esc(d.raised_by_email||'-'));
+                html+=dr('Reason',esc(d.reason||'-'));
+                if(d.description)html+=dr('Description',esc(d.description));
+                if(d.evidence_url)html+=dr('Evidence','<a href="'+esc(d.evidence_url)+'" target="_blank">View</a>');
+                if(d.booking){
+                    html+='<div style="border-top:2px solid #e2e8f0;margin:10px 0;"></div>';
+                    html+='<div style="font-weight:700;margin-bottom:6px;font-size:13px;">Booking Details</div>';
+                    html+=dr('Artist',esc(d.booking.artist_name||'-'))+dr('Total','₹'+fmt(d.booking.total_amount))+dr('Status',badge(d.booking.status));
+                }
+                if(d.resolution_notes){
+                    html+='<div style="border-top:2px solid #e2e8f0;margin:10px 0;"></div>';
+                    html+=dr('Resolution',esc(d.resolution_notes));
+                    if(d.resolved_by_email)html+=dr('Resolved By',esc(d.resolved_by_email));
+                }
+                document.getElementById('modalBody').innerHTML=html;
+                document.getElementById('modalTitle').textContent='Dispute #'+d.id;
+
+                var footer='<button class="btn btn-outline" onclick="closeModal()">Close</button>';
+                if(d.status==='open'||d.status==='under_review'){
+                    footer+=' <textarea id="resNotes" placeholder="Resolution notes..." style="width:100%;margin:8px 0;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;min-height:60px;"></textarea>';
+                    footer+='<div style="display:flex;gap:6px;justify-content:flex-end;width:100%;"><button class="btn btn-warning btn-sm" onclick="resolveDispute('+d.id+',\'refund\')">Refund</button><button class="btn btn-success btn-sm" onclick="resolveDispute('+d.id+',\'complete\')">Complete</button><button class="btn btn-outline btn-sm" onclick="resolveDispute('+d.id+',\'close\')">Close</button></div>';
+                }
+                document.getElementById('modalFooter').innerHTML=footer;
+                openModal();
+            }catch(e){alert('Error loading dispute');}
+        }
+
+        async function resolveDispute(id,action){
+            var notes=document.getElementById('resNotes');
+            if(!notes||!notes.value.trim()){alert('Please add resolution notes');return;}
+            try{
+                await apiRequest('/admin/disputes/'+id+'/resolve?resolution_notes='+encodeURIComponent(notes.value)+'&action='+action,{method:'PUT'});
+                closeModal();loadDisputes();
+            }catch(e){alert(e.message||'Error');}
+        }
+
+        /* ═══ PRICING ═══ */
+        async function loadPricing(){
+            try{
+                var data=await apiRequest('/admin/pricing');
+                var grid=document.getElementById('pricingGrid');
+                var fields=[
+                    {key:'platform_fee',label:'Platform Fee (₹)',type:'number'},
+                    {key:'accommodation_price',label:'Accommodation Price (₹)',type:'number'},
+                    {key:'transport_price',label:'Transport Price (₹)',type:'number'},
+                    {key:'security_price',label:'Security Price (₹)',type:'number'},
+                    {key:'accommodation_enabled',label:'Accommodation',type:'toggle'},
+                    {key:'transport_enabled',label:'Transport',type:'toggle'},
+                    {key:'security_enabled',label:'Security',type:'toggle'},
+                    {key:'cancellation_policy',label:'Cancellation Policy',type:'text'},
+                ];
+                grid.innerHTML=fields.map(function(f){
+                    var val=data[f.key]?data[f.key].value:'';
+                    var desc=data[f.key]?data[f.key].description:'';
+                    if(f.type==='toggle'){
+                        return '<div class="pricing-card"><div class="pc-label">'+f.label+' Add-on</div>'+
+                            '<div class="pc-toggle"><label><input type="checkbox" id="pc_'+f.key+'" '+(val==='true'?'checked':'')+'> Enabled</label></div>'+
+                            '<div class="pc-desc">'+esc(desc)+'</div></div>';
+                    }else if(f.type==='text'){
+                        return '<div class="pricing-card" style="grid-column:span 2;"><div class="pc-label">'+f.label+'</div>'+
+                            '<textarea class="pc-input" id="pc_'+f.key+'" style="min-height:60px;">'+esc(val)+'</textarea>'+
+                            '<div class="pc-desc">'+esc(desc)+'</div></div>';
+                    }
+                    return '<div class="pricing-card"><div class="pc-label">'+f.label+'</div>'+
+                        '<input type="number" class="pc-input" id="pc_'+f.key+'" value="'+esc(val)+'">'+
+                        '<div class="pc-desc">'+esc(desc)+'</div></div>';
+                }).join('');
+            }catch(e){console.error(e);}
+        }
+
+        async function savePricing(){
+            var updates={};
+            ['platform_fee','accommodation_price','transport_price','security_price'].forEach(function(k){
+                var el=document.getElementById('pc_'+k);if(el)updates[k]=el.value;
+            });
+            ['accommodation_enabled','transport_enabled','security_enabled'].forEach(function(k){
+                var el=document.getElementById('pc_'+k);if(el)updates[k]=el.checked?'true':'false';
+            });
+            var cp=document.getElementById('pc_cancellation_policy');
+            if(cp)updates.cancellation_policy=cp.value;
+            try{
+                await apiRequest('/admin/pricing',{method:'PUT',body:JSON.stringify(updates)});
+                alert('Pricing updated successfully!');
+            }catch(e){alert(e.message||'Error');}
+        }
+
+        /* ═══ REPORTS ═══ */
+        async function loadReports(){
+            try{
+                var [artists,cats,addons]=await Promise.all([
+                    apiRequest('/admin/reports/top-artists?limit=10'),
+                    apiRequest('/admin/reports/categories'),
+                    apiRequest('/admin/reports/addons'),
+                ]);
+                document.getElementById('topArtistsBody').innerHTML=(artists||[]).map(function(a){
+                    return '<tr><td>'+esc(a.name)+'</td><td>'+esc(a.category||'-')+'</td><td>'+a.booking_count+'</td><td class="money">₹'+fmt(a.total_revenue)+'</td><td>'+(a.rating?a.rating.toFixed(1)+' ⭐':'N/A')+'</td></tr>';
+                }).join('')||'<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">No data</td></tr>';
+
+                document.getElementById('categoriesBody').innerHTML=(cats||[]).map(function(c){
+                    return '<tr><td>'+esc(c.category||'-')+'</td><td>'+c.booking_count+'</td></tr>';
+                }).join('')||'<tr><td colspan="2" style="text-align:center;padding:20px;color:#94a3b8;">No data</td></tr>';
+
+                if(addons){
+                    document.getElementById('addonRevenueBody').innerHTML=''+
+                        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">'+
+                        '<div class="stat-card"><div class="label">🏨 Accommodation</div><div class="value blue">₹'+fmt(addons.accommodation.revenue)+'</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+addons.accommodation.count+' bookings</div></div>'+
+                        '<div class="stat-card"><div class="label">🚗 Transport</div><div class="value blue">₹'+fmt(addons.transport.revenue)+'</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+addons.transport.count+' bookings</div></div>'+
+                        '<div class="stat-card"><div class="label">🛡️ Security</div><div class="value blue">₹'+fmt(addons.security.revenue)+'</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+addons.security.count+' bookings</div></div>'+
+                        '<div class="stat-card"><div class="label">Total Add-on Revenue</div><div class="value green">₹'+fmt(addons.total)+'</div></div></div>';
+                }
+            }catch(e){console.error(e);}
+        }
+
+        /* ═══ AUDIT LOGS ═══ */
+        async function loadAuditLogs(){
+            var q='/admin/audit-logs?page='+currentPage.audit+'&limit=50';
+            var act=document.getElementById('auditActionFilter').value;
+            if(act)q+='&action_type='+act;
+            try{
+                var res=await apiRequest(q);
+                document.getElementById('auditTableBody').innerHTML=(res.logs||[]).map(function(l){
+                    var meta=l.metadata?JSON.stringify(l.metadata).substring(0,80):'';
+                    return '<tr><td style="white-space:nowrap;">'+fmtDateTime(l.created_at)+'</td><td class="mono">'+esc(l.admin_email||'-')+'</td>'+
+                        '<td>'+badge(l.action_type)+'</td><td>'+esc(l.affected_entity||'-')+'</td>'+
+                        '<td>'+(l.entity_id||'-')+'</td><td class="mono" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(meta)+'">'+esc(meta)+'</td></tr>';
+                }).join('')||'<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">No logs</td></tr>';
+                renderPagination('auditPagination',res.total,res.page,50,'audit');
+            }catch(e){console.error(e);}
+        }
+
+        /* ═══ UTILITIES ═══ */
+        function fmt(n){return (n||0).toLocaleString('en-IN');}
+        function esc(t){if(!t)return '';var d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+        function fmtDate(d){if(!d)return '-';return new Date(d).toLocaleDateString('en-IN',{month:'short',day:'numeric',year:'numeric'});}
+        function fmtDateTime(d){if(!d)return '-';var dt=new Date(d);return dt.toLocaleDateString('en-IN',{month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
+        function dr(label,value){return '<div class="detail-row"><span class="dl">'+label+'</span><span class="dv">'+value+'</span></div>';}
+
+        function badge(status){
+            if(!status)return '<span class="badge badge-gray">-</span>';
+            var s=String(status).toLowerCase();
+            var cls='badge-gray';
+            if(s==='active'||s==='confirmed'||s==='paid'||s==='verified'||s==='green'||s==='artist'||s==='resolved'||s==='advance_paid')cls='badge-green';
+            else if(s==='suspended'||s==='cancelled'||s==='failed'||s==='refunded'||s==='red'||s==='delete_user'||s==='suspend_user')cls='badge-red';
+            else if(s==='pending'||s==='awaiting_payment'||s==='open'||s==='under_review'||s==='unpaid'||s==='issue_refund')cls='badge-orange';
+            else if(s==='completed'||s==='advance'||s==='final'||s==='organizer'||s==='fully_paid'||s==='verify_user'||s==='activate_user'||s==='complete_booking')cls='badge-blue';
+            else if(s==='disputed'||s==='admin'||s==='override_booking_status'||s==='update_pricing'||s==='resolve_dispute')cls='badge-purple';
+            return '<span class="badge '+cls+'">'+s.replace(/_/g,' ')+'</span>';
+        }
+
+        function renderPagination(elId,total,page,limit,section){
+            var el=document.getElementById(elId);
+            var pages=Math.ceil(total/limit);
+            if(pages<=1){el.innerHTML='<span>'+total+' total</span><div></div>';return;}
+            var html='<span>Showing '+(((page-1)*limit)+1)+'–'+Math.min(page*limit,total)+' of '+total+'</span><div class="pages">';
+            for(var i=1;i<=pages&&i<=10;i++){
+                html+='<button class="pg-btn'+(i===page?' active':'')+'" onclick="goPage(\''+section+'\','+i+')">'+i+'</button>';
+            }
+            html+='</div>';
+            el.innerHTML=html;
+        }
+
+        function goPage(section,page){
+            currentPage[section]=page;
+            if(section==='users')loadUsers();
+            else if(section==='bookings')loadBookings();
+            else if(section==='payments')loadPayments();
+            else if(section==='disputes')loadDisputes();
+            else if(section==='audit')loadAuditLogs();
+        }
+
+        function openModal(){document.getElementById('modalOverlay').classList.add('open');}
+        function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+        document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+        window.showPage=showPage;
+        window.adminAction=adminAction;
+        window.bookingAction=bookingAction;
+        window.viewDispute=viewDispute;
+        window.resolveDispute=resolveDispute;
+        window.savePricing=savePricing;
+        window.exportPayments=exportPayments;
+        window.goPage=goPage;
+        window.closeModal=closeModal;
+        window.debounceUsers=debounceUsers;
+        window.debounceBookings=debounceBookings;
+        window.resetBookingFilters=resetBookingFilters;
+        window.openDrawer=openDrawer;
+        window.closeDrawer=closeDrawer;
+        window.toggleActMenu=toggleActMenu;
+        window.promptOverride=promptOverride;
+        window.drawerOverride=drawerOverride;
+        window.confirmAdvancePayment=confirmAdvancePayment;
+        window.confirmRemainingPayment=confirmRemainingPayment;
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Dashboard - CeleLink Admin</title>
+    <link rel="stylesheet" href="/static/eventnet.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1e293b;display:flex;min-height:100vh;}
+
+        /* ── Sidebar ── */
+        .sidebar{width:240px;background:#1e293b;color:#94a3b8;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+        .sidebar-brand{padding:20px 18px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px;}
+        .sidebar-brand .logo{width:32px;height:32px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
+        .sidebar-brand span{font-size:16px;font-weight:700;color:#f1f5f9;}
+        .sidebar-nav{flex:1;padding:12px 0;}
+        .nav-section{padding:8px 18px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#64748b;font-weight:700;margin-top:8px;}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;transition:all .15s;border-left:3px solid transparent;color:#94a3b8;text-decoration:none;}
+        .nav-item:hover{background:#334155;color:#e2e8f0;}
+        .nav-item.active{background:#334155;color:#3b82f6;border-left-color:#3b82f6;font-weight:600;}
+        .nav-item .icon{width:18px;text-align:center;font-size:15px;}
+        .sidebar-footer{padding:14px 18px;border-top:1px solid #334155;font-size:12px;}
+        .sidebar-footer a{color:#f87171;text-decoration:none;font-weight:600;}
+
+        /* ── Main ── */
+        .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+        .topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+        .topbar-title{font-size:15px;font-weight:700;color:#1e293b;}
+        .topbar-user{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;}
+        .topbar-avatar{width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+        .content{padding:24px;flex:1;}
+
+        /* ── Stats ── */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+        .stat-card{background:#fff;border-radius:10px;padding:18px;border:1px solid #e2e8f0;position:relative;overflow:hidden;}
+        .stat-card .label{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+        .stat-card .value{font-size:24px;font-weight:800;color:#1e293b;margin-top:4px;}
+        .stat-card .value.green{color:#10b981;}
+        .stat-card .value.blue{color:#3b82f6;}
+        .stat-card .value.orange{color:#f59e0b;}
+        .stat-card .value.red{color:#ef4444;}
+        .stat-card .value.purple{color:#8b5cf6;}
+        .stat-card .sub{font-size:11px;color:#94a3b8;margin-top:4px;}
+        .stat-card .stat-icon{position:absolute;top:14px;right:14px;font-size:22px;opacity:0.5;}
+
+        /* ── Panel ── */
+        .panel{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px;overflow:hidden;}
+        .panel-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+        .panel-header h3{font-size:14px;font-weight:700;color:#1e293b;}
+        .panel-body{padding:20px;}
+
+        /* ── Charts ── */
+        .chart-container{position:relative;padding:20px;}
+        .chart-bars{display:flex;align-items:flex-end;gap:4px;height:200px;}
+        .chart-bar{flex:1;border-radius:4px 4px 0 0;min-width:16px;position:relative;transition:all .3s ease;cursor:pointer;}
+        .chart-bar:hover{filter:brightness(0.9);}
+        .chart-bar-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:#64748b;white-space:nowrap;}
+        .chart-bar-val{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:#1e293b;white-space:nowrap;opacity:0;transition:opacity .15s;}
+        .chart-bar:hover .chart-bar-val{opacity:1;}
+
+        /* horizontal bar chart */
+        .h-bar-list{display:flex;flex-direction:column;gap:10px;}
+        .h-bar-row{display:flex;align-items:center;gap:12px;}
+        .h-bar-label{width:140px;font-size:12px;font-weight:600;color:#334155;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
+        .h-bar-track{flex:1;height:24px;background:#f1f5f9;border-radius:4px;overflow:hidden;position:relative;}
+        .h-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;display:flex;align-items:center;padding:0 8px;}
+        .h-bar-value{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;}
+        .h-bar-amount{width:100px;font-size:12px;font-weight:700;color:#1e293b;text-align:right;flex-shrink:0;}
+
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+        /* ── Loading ── */
+        .loading-state{text-align:center;padding:60px 20px;color:#94a3b8;}
+        .loading-state .spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        @media(max-width:900px){
+            .grid-2{grid-template-columns:1fr;}
+        }
+        @media(max-width:768px){
+            .sidebar{width:60px;}.sidebar-brand span,.nav-item span:not(.icon),.nav-section,.sidebar-footer span{display:none;}
+            .main{margin-left:60px;}.sidebar-brand{justify-content:center;padding:14px 0;}.nav-item{justify-content:center;padding:12px 0;border-left:none;}
+            .stats-grid{grid-template-columns:repeat(2,1fr);}
+        }
+
+        :root{
+            --en-primary:#0A66C2;
+            --en-primary-dark:#084d93;
+            --en-bg:#f4f7fb;
+            --en-border:#dbe3ef;
+            --en-text:#191919;
+            --en-muted:#5f6b7a;
+            --en-sidebar:#0f172a;
+            --en-sidebar-soft:#1e293b;
+        }
+        body{background:var(--en-bg);color:var(--en-text);}
+        .sidebar{background:var(--en-sidebar);color:#c3cedd;}
+        .sidebar-brand{border-bottom-color:#2b3648;}
+        .sidebar-brand .logo{background:var(--en-primary);}
+        .nav-section{color:#8ca0bd;}
+        .nav-item{color:#b9c7da;}
+        .nav-item:hover{background:var(--en-sidebar-soft);color:#eef4ff;}
+        .nav-item.active{background:rgba(10,102,194,.18);color:#8ac4ff;border-left-color:var(--en-primary);}
+        .sidebar-footer{border-top-color:#2b3648;}
+        .topbar,.panel,.stat-card{border:1px solid var(--en-border);box-shadow:0 2px 10px rgba(15,23,42,.06);}
+        .topbar-title,.panel-header h3,.stat-card .value,.h-bar-amount{color:#1d2430;}
+        .stat-card .label,.topbar-user,.chart-bar-label{color:var(--en-muted);}
+        .h-bar-track{background:#eef3f9;}
+        .loading-state .spinner{border-color:#e1e9f5;border-top-color:var(--en-primary);}
+    </style>
+    <link rel="stylesheet" href="/static/admin-theme.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo">CL</div>
+            <span>CeleLink Admin</span>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Main</div>
+            <a class="nav-item" href="/admin"><span class="icon">📊</span><span>Dashboard</span></a>
+
+            <div class="nav-section">Management</div>
+            <a class="nav-item" href="/admin/disputes"><span class="icon">⚖️</span><span>Disputes</span></a>
+            <a class="nav-item" href="/admin/settings"><span class="icon">💰</span><span>Settings</span></a>
+
+            <div class="nav-section">Analytics</div>
+            <a class="nav-item active" href="/admin/finance"><span class="icon">💹</span><span>Finance</span></a>
+            <a class="nav-item" href="/admin/analytics"><span class="icon">📈</span><span>Analytics</span></a>
+            <a class="nav-item" href="/admin/reports"><span class="icon">📥</span><span>Reports</span></a>
+            <a class="nav-item" href="/admin/audit-logs"><span class="icon">📋</span><span>Audit Logs</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <span style="display:block;margin-bottom:6px;color:#64748b;" id="adminName">Admin</span>
+            <a href="/feed" style="color:#94a3b8;text-decoration:none;font-size:12px;">← Back to App</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-title">Finance Dashboard</div>
+            <div class="topbar-user">
+                <div class="topbar-avatar" id="topbarAvatar">A</div>
+                <span id="topbarName">Admin</span>
+            </div>
+        </div>
+        <div class="content" id="financeContent">
+            <div class="loading-state" id="loadingState">
+                <div class="spinner"></div>
+                <div>Loading finance data...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if(!isAuthenticated()){window.location.href='/login';return;}
+            var u=getCurrentUser();
+            if(!u||u.role!=='admin'){window.location.href='/dashboard';return;}
+            document.getElementById('adminName').textContent=u.email;
+            document.getElementById('topbarName').textContent=u.email;
+            document.getElementById('topbarAvatar').textContent=(u.email||'A').charAt(0).toUpperCase();
+            loadFinance();
+        });
+
+        async function loadFinance(){
+            try{
+                var d=await apiRequest('/admin/finance');
+                renderFinance(d);
+            }catch(e){
+                console.error(e);
+                document.getElementById('financeContent').innerHTML=
+                    '<div class="loading-state" style="color:#ef4444;">Error loading finance data. Please try again.</div>';
+            }
+        }
+
+        function renderFinance(d){
+            var html='';
+
+            /* ── KPI Cards ── */
+            html+='<div class="stats-grid">';
+            html+=kpi('Total Platform Revenue','₹'+fmt(d.total_platform_revenue),'green','💰','All-time earnings from platform fees + add-ons');
+            html+=kpi('Monthly Revenue','₹'+fmt(d.monthly_revenue),'blue','📅','Current month platform revenue');
+            html+=kpi('Platform Fee Collected','₹'+fmt(d.platform_fee_collected),'blue','🏷️','Sum of all platform fees');
+            html+=kpi('Add-on Margins','₹'+fmt(d.addon_margins_collected),'purple','🧩','Accommodation + Transport + Security');
+            html+=kpi('Pending Payouts','₹'+fmt(d.pending_payouts),'orange','⏳','Remaining amounts on confirmed bookings');
+            html+=kpi('Completed Payouts','₹'+fmt(d.completed_payouts),'green','✅','Advances paid on completed bookings');
+            html+=kpi('Refunds Issued','₹'+fmt(d.refunds_issued),'red','↩️','Total refunded to organizers');
+            html+=kpi('Net Earnings','₹'+fmt(d.net_earnings),'green','📊','Revenue minus refunds');
+            html+='</div>';
+
+            /* ── Monthly Revenue Trend ── */
+            html+='<div class="panel">';
+            html+='<div class="panel-header"><h3>Monthly Revenue Trend (12 Months)</h3></div>';
+            html+='<div class="chart-container"><div class="chart-bars" id="monthlyChart" style="height:220px;padding-bottom:28px;"></div></div>';
+            html+='</div>';
+
+            /* ── City & Category side by side ── */
+            html+='<div class="grid-2">';
+
+            html+='<div class="panel">';
+            html+='<div class="panel-header"><h3>Revenue by City</h3></div>';
+            html+='<div class="panel-body" id="cityChart"></div>';
+            html+='</div>';
+
+            html+='<div class="panel">';
+            html+='<div class="panel-header"><h3>Revenue by Category</h3></div>';
+            html+='<div class="panel-body" id="categoryChart"></div>';
+            html+='</div>';
+
+            html+='</div>';
+
+            document.getElementById('financeContent').innerHTML=html;
+
+            renderMonthlyBars(d.monthly_trend);
+            renderHorizontalBars('cityChart',d.revenue_by_city,'city','#3b82f6');
+            renderHorizontalBars('categoryChart',d.revenue_by_category,'category','#8b5cf6');
+        }
+
+        function kpi(label,value,color,icon,sub){
+            return '<div class="stat-card">'+
+                '<div class="stat-icon">'+icon+'</div>'+
+                '<div class="label">'+label+'</div>'+
+                '<div class="value '+color+'">'+value+'</div>'+
+                (sub?'<div class="sub">'+sub+'</div>':'')+
+                '</div>';
+        }
+
+        function renderMonthlyBars(data){
+            var el=document.getElementById('monthlyChart');
+            if(!data||!data.length){el.innerHTML='<span style="color:#94a3b8;font-size:12px;">No data available</span>';return;}
+            var max=Math.max.apply(null,data.map(function(d){return d.revenue||0;}))||1;
+            var colors=['#3b82f6','#60a5fa'];
+            el.innerHTML=data.map(function(d,i){
+                var pct=Math.max(((d.revenue||0)/max)*100,3);
+                var lbl=d.label||d.month.substring(5);
+                var bg=colors[i%2];
+                return '<div class="chart-bar" style="height:'+pct+'%;background:'+bg+';">'+
+                    '<span class="chart-bar-val">₹'+fmt(d.revenue)+'</span>'+
+                    '<span class="chart-bar-label">'+lbl.substring(0,3)+'</span></div>';
+            }).join('');
+        }
+
+        function renderHorizontalBars(containerId,data,labelKey,color){
+            var el=document.getElementById(containerId);
+            if(!data||!data.length){
+                el.innerHTML='<div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px;">No data available</div>';
+                return;
+            }
+            var max=Math.max.apply(null,data.map(function(d){return d.revenue||0;}))||1;
+            var html='<div class="h-bar-list">';
+            data.forEach(function(d){
+                var pct=Math.max(((d.revenue||0)/max)*100,2);
+                var label=esc(d[labelKey]||'Unknown');
+                html+='<div class="h-bar-row">'+
+                    '<div class="h-bar-label" title="'+label+'">'+label+'</div>'+
+                    '<div class="h-bar-track"><div class="h-bar-fill" style="width:'+pct+'%;background:'+color+';"><span class="h-bar-value">'+(pct>15?'₹'+fmt(d.revenue):'')+'</span></div></div>'+
+                    '<div class="h-bar-amount">₹'+fmt(d.revenue)+'</div>'+
+                    '</div>';
+            });
+            html+='</div>';
+            el.innerHTML=html;
+        }
+
+        function fmt(n){return (n||0).toLocaleString('en-IN');}
+        function esc(t){if(!t)return '';var d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventNet - Profile</title>
+  <script>
+    window.tailwind = window.tailwind || {};
+    window.tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primaryBlue: "#0A66C2",
+            accentOrange: "#FF4500",
+            textPrimary: "#191919",
+            textSecondary: "#666666",
+            surfaceGray: "#F3F2EF"
+          },
+          boxShadow: {
+            diffuse: "0px 4px 12px rgba(0, 0, 0, 0.05)"
+          },
+          borderRadius: {
+            card: "12px"
+          },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui"]
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/eventnet.css" />
+</head>
+<body class="bg-[#f7f8fa] pb-20 lg:pb-8">
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
+    <div class="eventnet-shell px-4 py-3 flex items-center gap-3">
+      <button id="enOpenLeft" class="lg:hidden en-btn-icon" aria-label="Open navigation">☰</button>
+      <a href="/eventnet" class="font-extrabold text-xl tracking-tight text-primaryBlue">CeleBook</a>
+      <div class="flex-1 max-w-2xl">
+        <div class="en-pill-input flex items-center px-4 py-2 gap-2">
+          <span class="text-gray-500">🔍</span>
+          <input class="w-full bg-transparent outline-none text-sm" placeholder="Search events, venues, planners..." />
+        </div>
+      </div>
+      <button id="enOpenRight" class="en-btn-icon lg:hidden" aria-label="Open widgets">⋯</button>
+    </div>
+  </header>
+
+  <div class="eventnet-shell px-4 pt-5 grid grid-cols-1 lg:grid-cols-[72%_28%] gap-5">
+    <main class="space-y-4">
+      <section class="en-card overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1600&auto=format&fit=crop" alt="Cover" class="h-44 md:h-56 w-full object-cover" />
+        <div class="px-5 pb-5">
+          <div class="-mt-14 md:-mt-16 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <img src="https://i.pravatar.cc/180?img=33" class="h-28 w-28 md:h-32 md:w-32 rounded-full border-4 border-white object-cover shadow-diffuse" alt="Sarah Jenkins" />
+            <div class="flex flex-wrap gap-2">
+              <button class="en-btn-primary px-4 py-2 text-sm">Book / Inquire</button>
+              <button class="en-btn-secondary px-4 py-2 text-sm">Message</button>
+              <button class="en-btn-secondary px-4 py-2 text-sm">More...</button>
+            </div>
+          </div>
+          <div class="mt-3">
+            <h1 class="text-2xl font-extrabold">Sarah Jenkins (She/Her)</h1>
+            <p class="text-textSecondary mt-1">Venue Owner at The Historic Foundry • Luxury and Corporate Event Specialist</p>
+            <p class="text-sm text-textSecondary mt-1">📍 Los Angeles, California • 1.8k connections</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="en-card">
+        <div class="px-5 border-b border-gray-200 flex gap-5 overflow-auto">
+          <button class="en-tab-btn active py-3 whitespace-nowrap" data-tab-target="tab-about">About</button>
+          <button class="en-tab-btn py-3 whitespace-nowrap" data-tab-target="tab-services">Services</button>
+          <button class="en-tab-btn py-3 whitespace-nowrap" data-tab-target="tab-events">Past Events</button>
+          <button class="en-tab-btn py-3 whitespace-nowrap" data-tab-target="tab-reviews">Reviews</button>
+          <button class="en-tab-btn py-3 whitespace-nowrap" data-tab-target="tab-portfolio">Portfolio</button>
+        </div>
+
+        <div id="tab-about" class="en-tab-panel active p-5 space-y-4">
+          <p class="text-sm text-textSecondary leading-7">
+            I build memorable venue-led experiences for premium brands, founders, and enterprise teams. Over the last 8 years,
+            I have hosted product launches, private investor evenings, gala dinners, and immersive media activations, with a strong focus
+            on guest journey design, smooth vendor orchestration, and event ROI.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="en-card-flat p-3">
+              <p class="text-xs text-textSecondary uppercase tracking-wide">Specialty</p>
+              <p class="font-semibold mt-1">Corporate & Luxury Events</p>
+            </div>
+            <div class="en-card-flat p-3">
+              <p class="text-xs text-textSecondary uppercase tracking-wide">Capacity</p>
+              <p class="font-semibold mt-1">80 - 600 Guests</p>
+            </div>
+            <div class="en-card-flat p-3">
+              <p class="text-xs text-textSecondary uppercase tracking-wide">Average Response</p>
+              <p class="font-semibold mt-1">Under 2 Hours</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-services" class="en-tab-panel p-5">
+          <ul class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <li class="en-card-flat p-3">Venue Booking and Layout Planning</li>
+            <li class="en-card-flat p-3">On-site Event Production Coordination</li>
+            <li class="en-card-flat p-3">Preferred Vendor and Catering Curation</li>
+            <li class="en-card-flat p-3">Brand Experience Customization</li>
+          </ul>
+        </div>
+
+        <div id="tab-events" class="en-tab-panel p-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=900&auto=format&fit=crop" class="rounded-xl h-40 w-full object-cover" alt="Event 1" />
+            <img src="https://images.unsplash.com/photo-1464375117522-1311d6a5b81f?q=80&w=900&auto=format&fit=crop" class="rounded-xl h-40 w-full object-cover" alt="Event 2" />
+            <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?q=80&w=900&auto=format&fit=crop" class="rounded-xl h-40 w-full object-cover" alt="Event 3" />
+            <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=900&auto=format&fit=crop" class="rounded-xl h-40 w-full object-cover" alt="Event 4" />
+            <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=900&auto=format&fit=crop" class="rounded-xl h-40 w-full object-cover" alt="Event 5" />
+            <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=900&auto=format&fit=crop" class="rounded-xl h-40 w-full object-cover" alt="Event 6" />
+          </div>
+        </div>
+
+        <div id="tab-reviews" class="en-tab-panel p-5 space-y-3">
+          <div class="en-card-flat p-3 text-sm">
+            <p class="font-semibold">Maya Rodriguez</p>
+            <p class="text-textSecondary">"Meticulous execution and incredible venue flow. 10/10 for premium brand events."</p>
+          </div>
+          <div class="en-card-flat p-3 text-sm">
+            <p class="font-semibold">Thomas Blake</p>
+            <p class="text-textSecondary">"Exceptional team and fast communication from inquiry to event day."</p>
+          </div>
+        </div>
+
+        <div id="tab-portfolio" class="en-tab-panel p-5">
+          <div class="en-card-flat p-4 text-sm text-textSecondary">
+            Portfolio includes executive offsites, creator summits, auto brand launches, and fashion showcase afterparties.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="en-desktop-col">
+      <div class="en-sticky-top space-y-4">
+        <section class="en-card p-4">
+          <h3 class="font-bold text-sm mb-3">Suggested Connections</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <img src="https://i.pravatar.cc/50?img=60" class="h-8 w-8 rounded-full" alt="Kevin Watts" />
+                <span class="text-sm">Kevin Watts</span>
+              </div>
+              <button class="en-btn-secondary px-3 py-1 text-xs">Connect</button>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <img src="https://i.pravatar.cc/50?img=42" class="h-8 w-8 rounded-full" alt="Lina Park" />
+                <span class="text-sm">Lina Park</span>
+              </div>
+              <button class="en-btn-secondary px-3 py-1 text-xs">Connect</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="en-card p-4">
+          <h3 class="font-bold text-sm mb-3">Upcoming Events Near You</h3>
+          <p class="text-sm text-textSecondary">Design Forward Venues Meetup • Apr 12</p>
+          <p class="text-sm text-textSecondary mt-2">Hospitality Leadership Circle • Apr 28</p>
+        </section>
+
+        <section class="en-card p-0 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1519167758481-83f29c7883e5?q=80&w=1200&auto=format&fit=crop" alt="featured venue" class="h-28 w-full object-cover" />
+          <div class="p-4">
+            <h3 class="font-bold text-sm">Featured Venue Spotlight</h3>
+            <p class="text-xs text-textSecondary mt-1">Private penthouse rooftop packages now available.</p>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <aside id="enLeftDrawer" class="en-mobile-drawer left lg:hidden p-4">
+    <div class="en-card p-4">
+      <h3 class="font-bold">EventNet Navigation</h3>
+      <div class="mt-2 space-y-1 text-sm">
+        <a class="en-sidebar-link block px-3 py-2" href="/eventnet">🏠 Home Feed</a>
+        <a class="en-sidebar-link block px-3 py-2" href="#">👥 My Network</a>
+        <a class="en-sidebar-link block px-3 py-2" href="#">📅 Events</a>
+      </div>
+    </div>
+  </aside>
+
+  <aside id="enRightDrawer" class="en-mobile-drawer right lg:hidden p-4">
+    <section class="en-card p-4">
+      <h3 class="font-bold text-sm mb-2">Right Widgets</h3>
+      <p class="text-sm text-textSecondary">Suggestions and trends available here.</p>
+    </section>
+  </aside>
+
+  <nav class="en-mobile-bottom fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden justify-around py-2 text-xs">
+    <a href="/eventnet" class="flex flex-col items-center text-textSecondary">🏠<span>Home</span></a>
+    <a href="#" class="flex flex-col items-center text-textSecondary">👥<span>Network</span></a>
+    <a href="#" class="flex flex-col items-center text-primaryBlue font-bold">➕<span>Post</span></a>
+    <a href="#" class="flex flex-col items-center text-textSecondary">📅<span>Events</span></a>
+    <a href="/eventnet/profile" class="flex flex-col items-center text-primaryBlue">👤<span>Profile</span></a>
+  </nav>
+
+  <script src="/static/eventnet.js"></script>
+</body>
+</html>

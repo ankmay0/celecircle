@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Network - CeleLink</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/feed.css">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+    <script src="/static/linkedin-header.js"></script>
+
+    <main class="page-container">
+        <h1 style="margin-bottom: 2rem;">My Network</h1>
+        
+        <div class="card mb-3">
+            <div style="display: flex; gap: 1rem; border-bottom: 1px solid #e0e0e0; padding-bottom: 1rem; margin-bottom: 1rem;">
+                <button class="btn btn-primary" onclick="showTab('following')" id="tabFollowing">Following</button>
+                <button class="btn btn-secondary" onclick="showTab('followers')" id="tabFollowers">Followers</button>
+                <button class="btn btn-secondary" onclick="showTab('suggestions')" id="tabSuggestions">Suggestions</button>
+            </div>
+        </div>
+
+        <div id="networkContent">
+            <div class="loading">Loading...</div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initHeader();
+            setActiveNavItem('network');
+            loadNetwork();
+        });
+
+        let currentTab = 'following';
+
+        function showTab(tab) {
+            currentTab = tab;
+            
+            // Update button styles
+            document.getElementById('tabFollowing').className = tab === 'following' ? 'btn btn-primary' : 'btn btn-secondary';
+            document.getElementById('tabFollowers').className = tab === 'followers' ? 'btn btn-primary' : 'btn btn-secondary';
+            document.getElementById('tabSuggestions').className = tab === 'suggestions' ? 'btn btn-primary' : 'btn btn-secondary';
+            
+            loadNetwork();
+        }
+
+        async function loadNetwork() {
+            if (!isAuthenticated()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const container = document.getElementById('networkContent');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                if (currentTab === 'following') {
+                    await loadFollowing();
+                } else if (currentTab === 'followers') {
+                    await loadFollowers();
+                } else if (currentTab === 'suggestions') {
+                    await loadSuggestions();
+                }
+            } catch (error) {
+                console.error('Error loading network:', error);
+                container.innerHTML = `<div class="card"><p>Error loading network: ${error.message || 'Unknown error'}. Please check the console for details.</p></div>`;
+            }
+        }
+
+        async function loadFollowing() {
+            const container = document.getElementById('networkContent');
+            try {
+                const following = await apiRequest('/connections/following');
+                console.log('Following data:', following);
+                
+                if (!Array.isArray(following)) {
+                    console.error('Following is not an array:', following);
+                    container.innerHTML = '<div class="card"><p>Error: Invalid response format. Please refresh the page.</p></div>';
+                    return;
+                }
+                
+                if (following.length === 0) {
+                    container.innerHTML = '<div class="card"><p>You are not following anyone yet. Check out suggestions to connect!</p></div>';
+                    return;
+                }
+
+                let html = '<div class="grid grid-3">';
+                for (const user of following) {
+                    const displayName = user.name || user.email.split('@')[0];
+                    const initial = displayName.charAt(0).toUpperCase();
+                    console.log('User data:', { 
+                        user_id: user.user_id, 
+                        profile_id: user.profile_id, 
+                        role: user.role, 
+                        name: user.name 
+                    });
+                    // If user has a name, they likely have a profile - try profile_id first, then user_id
+                    let profileLink = null;
+                    if (user.profile_id) {
+                        profileLink = `/view-profile?profile_id=${user.profile_id}`;
+                    } else if (user.user_id && (user.role === 'artist' || user.role === 'organizer')) {
+                        // Even if profile_id is missing, try user_id if they're an artist/organizer
+                        profileLink = `/view-profile?user_id=${user.user_id}`;
+                    } else if (user.user_id && user.name) {
+                        // If they have a name, they might have a profile - try user_id anyway
+                        profileLink = `/view-profile?user_id=${user.user_id}`;
+                    }
+                    console.log('Profile link:', profileLink);
+                    html += `
+                        <div class="card" style="cursor: ${profileLink ? 'pointer' : 'default'};" ${profileLink ? `onclick="window.location.href='${profileLink}'"` : ''}>
+                            <div style="text-align: center;">
+                                <div class="user-avatar-small" style="width: 80px; height: 80px; margin: 0 auto 1rem; font-size: 2rem;">
+                                    ${initial}
+                                </div>
+                                <h3 style="margin-bottom: 0.5rem; ${profileLink ? 'color: var(--primary);' : ''}">${displayName}</h3>
+                                <p class="text-secondary" style="margin-bottom: 0.5rem;">${user.category || ''}</p>
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); unfollowUser(${user.user_id})" style="width: 100%;">Unfollow</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<div class="card"><p>Error loading following: ${error.message}</p></div>`;
+            }
+        }
+
+        async function loadFollowers() {
+            const container = document.getElementById('networkContent');
+            try {
+                const followers = await apiRequest('/connections/followers');
+                console.log('Followers data:', followers);
+                
+                if (!Array.isArray(followers)) {
+                    console.error('Followers is not an array:', followers);
+                    container.innerHTML = '<div class="card"><p>Error: Invalid response format. Please refresh the page.</p></div>';
+                    return;
+                }
+                
+                if (followers.length === 0) {
+                    container.innerHTML = '<div class="card"><p>No one is following you yet.</p></div>';
+                    return;
+                }
+
+                let html = '<div class="grid grid-3">';
+                for (const user of followers) {
+                    const displayName = user.name || user.email.split('@')[0];
+                    const initial = displayName.charAt(0).toUpperCase();
+                    const isFollowing = await checkIfFollowing(user.user_id);
+                    const profileLink = user.profile_id 
+                        ? `/view-profile?profile_id=${user.profile_id}`
+                        : user.user_id && (user.role === 'artist' || user.role === 'organizer')
+                        ? `/view-profile?user_id=${user.user_id}`
+                        : null;
+                    html += `
+                        <div class="card" style="cursor: ${profileLink ? 'pointer' : 'default'};" ${profileLink ? `onclick="window.location.href='${profileLink}'"` : ''}>
+                            <div style="text-align: center;">
+                                <div class="user-avatar-small" style="width: 80px; height: 80px; margin: 0 auto 1rem; font-size: 2rem;">
+                                    ${initial}
+                                </div>
+                                <h3 style="margin-bottom: 0.5rem; ${profileLink ? 'color: var(--primary);' : ''}">${displayName}</h3>
+                                <p class="text-secondary" style="margin-bottom: 0.5rem;">${user.category || ''}</p>
+                                ${isFollowing 
+                                    ? `<button class="btn btn-secondary" onclick="event.stopPropagation(); unfollowUser(${user.user_id})" style="width: 100%;">Unfollow</button>`
+                                    : `<button class="btn btn-primary" onclick="event.stopPropagation(); followUser(${user.user_id})" style="width: 100%;">Follow Back</button>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<div class="card"><p>Error loading followers: ${error.message}</p></div>`;
+            }
+        }
+
+        async function loadSuggestions() {
+            const container = document.getElementById('networkContent');
+            try {
+                // Get all users and filter out those we're already following
+                const [allUsers, following] = await Promise.all([
+                    apiRequest('/users/profiles?limit=50'),
+                    apiRequest('/connections/following')
+                ]);
+
+                const followingIds = new Set(following.map(u => u.user_id));
+                const suggestions = allUsers.filter(user => 
+                    !followingIds.has(user.user_id) && 
+                    user.user_id !== getCurrentUser().id
+                ).slice(0, 12);
+
+                if (suggestions.length === 0) {
+                    container.innerHTML = '<div class="card"><p>No suggestions at the moment.</p></div>';
+                    return;
+                }
+
+                let html = '<div class="grid grid-3">';
+                for (const profile of suggestions) {
+                    const profileLink = profile.id 
+                        ? `/view-profile?profile_id=${profile.id}`
+                        : profile.user_id
+                        ? `/view-profile?user_id=${profile.user_id}`
+                        : null;
+                    html += `
+                        <div class="card" style="cursor: ${profileLink ? 'pointer' : 'default'};" ${profileLink ? `onclick="window.location.href='${profileLink}'"` : ''}>
+                            <div style="text-align: center;">
+                                <div class="user-avatar-small" style="width: 80px; height: 80px; margin: 0 auto 1rem; font-size: 2rem;">
+                                    ${profile.name?.charAt(0).toUpperCase() || 'U'}
+                                </div>
+                                <h3 style="margin-bottom: 0.5rem; ${profileLink ? 'color: var(--primary);' : ''}">${profile.name || 'Unknown'}</h3>
+                                <p class="text-secondary" style="margin-bottom: 0.5rem;">${profile.category || ''}</p>
+                                <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.5rem;">${profile.location || ''}</p>
+                                <div style="margin-bottom: 1rem;">
+                                    <span class="badge badge-primary">AI Score: ${profile.ai_score.toFixed(1)}</span>
+                                </div>
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); followUser(${profile.user_id})" style="width: 100%;">Connect</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<div class="card"><p>Error loading suggestions: ${error.message}</p></div>`;
+            }
+        }
+
+        async function checkIfFollowing(userId) {
+            try {
+                const following = await apiRequest('/connections/following');
+                return following.some(u => u.user_id === userId);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function followUser(userId) {
+            try {
+                await apiRequest(`/connections/${userId}/follow`, {
+                    method: 'POST'
+                });
+                showNotification('User followed successfully!', 'success');
+                loadNetwork();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function unfollowUser(userId) {
+            try {
+                await apiRequest(`/connections/${userId}/unfollow`, {
+                    method: 'DELETE'
+                });
+                showNotification('User unfollowed successfully!', 'success');
+                loadNetwork();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
