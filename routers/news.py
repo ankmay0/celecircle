@@ -13,6 +13,7 @@ def get_news_topics():
     """Get list of available news topics"""
     return {
         "topics": [
+            "Odisha Ollywood entertainment industry",
             "Entertainment industry trends",
             "Top gig opportunities",
             "Artist success stories",
@@ -22,7 +23,10 @@ def get_news_topics():
 
 @router.get("/articles")
 def get_news_articles(
-    topic: str = Query(..., description="News topic to fetch articles for"),
+    topic: str = Query(
+        "Odisha Ollywood entertainment industry",
+        description="News topic to fetch articles for",
+    ),
     limit: int = Query(10, ge=1, le=50, description="Maximum number of articles to return")
 ):
     """

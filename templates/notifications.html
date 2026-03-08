@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifications - CeleLink</title>
+    <title>CeleCircle — Talent Social Network</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
     <link rel="stylesheet" href="/static/common.css">
@@ -79,14 +79,14 @@
                     const isUnread = !notif.is_read;
                     
                     html += `
-                        <div class="card ${isUnread ? 'notification-unread' : ''}" style="margin-bottom: 1rem; cursor: pointer; ${isUnread ? 'background-color: #e8f4f8;' : ''}" onclick="handleNotificationClick(${notif.id}, '${notif.link || ''}')">
+                        <div class="card ${isUnread ? 'notification-unread' : ''}" style="margin-bottom: 1rem; cursor: pointer;" onclick="handleNotificationClick(${notif.id}, '${notif.link || ''}')">
                             <div style="display: flex; gap: 1rem; align-items: flex-start;">
                                 <div style="font-size: 2rem; flex-shrink: 0;">${icon}</div>
                                 <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">${escapeHtml(notif.title)}</h3>
-                                    <p style="margin: 0 0 0.5rem 0; color: #666;">${escapeHtml(notif.message)}</p>
+                                    <h3 class="notification-title" style="margin: 0 0 0.5rem 0; font-size: 1rem;">${escapeHtml(notif.title)}</h3>
+                                    <p class="notification-text" style="margin: 0 0 0.5rem 0;">${escapeHtml(notif.message)}</p>
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <span style="font-size: 0.85rem; color: #999;">${timeAgo}</span>
+                                        <span class="notification-time" style="font-size: 0.85rem;">${timeAgo}</span>
                                         ${isUnread ? '<span class="badge badge-primary" style="font-size: 0.75rem;">New</span>' : ''}
                                     </div>
                                 </div>
@@ -173,6 +173,22 @@
     <style>
         .notification-unread {
             border-left: 4px solid #0077b5;
+        }
+        [data-theme="dark"] .notification-unread {
+            background-color: rgba(59,130,246,0.08) !important;
+        }
+        [data-theme="dark"] #notificationsContent .card {
+            background: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+        }
+        [data-theme="dark"] .notification-title {
+            color: var(--text-primary) !important;
+        }
+        [data-theme="dark"] .notification-text {
+            color: var(--text-secondary) !important;
+        }
+        [data-theme="dark"] .notification-time {
+            color: var(--text-muted) !important;
         }
     </style>
 </body>

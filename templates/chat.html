@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messages - CeleLink</title>
+    <title>CeleCircle — Talent Social Network</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
     <link rel="stylesheet" href="/static/common.css">
@@ -467,6 +467,83 @@
             .msg-chat { display: none; }
             .msg-container.chat-open .msg-sidebar { display: none; }
             .msg-container.chat-open .msg-chat { display: flex; }
+        }
+
+        [data-theme="dark"] .msg-container,
+        [data-theme="dark"] .msg-sidebar,
+        [data-theme="dark"] .msg-sidebar-header,
+        [data-theme="dark"] .msg-search-box,
+        [data-theme="dark"] .msg-chat,
+        [data-theme="dark"] .msg-chat-header,
+        [data-theme="dark"] .msg-input-area,
+        [data-theme="dark"] .msg-messages {
+            background: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        [data-theme="dark"] .section-label,
+        [data-theme="dark"] .contact-sub,
+        [data-theme="dark"] .contact-time,
+        [data-theme="dark"] .msg-chat-header-info span,
+        [data-theme="dark"] .msg-chat-placeholder,
+        [data-theme="dark"] .msg-attach-preview .attach-size,
+        [data-theme="dark"] .msg-contact-notice {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .section-label {
+            background: var(--bg-secondary) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .contact-name,
+        [data-theme="dark"] .msg-chat-header-info h3,
+        [data-theme="dark"] .msg-booking-ctx-item strong,
+        [data-theme="dark"] .msg-attach-preview .attach-name {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .contact-item:hover,
+        [data-theme="dark"] .contact-item.active,
+        [data-theme="dark"] .msg-bubble.received,
+        [data-theme="dark"] .msg-attach-preview,
+        [data-theme="dark"] .msg-booking-ctx {
+            background: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        [data-theme="dark"] .msg-input-row input,
+        [data-theme="dark"] .msg-search-input {
+            background: var(--bg-secondary) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .msg-input-row input::placeholder,
+        [data-theme="dark"] .msg-search-input::placeholder {
+            color: var(--text-muted) !important;
+        }
+
+        [data-theme="dark"] .msg-bubble.sent {
+            background: var(--accent-color) !important;
+        }
+
+        [data-theme="dark"] .ctx-status-pending,
+        [data-theme="dark"] .ctx-status-awaiting_payment,
+        [data-theme="dark"] .ctx-status-confirmed,
+        [data-theme="dark"] .ctx-status-completed,
+        [data-theme="dark"] .ctx-status-cancelled,
+        [data-theme="dark"] .ctx-status-disputed {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] #chatMessages [style*="color:#999"],
+        [data-theme="dark"] #chatMessages [style*="color: #999"],
+        [data-theme="dark"] .msg-attach-preview [style*="color:#888"],
+        [data-theme="dark"] .msg-attach-preview [style*="color: #888"] {
+            color: var(--text-secondary) !important;
         }
     </style>
 </head>

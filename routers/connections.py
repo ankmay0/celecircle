@@ -19,7 +19,7 @@ def follow_user(
         raise HTTPException(status_code=400, detail="Cannot follow yourself")
     
     target_user = db.query(User).filter(User.id == user_id).first()
-    if not target_user:
+    if not target_user or target_user.role == "admin":
         raise HTTPException(status_code=404, detail="User not found")
     
     existing = db.query(Connection).filter(
@@ -88,6 +88,8 @@ def get_followers(
         user = db.query(User).filter(User.id == conn.follower_id).first()
         if not user:
             continue
+        if user.role == "admin":
+            continue
         profile = db.query(Profile).filter(Profile.user_id == conn.follower_id).first()
         result.append({
             "user_id": user.id,
@@ -116,6 +118,8 @@ def get_following(
         user = db.query(User).filter(User.id == conn.following_id).first()
         if not user:
             continue
+        if user.role == "admin":
+            continue
         profile = db.query(Profile).filter(Profile.user_id == conn.following_id).first()
         result.append({
             "user_id": user.id,
@@ -136,6 +140,10 @@ def get_connection_status(
     db: Session = Depends(get_db)
 ):
     """Check if current user follows another user"""
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user or target_user.role == "admin":
+        return {"is_following": False}
+
     connection = db.query(Connection).filter(
         Connection.follower_id == current_user.id,
         Connection.following_id == user_id

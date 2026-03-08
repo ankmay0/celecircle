@@ -173,6 +173,11 @@ def get_profile_by_user_id(user_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+    if user.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
 
     return {
         "id": 0,
@@ -213,7 +218,11 @@ def search_profiles(
     db: Session = Depends(get_db)
 ):
     """Search profiles with filters and text search"""
-    query = db.query(Profile).join(User).filter(User.is_active == True, User.is_verified == True)
+    query = db.query(Profile).join(User).filter(
+        User.is_active == True,
+        User.is_verified == True,
+        User.role != "admin"
+    )
     
     # Text search across name, category, location, bio
     if q:
@@ -254,6 +263,7 @@ def search_users(
     # Search profiles (artists)
     profiles = db.query(Profile).join(User).filter(
         User.is_active == True,
+        User.role != "admin",
         User.id != current_user.id,
         (
             (Profile.name.ilike(search_term)) |
@@ -281,6 +291,7 @@ def search_users(
     if len(results) < limit:
         users = db.query(User).filter(
             User.is_active == True,
+            User.role != "admin",
             User.id != current_user.id,
             User.email.ilike(search_term)
         ).limit(limit - len(results)).all()

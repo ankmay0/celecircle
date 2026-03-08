@@ -8,7 +8,7 @@ load_dotenv()
 
 
 def _build_database_url() -> str:
-    """Resolve database URL from env with SQLite as dev default."""
+    """Resolve database URL from env with PostgreSQL as default."""
     explicit_url = os.getenv("DATABASE_URL")
     if explicit_url:
         if explicit_url.startswith("postgres://"):
@@ -17,13 +17,13 @@ def _build_database_url() -> str:
             return explicit_url.replace("postgresql://", "postgresql+psycopg://", 1)
         return explicit_url
 
-    db_engine = os.getenv("DB_ENGINE", "sqlite").strip().lower()
+    db_engine = os.getenv("DB_ENGINE", "postgres").strip().lower()
     if db_engine == "postgresql" or db_engine == "postgres":
         db_user = os.getenv("DB_USER", "postgres")
-        db_password = os.getenv("DB_PASSWORD", "")
+        db_password = os.getenv("DB_PASSWORD", "root")
         db_host = os.getenv("DB_HOST", "localhost")
         db_port = os.getenv("DB_PORT", "5432")
-        db_name = os.getenv("DB_NAME", "celelink_db")
+        db_name = os.getenv("DB_NAME", "celecircle_db")
         return f"postgresql+psycopg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
     sqlite_path = os.getenv("SQLITE_PATH", "./celelink.db")

@@ -5,10 +5,9 @@ function createLinkedInHeader() {
             <div class="header-container">
                 <div class="header-left">
                     <a href="/feed" class="logo-header">
-                        <span class="logo-icon">CB</span>
-                        <span class="logo-text">CeleBook</span>
+                        <img src="/static/celecircle-logo.png" alt="CeleCircle" class="brand-logo-circle">
                     </a>
-                    <div class="search-box" id="searchBox">
+                    <div class="search-box header-search" id="searchBox">
                         <span class="search-icon">🔍</span>
                         <input type="text" placeholder="Search events, venues, planners..." class="search-input" id="searchInput" autocomplete="off">
                         <div id="searchResults" class="search-results"></div>
@@ -42,13 +41,26 @@ function createLinkedInHeader() {
                         <span class="nav-label">Notifications</span>
                         <span class="nav-badge" id="notifBadge" style="display: none;">0</span>
                     </div>
-                    <div class="nav-item-header nav-me-dropdown" id="nav-me" onclick="toggleMeDropdown(event)">
+                    <div class="nav-item-header nav-me-dropdown nav-profile" id="nav-me" onclick="toggleMeDropdown(event)">
                         <span class="nav-icon-header nav-me-avatar">👤</span>
                         <span class="nav-label nav-me-label"><span class="nav-me-text">Me</span><span class="dropdown-arrow">▼</span></span>
                     </div>
                 </nav>
             </div>
         </header>
+    `;
+}
+
+function createMobileBottomNav() {
+    return `
+        <nav class="mobile-nav" id="mobileNav">
+            <a href="/feed" id="mobile-nav-home" aria-label="Home"><i class="nav-icon-header" aria-hidden="true">🏠</i><span class="nav-label">Home</span></a>
+            <a href="/connections" id="mobile-nav-network" aria-label="Network"><i class="nav-icon-header" aria-hidden="true">👥</i><span class="nav-label">Network</span></a>
+            <a href="/browse-gigs" id="mobile-nav-gigs" aria-label="Gigs"><i class="nav-icon-header" aria-hidden="true">💼</i><span class="nav-label">Gigs</span></a>
+            <a href="/bookings" id="mobile-nav-bookings" aria-label="Bookings"><i class="nav-icon-header" aria-hidden="true">📅</i><span class="nav-label">Bookings</span></a>
+            <a href="/chat" id="mobile-nav-messaging" aria-label="Messaging"><i class="nav-icon-header" aria-hidden="true">💬</i><span class="nav-label">Messages</span></a>
+            <a href="/profile" id="mobile-nav-profile" class="nav-profile" aria-label="Profile"><i class="nav-icon-header" aria-hidden="true">👤</i><span class="nav-label">Profile</span></a>
+        </nav>
     `;
 }
 
@@ -62,6 +74,14 @@ function setActiveNavItem(pageId) {
     const activeItem = document.getElementById(`nav-${pageId}`);
     if (activeItem) {
         activeItem.classList.add('active');
+    }
+
+    document.querySelectorAll('#mobileNav a').forEach(item => {
+        item.classList.remove('active');
+    });
+    const mobileItem = document.getElementById(`mobile-nav-${pageId}`);
+    if (mobileItem) {
+        mobileItem.classList.add('active');
     }
 }
 
@@ -80,7 +100,10 @@ function initHeader() {
         // Header already exists, ensure listeners are attached
         attachNotificationListeners();
     }
-    
+
+    if (!document.getElementById('mobileNav')) {
+        document.body.insertAdjacentHTML('beforeend', createMobileBottomNav());
+    }
 }
 
 // Initialize header when DOM is ready

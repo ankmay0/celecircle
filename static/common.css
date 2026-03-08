@@ -349,3 +349,61 @@ body {
     }
 }
 
+/* Global responsive hardening */
+body {
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+/* Global dark theme normalization for shared pages */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.card {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.card-title,
+.form-label {
+    color: var(--text-primary) !important;
+}
+
+.text-secondary,
+.loading {
+    color: var(--text-secondary) !important;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.password-toggle {
+    color: var(--text-secondary) !important;
+}
+
+.password-toggle:hover {
+    color: var(--text-primary) !important;
+}
+

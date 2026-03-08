@@ -5,6 +5,13 @@ let currentProfile = null;
 let posts = [];
 let likedPosts = new Set();
 
+function formatCount(value) {
+    if (!value || value < 1) return '0';
+    if (value >= 1000000) return (value / 1000000).toFixed(1).replace('.0', '') + 'M';
+    if (value >= 1000) return (value / 1000).toFixed(1).replace('.0', '') + 'k';
+    return String(value);
+}
+
 // Initialize feed - ONLY on the feed/home page (where feedPosts div exists)
 document.addEventListener('DOMContentLoaded', async () => {
     // Guard: only run feed initialization on the actual feed page
@@ -90,9 +97,11 @@ async function loadProfile() {
         window.currentProfile = currentProfile;
         
         updateProfileSidebar();
+        await loadProfileStats();
     } catch (error) {
         console.error('Error loading profile:', error);
         updateProfileSidebar();
+        await loadProfileStats();
     }
 }
 
@@ -132,11 +141,23 @@ function updateProfileSidebar() {
     const profileLocationEl = document.getElementById('profileLocation');
     
     if (profileInitialEl) profileInitialEl.textContent = initials;
+
+    const photoUrl = (currentUser && currentUser.profile_photo_url) || null;
     if (profilePictureLargeEl) {
-        const span = profilePictureLargeEl.querySelector('span');
-        if (span) span.textContent = initials;
+        if (photoUrl) {
+            profilePictureLargeEl.innerHTML = `<img src="${photoUrl}" alt="CeleCircle">`;
+        } else {
+            profilePictureLargeEl.innerHTML = `<span id="profileInitial">${initials}</span>`;
+        }
     }
-    if (userAvatarEl) userAvatarEl.textContent = initials;
+
+    if (userAvatarEl) {
+        if (photoUrl) {
+            userAvatarEl.innerHTML = `<img src="${photoUrl}" alt="CeleCircle">`;
+        } else {
+            userAvatarEl.textContent = initials;
+        }
+    }
     
     if (profileNameEl) profileNameEl.textContent = displayName;
     if (profileTitleEl) profileTitleEl.textContent = displayTitle;
@@ -149,18 +170,47 @@ function updateProfileSidebar() {
     if (modalUserNameEl) modalUserNameEl.textContent = displayName;
 }
 
+async function loadProfileStats() {
+    const currentUser = window.currentUser || getCurrentUser();
+    if (!currentUser || !currentUser.id) return;
+
+    const postsCountEl = document.getElementById('postCount');
+    const followersCountEl = document.getElementById('followersCount');
+    const followingCountEl = document.getElementById('followingCount');
+
+    try {
+        const [myPosts, followers, following] = await Promise.all([
+            apiRequest(`/posts?user_id=${currentUser.id}&limit=200`),
+            apiRequest('/connections/followers'),
+            apiRequest('/connections/following')
+        ]);
+
+        if (postsCountEl) postsCountEl.textContent = formatCount(Array.isArray(myPosts) ? myPosts.length : 0);
+        if (followersCountEl) followersCountEl.textContent = formatCount(Array.isArray(followers) ? followers.length : 0);
+        if (followingCountEl) followingCountEl.textContent = formatCount(Array.isArray(following) ? following.length : 0);
+
+        const badge = document.getElementById('networkBadge');
+        if (badge && Array.isArray(following) && following.length > 0) {
+            badge.textContent = following.length > 99 ? '99+' : following.length;
+            badge.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading profile stats:', error);
+        if (postsCountEl) postsCountEl.textContent = '0';
+        if (followersCountEl) followersCountEl.textContent = '0';
+        if (followingCountEl) followingCountEl.textContent = '0';
+    }
+}
+
 async function loadConnections() {
     try {
         const following = await apiRequest('/connections/following');
-        const connectionCountEl = document.getElementById('connectionCount');
-        if (connectionCountEl) {
-            connectionCountEl.textContent = following.length || 0;
-        }
         const badge = document.getElementById('networkBadge');
         if (badge && following.length > 0) {
             badge.textContent = following.length;
             badge.style.display = 'block';
         }
+        await loadProfileStats();
     } catch (error) {
         console.error('Error loading connections:', error);
     }

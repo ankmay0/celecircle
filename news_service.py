@@ -1,22 +1,71 @@
 """
-News service to fetch real news articles from NewsAPI
+News service to fetch real news articles from GNews.
 """
 import os
 import requests
-from typing import List, Dict, Optional
+from typing import List, Dict
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
-# NewsAPI configuration
-NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
-NEWS_API_BASE_URL = "https://newsapi.org/v2"
+load_dotenv()
 
-# Fallback topics mapping for entertainment industry
-TOPIC_KEYWORDS = {
-    "Entertainment industry trends": ["entertainment", "music industry", "film industry", "celebrity"],
-    "Top gig opportunities": ["gig", "event", "concert", "performance", "booking"],
-    "Artist success stories": ["artist", "musician", "singer", "performer", "success"],
-    "Industry insights": ["entertainment business", "music business", "show business", "industry"]
+# GNews configuration
+GNEWS_API_KEY = os.getenv("GNEWS_API_KEY") or os.getenv("NEWS_API_KEY", "")
+GNEWS_API_BASE_URL = "https://gnews.io/api/v4"
+DEFAULT_NEWS_TOPIC = "Odisha Ollywood entertainment industry"
+
+# Topic mapping focused on India, Odisha and Ollywood.
+TOPIC_QUERIES = {
+    "Odisha Ollywood entertainment industry": "(Ollywood OR Odisha) AND (cinema OR film OR entertainment OR celebrity)",
+    "Entertainment industry trends": "(India entertainment industry) AND (Odisha OR Ollywood OR Bollywood)",
+    "Top gig opportunities": "(India events OR live shows OR concert bookings) AND (Odisha OR Bhubaneswar)",
+    "Artist success stories": "(Ollywood artist OR Odisha singer OR Odisha actor) AND success",
+    "Industry insights": "(Ollywood industry OR Odisha film industry) AND insights",
 }
+
+def _resolve_query(topic: str) -> str:
+    resolved_topic = (topic or "").strip() or DEFAULT_NEWS_TOPIC
+    return TOPIC_QUERIES.get(resolved_topic, resolved_topic)
+
+def _normalize_article(article: Dict) -> Dict:
+    source = article.get("source") or {}
+    return {
+        "title": article.get("title", ""),
+        "description": article.get("description") or article.get("content", ""),
+        "url": article.get("url", ""),
+        "publishedAt": article.get("publishedAt", ""),
+        "source": source.get("name", "Unknown"),
+        "imageUrl": article.get("image", "")
+    }
+
+def _fetch_gnews_search(query: str, limit: int) -> List[Dict]:
+    url = f"{GNEWS_API_BASE_URL}/search"
+    params = {
+        "q": query,
+        "lang": "en",
+        "country": "in",
+        "max": min(max(limit, 1), 50),
+        "sortby": "publishedAt",
+        "token": GNEWS_API_KEY,
+    }
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    data = response.json()
+    return data.get("articles") or []
+
+def _fetch_gnews_top_headlines(limit: int) -> List[Dict]:
+    url = f"{GNEWS_API_BASE_URL}/top-headlines"
+    params = {
+        "category": "entertainment",
+        "lang": "en",
+        "country": "in",
+        "max": min(max(limit, 1), 50),
+        "token": GNEWS_API_KEY,
+    }
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    data = response.json()
+    return data.get("articles") or []
 
 def get_news_by_topic(topic: str, limit: int = 10) -> List[Dict]:
     """
@@ -29,50 +78,64 @@ def get_news_by_topic(topic: str, limit: int = 10) -> List[Dict]:
     Returns:
         List of news articles with title, description, url, publishedAt, source
     """
-    if not NEWS_API_KEY:
+    if not GNEWS_API_KEY:
         # Return mock data if API key is not configured
         return get_mock_news(topic, limit)
     
     try:
-        # Map topic to search keywords
-        keywords = TOPIC_KEYWORDS.get(topic, [topic.lower()])
-        query = " OR ".join(keywords[:3])  # Use first 3 keywords
-        
-        # Calculate date range (last 7 days)
-        from_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-        
-        # Make API request
-        url = f"{NEWS_API_BASE_URL}/everything"
-        params = {
-            "q": query,
-            "language": "en",
-            "sortBy": "publishedAt",
-            "from": from_date,
-            "pageSize": limit,
-            "apiKey": NEWS_API_KEY
-        }
-        
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        
-        data = response.json()
-        
-        if data.get("status") == "ok" and data.get("articles"):
-            articles = []
-            for article in data["articles"][:limit]:
-                if article.get("title") and article.get("url"):
-                    articles.append({
-                        "title": article.get("title", ""),
-                        "description": article.get("description", ""),
-                        "url": article.get("url", ""),
-                        "publishedAt": article.get("publishedAt", ""),
-                        "source": article.get("source", {}).get("name", "Unknown"),
-                        "imageUrl": article.get("urlToImage", "")
-                    })
-            return articles
-        else:
-            return get_mock_news(topic, limit)
-            
+        query = _resolve_query(topic)
+        candidate_queries = [
+            query,
+            "Ollywood Odisha cinema",
+            "Odisha entertainment",
+            "India entertainment celebrity",
+        ]
+        resolved_topic = (topic or "").strip()
+        if resolved_topic:
+            candidate_queries.append(resolved_topic)
+
+        articles: List[Dict] = []
+        seen_urls = set()
+
+        for candidate in candidate_queries:
+            if not candidate:
+                continue
+            try:
+                fetched = _fetch_gnews_search(candidate, min(limit * 3, 50))
+            except requests.exceptions.RequestException:
+                continue
+
+            for raw in fetched:
+                if not raw.get("title") or not raw.get("url"):
+                    continue
+                if raw["url"] in seen_urls:
+                    continue
+                seen_urls.add(raw["url"])
+                articles.append(_normalize_article(raw))
+                if len(articles) >= limit:
+                    return articles
+
+        # If search gives sparse results, broaden with India entertainment headlines.
+        if len(articles) < limit:
+            try:
+                headlines = _fetch_gnews_top_headlines(min(limit * 3, 50))
+                for raw in headlines:
+                    if not raw.get("title") or not raw.get("url"):
+                        continue
+                    if raw["url"] in seen_urls:
+                        continue
+                    seen_urls.add(raw["url"])
+                    articles.append(_normalize_article(raw))
+                    if len(articles) >= limit:
+                        break
+            except requests.exceptions.RequestException:
+                pass
+
+        if articles:
+            return articles[:limit]
+
+        return get_mock_news(topic, limit)
+
     except requests.exceptions.RequestException as e:
         print(f"Error fetching news from API: {e}")
         return get_mock_news(topic, limit)
@@ -85,21 +148,39 @@ def get_mock_news(topic: str, limit: int = 10) -> List[Dict]:
     Return mock news data when API is not available
     """
     mock_articles = {
-        "Entertainment industry trends": [
+        "Odisha Ollywood entertainment industry": [
             {
-                "title": "Entertainment Industry Sees Record Growth in 2024",
-                "description": "The entertainment industry continues to expand with new opportunities for artists and performers.",
-                "url": "https://example.com/news/entertainment-growth",
+                "title": "Ollywood Production Activity Rises Across Odisha",
+                "description": "Regional studios and creators report stronger release pipelines and audience growth in Odisha.",
+                "url": "https://example.com/news/ollywood-production-growth",
                 "publishedAt": datetime.now().isoformat(),
-                "source": "Entertainment Weekly",
+                "source": "Odisha Entertainment Desk",
                 "imageUrl": ""
             },
             {
-                "title": "Digital Platforms Transform Artist Discovery",
-                "description": "New platforms are revolutionizing how artists are discovered and booked for events.",
-                "url": "https://example.com/news/digital-platforms",
+                "title": "Bhubaneswar Events Circuit Drives Demand for Performers",
+                "description": "Event planners in Odisha highlight increased demand for local artists and live entertainment talent.",
+                "url": "https://example.com/news/bhubaneswar-events-demand",
                 "publishedAt": (datetime.now() - timedelta(hours=2)).isoformat(),
-                "source": "Music Business News",
+                "source": "India Events Watch",
+                "imageUrl": ""
+            }
+        ],
+        "Entertainment industry trends": [
+            {
+                "title": "India Entertainment Markets Expand with Regional Growth",
+                "description": "Analysts see stronger momentum from regional film and creator ecosystems including Odisha.",
+                "url": "https://example.com/news/india-entertainment-regional-growth",
+                "publishedAt": datetime.now().isoformat(),
+                "source": "Entertainment Weekly India",
+                "imageUrl": ""
+            },
+            {
+                "title": "Digital Platforms Accelerate Ollywood Artist Discovery",
+                "description": "Creators and producers in Odisha are using social platforms to grow reach and bookings.",
+                "url": "https://example.com/news/ollywood-digital-platforms",
+                "publishedAt": (datetime.now() - timedelta(hours=2)).isoformat(),
+                "source": "Creator Economy India",
                 "imageUrl": ""
             }
         ],
@@ -160,13 +241,14 @@ def get_mock_news(topic: str, limit: int = 10) -> List[Dict]:
     }
     
     # Return mock articles for the topic, or generic ones if topic not found
-    articles = mock_articles.get(topic, [
+    resolved_topic = (topic or "").strip() or DEFAULT_NEWS_TOPIC
+    articles = mock_articles.get(resolved_topic, [
         {
-            "title": f"Latest Updates on {topic}",
-            "description": f"Stay informed about the latest developments in {topic}.",
+            "title": f"Latest Updates on {resolved_topic}",
+            "description": f"Stay informed about the latest developments in {resolved_topic}.",
             "url": "https://example.com/news/latest",
             "publishedAt": datetime.now().isoformat(),
-            "source": "CeleLink News",
+            "source": "CeleCircle News",
             "imageUrl": ""
         }
     ])

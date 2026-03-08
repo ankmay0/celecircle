@@ -223,3 +223,117 @@ body{
     display:flex;
   }
 }
+
+body {
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.nav-profile {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #0b1a2b;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  z-index: 1000;
+}
+
+.mobile-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2e8f0;
+}
+
+.mobile-nav i,
+.mobile-nav svg {
+  font-size: 22px;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav span,
+  .nav-label {
+    display: none;
+  }
+}
+
+/* Dark mode consistency for EventNet pages */
+body {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.en-card,
+.en-card-flat,
+.en-mobile-drawer {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.en-pill-input,
+.en-field,
+input,
+textarea {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.en-interaction-icon,
+.en-sidebar-link,
+.en-tab-btn {
+  color: var(--text-secondary) !important;
+}
+
+.en-interaction-icon:hover,
+.en-sidebar-link:hover,
+.en-tab-btn.active {
+  color: var(--text-primary) !important;
+}
+
+.mobile-nav {
+  background: var(--bg-primary) !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .en-card,
+[data-theme="dark"] .en-card-flat,
+[data-theme="dark"] .en-mobile-drawer,
+[data-theme="dark"] .en-pill-input,
+[data-theme="dark"] .en-field {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .en-sidebar-link,
+[data-theme="dark"] .en-interaction-icon,
+[data-theme="dark"] .en-tab-btn,
+[data-theme="dark"] .text-textSecondary {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .en-sidebar-link:hover,
+[data-theme="dark"] .en-tab-btn.active,
+[data-theme="dark"] .en-interaction-icon:hover {
+  color: var(--text-primary) !important;
+}

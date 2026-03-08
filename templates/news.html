@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CeleLink News - <span id="pageTopic">Loading...</span></title>
+    <title>CeleCircle — Talent Social Network</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
     <link rel="stylesheet" href="/static/common.css">
@@ -143,7 +143,7 @@
             
             // Update page title and header
             document.getElementById('newsTopic').textContent = topic;
-            document.getElementById('pageTopic').textContent = topic;
+            document.title = `CeleCircle — Talent Social Network`;
             document.getElementById('newsSubtitle').textContent = `Latest news and updates about ${topic}`;
             
             // Load news articles
@@ -155,7 +155,7 @@
             
             try {
                 console.log('Loading news for topic:', topic);
-                const response = await apiRequest(`/api/news/articles?topic=${encodeURIComponent(topic)}&limit=20`);
+                const response = await apiRequest(`/news/articles?topic=${encodeURIComponent(topic)}&limit=20`);
                 console.log('News response:', response);
                 
                 if (response && response.articles && response.articles.length > 0) {

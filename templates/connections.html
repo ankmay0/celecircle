@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Network - CeleLink</title>
+    <title>CeleCircle — Talent Social Network</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
     <link rel="stylesheet" href="/static/common.css">
@@ -32,6 +32,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             initHeader();
             setActiveNavItem('network');
+            const tabParam = new URLSearchParams(window.location.search).get('tab');
+            if (tabParam === 'followers' || tabParam === 'suggestions' || tabParam === 'following') {
+                currentTab = tabParam;
+                document.getElementById('tabFollowing').className = currentTab === 'following' ? 'btn btn-primary' : 'btn btn-secondary';
+                document.getElementById('tabFollowers').className = currentTab === 'followers' ? 'btn btn-primary' : 'btn btn-secondary';
+                document.getElementById('tabSuggestions').className = currentTab === 'suggestions' ? 'btn btn-primary' : 'btn btn-secondary';
+            }
             loadNetwork();
         });
 

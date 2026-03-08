@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EventNet - Profile</title>
+  <title>CeleCircle — Talent Social Network</title>
   <script>
     window.tailwind = window.tailwind || {};
     window.tailwind.config = {
@@ -39,7 +39,7 @@
   <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
     <div class="eventnet-shell px-4 py-3 flex items-center gap-3">
       <button id="enOpenLeft" class="lg:hidden en-btn-icon" aria-label="Open navigation">☰</button>
-      <a href="/eventnet" class="font-extrabold text-xl tracking-tight text-primaryBlue">CeleBook</a>
+      <a href="/eventnet" class="font-extrabold text-xl tracking-tight text-primaryBlue">CeleCircle</a>
       <div class="flex-1 max-w-2xl">
         <div class="en-pill-input flex items-center px-4 py-2 gap-2">
           <span class="text-gray-500">🔍</span>
@@ -182,7 +182,7 @@
 
   <aside id="enLeftDrawer" class="en-mobile-drawer left lg:hidden p-4">
     <div class="en-card p-4">
-      <h3 class="font-bold">EventNet Navigation</h3>
+      <h3 class="font-bold">CeleCircle Navigation</h3>
       <div class="mt-2 space-y-1 text-sm">
         <a class="en-sidebar-link block px-3 py-2" href="/eventnet">🏠 Home Feed</a>
         <a class="en-sidebar-link block px-3 py-2" href="#">👥 My Network</a>
@@ -198,14 +198,15 @@
     </section>
   </aside>
 
-  <nav class="en-mobile-bottom fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden justify-around py-2 text-xs">
+  <nav class="en-mobile-bottom mobile-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden justify-around py-2 text-xs">
     <a href="/eventnet" class="flex flex-col items-center text-textSecondary">🏠<span>Home</span></a>
     <a href="#" class="flex flex-col items-center text-textSecondary">👥<span>Network</span></a>
     <a href="#" class="flex flex-col items-center text-primaryBlue font-bold">➕<span>Post</span></a>
     <a href="#" class="flex flex-col items-center text-textSecondary">📅<span>Events</span></a>
-    <a href="/eventnet/profile" class="flex flex-col items-center text-primaryBlue">👤<span>Profile</span></a>
+    <a href="/eventnet/profile" class="flex flex-col items-center text-primaryBlue nav-profile">👤<span>Profile</span></a>
   </nav>
 
+  <script src="/static/app.js"></script>
   <script src="/static/eventnet.js"></script>
 </body>
 </html>

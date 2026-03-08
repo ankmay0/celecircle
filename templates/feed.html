@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CeleLink - Home</title>
+    <title>CeleCircle — Talent Social Network</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
 </head>
@@ -22,10 +22,10 @@
         <!-- Main Feed (LinkedIn style) -->
         <main class="feed-main">
             <!-- Start a Post Section -->
-            <div class="start-post-card card">
+            <div class="start-post-card card post-composer">
                 <div class="start-post-header">
                     <div class="user-avatar-small" id="userAvatar">U</div>
-                    <button class="start-post-input" onclick="focusPostInput()">Start a post</button>
+                    <button class="start-post-input post-input" onclick="focusPostInput()">Start a post</button>
                 </div>
                 <div class="post-options">
                     <button class="post-option-btn" id="filterVideoBtn" data-media="video">
@@ -118,18 +118,18 @@
                         </div>
                     </div>
                     <div class="profile-stats">
-                        <div class="profile-stat">
-                            <div class="profile-stat-value" id="connectionCount">0</div>
-                            <div class="profile-stat-label">Connections</div>
-                        </div>
-                        <div class="profile-stat">
-                            <div class="profile-stat-value">1.2k</div>
+                        <a href="/posts-activity" class="profile-stat" id="profilePostsLink">
+                            <div class="profile-stat-value" id="postCount">0</div>
+                            <div class="profile-stat-label">Posts</div>
+                        </a>
+                        <a href="/connections?tab=followers" class="profile-stat" id="profileFollowersLink">
+                            <div class="profile-stat-value" id="followersCount">0</div>
                             <div class="profile-stat-label">Followers</div>
-                        </div>
-                        <div class="profile-stat">
-                            <div class="profile-stat-value">356</div>
+                        </a>
+                        <a href="/connections?tab=following" class="profile-stat" id="profileFollowingLink">
+                            <div class="profile-stat-value" id="followingCount">0</div>
                             <div class="profile-stat-label">Following</div>
-                        </div>
+                        </a>
                     </div>
                     <div class="profile-footer-note">
                         <span class="profile-footer-label">Recent booking</span>
@@ -140,28 +140,13 @@
                 <!-- LinkedIn News -->
                 <div class="widget">
                     <div class="widget-header">
-                        <h3>CeleLink News</h3>
+                        <h3>CeleCircle News</h3>
                         <span class="info-icon">ℹ️</span>
                     </div>
                     <div class="news-list" id="newsList">
-                        <div class="news-item" data-topic="Entertainment industry trends">
-                            <div class="news-title">Entertainment industry trends</div>
-                            <div class="news-meta">Click to view news</div>
-                        </div>
-                        <div class="news-item" data-topic="Top gig opportunities">
-                            <div class="news-title">Top gig opportunities</div>
-                            <div class="news-meta">Click to view news</div>
-                        </div>
-                        <div class="news-item" data-topic="Artist success stories">
-                            <div class="news-title">Artist success stories</div>
-                            <div class="news-meta">Click to view news</div>
-                        </div>
-                        <div class="news-item" data-topic="Industry insights">
-                            <div class="news-title">Industry insights</div>
-                            <div class="news-meta">Click to view news</div>
-                        </div>
+                        <div class="loading">Loading Odisha &amp; Ollywood news...</div>
                     </div>
-                    <button class="show-more-btn">Show more ▼</button>
+                    <button class="show-more-btn" id="newsRefreshBtn">Refresh news</button>
                 </div>
 
                 <!-- Ads / Promotional Widget -->
@@ -203,6 +188,42 @@
         
         // Make function available globally immediately
         window.openNewsTopic = openNewsTopic;
+
+        async function loadCeleNews() {
+            var newsList = document.getElementById('newsList');
+            if (!newsList) return;
+            try {
+                var response = await apiRequest('/news/articles?topic=' + encodeURIComponent('Odisha Ollywood entertainment industry') + '&limit=6');
+                var articles = (response && response.articles) ? response.articles : [];
+                if (!articles.length) {
+                    newsList.innerHTML = '<div class="news-item"><div class="news-title">No news found</div><div class="news-meta">Try again shortly</div></div>';
+                    return;
+                }
+
+                var html = '';
+                articles.forEach(function(article) {
+                    var safeTitle = (article.title || 'Untitled').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var safeSource = (article.source || 'Unknown').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var safeTime = (article.formattedDate || 'Recently').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += '<div class="news-item" data-url="' + (article.url || '') + '">'
+                        + '<div class="news-title">' + safeTitle + '</div>'
+                        + '<div class="news-meta">' + safeSource + ' • ' + safeTime + '</div>'
+                        + '</div>';
+                });
+                newsList.innerHTML = html;
+
+                newsList.querySelectorAll('.news-item[data-url]').forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        var url = this.getAttribute('data-url');
+                        if (url) window.open(url, '_blank');
+                    });
+                    item.style.cursor = 'pointer';
+                });
+            } catch (error) {
+                console.error('Error loading CeleCircle news:', error);
+                newsList.innerHTML = '<div class="news-item"><div class="news-title">Unable to load news</div><div class="news-meta">Please try again later</div></div>';
+            }
+        }
         
         // Ensure notifications icon is clickable on feed page
         function ensureNotificationsClickable() {
@@ -390,17 +411,16 @@
             });
             observer.observe(document.body, { childList: true, subtree: true });
             
-            // Attach click handlers to news items
-            var newsItems = document.querySelectorAll('.news-item[data-topic]');
-            newsItems.forEach(function(item) {
-                item.addEventListener('click', function(e) {
+            loadCeleNews();
+            setInterval(loadCeleNews, 15 * 60 * 1000);
+
+            var newsRefreshBtn = document.getElementById('newsRefreshBtn');
+            if (newsRefreshBtn) {
+                newsRefreshBtn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    e.stopPropagation();
-                    var topic = this.getAttribute('data-topic');
-                    if (topic) openNewsTopic(topic);
+                    loadCeleNews();
                 });
-                item.style.cursor = 'pointer';
-            });
+            }
         });
     </script>
 </body>

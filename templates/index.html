@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CeleLink - Entertainment Industry Marketplace</title>
+    <title>CeleCircle — Talent Social Network</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
     <link rel="stylesheet" href="/static/common.css">
@@ -101,6 +101,53 @@
             font-weight: 700;
             margin-bottom: 0.75rem;
         }
+
+        /* Landing page dark-theme unification */
+        [data-theme="dark"] body,
+        [data-theme="dark"] .landing-shell,
+        [data-theme="dark"] section,
+        [data-theme="dark"] footer,
+        [data-theme="dark"] .bg-white,
+        [data-theme="dark"] .bg-gray-50 {
+            background: var(--bg-primary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .landing-shell {
+            background: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.16), #0b1a2b 45%, #0b1a2b 100%) !important;
+        }
+
+        [data-theme="dark"] .landing-feature-card,
+        [data-theme="dark"] .group.block.bg-white,
+        [data-theme="dark"] .rounded-2xl,
+        [data-theme="dark"] .rounded-3xl {
+            background: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .text-gray-900,
+        [data-theme="dark"] .text-gray-600,
+        [data-theme="dark"] .text-gray-500,
+        [data-theme="dark"] .text-gray-400,
+        [data-theme="dark"] .landing-subtitle {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] footer h4,
+        [data-theme="dark"] footer .font-bold,
+        [data-theme="dark"] footer .tracking-tight {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .landing-title span:first-child {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .border-gray-200,
+        [data-theme="dark"] .border-gray-100 {
+            border-color: var(--border-color) !important;
+        }
     </style>
 </head>
 <body>
@@ -108,8 +155,7 @@
         <div class="header-container">
             <div class="header-left">
                 <a href="/" class="logo-header">
-                    <span class="logo-icon">CB</span>
-                    <span class="logo-text" style="font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; color: #111827;">CeleBook</span>
+                    <img src="/static/celecircle-logo.png" alt="CeleCircle" class="brand-logo-circle">
                 </a>
             </div>
             <nav class="header-nav">
@@ -218,7 +264,7 @@
     <section class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 md:px-8">
             <h2 class="text-3xl font-extrabold text-gray-900 text-center mb-16">
-                How CeleBook Works
+                How CeleCircle Works
             </h2>
             <div class="grid md:grid-cols-3 gap-12 relative">
                 <a href="/register" class="group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-transparent hover:border-gray-100">
@@ -288,7 +334,7 @@
                 <div class="relative z-10">
                     <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to elevate your next event?</h2>
                     <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-                        Join thousands of professionals already using CeleBook to connect, create, and celebrate.
+                        Join thousands of professionals already using CeleCircle to connect, create, and celebrate.
                     </p>
                     <div class="flex flex-wrap items-center justify-center gap-4">
                         <a href="/register" class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:bg-blue-50">
@@ -304,24 +350,47 @@
     </section>
 
     <footer class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 py-10">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div>
                     <a href="/" class="inline-flex items-center gap-2.5 text-gray-900 no-underline">
-                        <span class="w-8 h-8 rounded-lg bg-blue-600 text-white inline-flex items-center justify-center text-xs font-bold">CB</span>
-                        <span class="font-bold text-lg tracking-tight">CeleBook</span>
+                            <img src="/static/celecircle-logo.png" alt="CeleCircle" class="brand-logo-circle">
                     </a>
-                    <p class="text-sm text-gray-500 mt-3">Connecting artists and organizers with trusted, secure bookings.</p>
+                    <p class="text-sm text-gray-500 mt-3">
+                        Connecting artists and organizers with trusted, secure bookings.
+                    </p>
                 </div>
-                <nav class="flex flex-wrap items-center gap-5 text-sm font-medium text-gray-600">
-                    <a href="/login" class="hover:text-blue-600 transition-colors">Sign In</a>
-                    <a href="/register" class="hover:text-blue-600 transition-colors">Join Now</a>
-                    <a href="/secure-payments" class="hover:text-blue-600 transition-colors">Secure Payments</a>
-                    <a href="/contact-sales" class="hover:text-blue-600 transition-colors">Contact Sales</a>
-                </nav>
+
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900 mb-3">Contact</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <p><span class="font-semibold">Email:</span> <a href="mailto:celecircle1@gmail.com">celecircle1@gmail.com</a></p>
+                        <p><span class="font-semibold">Phone:</span> <a href="tel:8658818888">8658818888</a></p>
+                        <p><span class="font-semibold">Phone:</span> <a href="tel:8249221773">824 922 1773</a></p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900 mb-3">Location</h4>
+                    <p class="text-sm text-gray-600">
+                        Bhubaneswar, Odisha, India
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900 mb-3">Help & Links</h4>
+                    <nav class="space-y-2 text-sm text-gray-600">
+                        <a href="/help" class="block hover:text-blue-600 transition-colors">Help Center</a>
+                        <a href="/contact-sales" class="block hover:text-blue-600 transition-colors">Contact Sales</a>
+                        <a href="/secure-payments" class="block hover:text-blue-600 transition-colors">Secure Payments</a>
+                        <a href="/terms" class="block hover:text-blue-600 transition-colors">Terms</a>
+                    </nav>
+                </div>
             </div>
-            <div class="mt-8 pt-5 border-t border-gray-100 text-xs text-gray-500">
-                © 2026 CeleBook. All rights reserved.
+
+            <div class="mt-8 pt-5 border-t border-gray-100 text-xs text-gray-500 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <span>© 2026 CeleCircle. All rights reserved.</span>
+                <span>Support: celecircle1@gmail.com</span>
             </div>
         </div>
     </footer>

@@ -5,8 +5,9 @@ let currentUser = null;
 
 // Theme Management
 function initTheme() {
-    const theme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', theme);
+    const theme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
+    mountThemeToggle();
     updateThemeIcon(theme);
 }
 
@@ -19,10 +20,24 @@ function toggleTheme() {
 }
 
 function updateThemeIcon(theme) {
-    const icon = document.querySelector('.theme-toggle');
-    if (icon) {
+    const icon = document.querySelector('.theme-toggle-icon');
+    const label = document.querySelector('.theme-toggle-label');
+    if (icon && label) {
         icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        label.textContent = theme === 'dark' ? 'Light' : 'Dark';
     }
+}
+
+function mountThemeToggle() {
+    if (document.getElementById('themeToggleBtn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'themeToggleBtn';
+    btn.className = 'theme-toggle theme-toggle-floating';
+    btn.setAttribute('type', 'button');
+    btn.setAttribute('aria-label', 'Toggle theme');
+    btn.innerHTML = '<span class="theme-toggle-icon">🌙</span><span class="theme-toggle-label">Dark</span>';
+    btn.addEventListener('click', toggleTheme);
+    document.body.appendChild(btn);
 }
 
 // API Helper Functions
@@ -306,4 +321,5 @@ window.formatDate = formatDate;
 window.formatCurrency = formatCurrency;
 window.openModal = openModal;
 window.closeModal = closeModal;
+window.toggleTheme = toggleTheme;
 

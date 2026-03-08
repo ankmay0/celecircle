@@ -154,3 +154,75 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.15) !important;
     outline: none !important;
 }
+
+/* Admin dashboard dark-mode readability overrides */
+[data-theme="dark"] body {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .sidebar {
+    background: #0a1422 !important;
+    color: var(--text-secondary) !important;
+    border-right-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .sidebar-brand span,
+[data-theme="dark"] .nav-item,
+[data-theme="dark"] .nav-section,
+[data-theme="dark"] .sidebar-footer,
+[data-theme="dark"] .topbar-user,
+[data-theme="dark"] .tbl th,
+[data-theme="dark"] .tbl td,
+[data-theme="dark"] .stat-card .label,
+[data-theme="dark"] .report-card .rc-desc,
+[data-theme="dark"] .detail-row .dl,
+[data-theme="dark"] .dw-heading {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .topbar-title,
+[data-theme="dark"] .panel-header h3,
+[data-theme="dark"] .stat-card .value,
+[data-theme="dark"] .detail-row .dv,
+[data-theme="dark"] .report-card .rc-title,
+[data-theme="dark"] .h-bar-amount {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .loading-state,
+[data-theme="dark"] .loading-state *,
+[data-theme="dark"] .pagination,
+[data-theme="dark"] .mono {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .topbar,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .modal,
+[data-theme="dark"] .report-card,
+[data-theme="dark"] .pricing-card,
+[data-theme="dark"] .tbl th,
+[data-theme="dark"] .bk-act-menu {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .tbl tr:hover td,
+[data-theme="dark"] .bk-act-menu a:hover,
+[data-theme="dark"] .nav-item:hover {
+    background: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .filters input,
+[data-theme="dark"] .filters select,
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea,
+[data-theme="dark"] .date-filter-bar input[type="date"],
+[data-theme="dark"] .pricing-card .pc-input {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}

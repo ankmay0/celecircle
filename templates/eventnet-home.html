@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EventNet - Home Feed</title>
+  <title>CeleCircle — Talent Social Network</title>
   <script>
     window.tailwind = window.tailwind || {};
     window.tailwind.config = {
@@ -39,7 +39,7 @@
   <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
     <div class="eventnet-shell px-4 py-3 flex items-center gap-3">
       <button id="enOpenLeft" class="lg:hidden en-btn-icon" aria-label="Open navigation">☰</button>
-      <a href="/eventnet" class="font-extrabold text-xl tracking-tight text-primaryBlue">CeleBook</a>
+      <a href="/eventnet" class="font-extrabold text-xl tracking-tight text-primaryBlue">CeleCircle</a>
       <div class="flex-1 max-w-2xl">
         <div class="en-pill-input flex items-center px-4 py-2 gap-2">
           <span class="text-gray-500">🔍</span>
@@ -165,7 +165,7 @@
             <img src="https://i.pravatar.cc/100?img=52" class="h-11 w-11 rounded-full" alt="Maya Rodriguez" />
             <div>
               <p class="font-semibold text-sm">Maya Rodriguez <span class="text-textSecondary font-medium">• 2nd</span></p>
-              <p class="text-xs text-textSecondary">Brand Partnerships Lead • EventNet Verified</p>
+              <p class="text-xs text-textSecondary">Brand Partnerships Lead • CeleCircle Verified</p>
               <p class="text-xs text-textSecondary mt-0.5">5h • Public</p>
             </div>
           </div>
@@ -270,14 +270,15 @@
     </div>
   </aside>
 
-  <nav class="en-mobile-bottom fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden justify-around py-2 text-xs">
+  <nav class="en-mobile-bottom mobile-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden justify-around py-2 text-xs">
     <a href="/eventnet" class="flex flex-col items-center text-primaryBlue">🏠<span>Home</span></a>
     <a href="#" class="flex flex-col items-center text-textSecondary">👥<span>Network</span></a>
     <a href="#" class="flex flex-col items-center text-primaryBlue font-bold">➕<span>Post</span></a>
     <a href="#" class="flex flex-col items-center text-textSecondary">📅<span>Events</span></a>
-    <a href="/eventnet/profile" class="flex flex-col items-center text-textSecondary">👤<span>Profile</span></a>
+    <a href="/eventnet/profile" class="flex flex-col items-center text-textSecondary nav-profile">👤<span>Profile</span></a>
   </nav>
 
+  <script src="/static/app.js"></script>
   <script src="/static/eventnet.js"></script>
 </body>
 </html>

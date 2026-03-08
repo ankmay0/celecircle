@@ -30,8 +30,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1rem;
-    height: 56px;
+    padding: 8px 1rem;
+    min-height: 136px;
 }
 
 .header-left {
@@ -49,6 +49,15 @@ body {
     color: white;
     font-weight: bold;
     font-size: 1.25rem;
+}
+
+.brand-logo-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
 }
 
 .logo-icon {
@@ -360,6 +369,15 @@ body {
     align-items: center;
     justify-content: center;
     flex: 1;
+    text-decoration: none;
+    color: inherit;
+    padding: 8px 6px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.profile-stat:hover {
+    background: #f8fafc;
 }
 
 .profile-stat-value {
@@ -404,6 +422,15 @@ body {
 .profile-footer-value {
     color: #1f2937;
     font-weight: 500;
+}
+
+.profile-picture-large img,
+.user-avatar-small img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
 }
 
 /* Premium Card */
@@ -1698,4 +1725,429 @@ body {
 
 .notification-unread-dot {
     background: var(--primary-blue);
+}
+
+/* Responsive and mobile-nav refresh */
+body {
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.nav-profile {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.post-composer {
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.post-input {
+    min-height: 40px;
+    font-size: 14px;
+}
+
+.mobile-nav {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .feed-container {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        padding-bottom: 80px;
+    }
+
+    .post-card,
+    .start-post-card,
+    .card {
+        width: 100%;
+        margin-bottom: 12px;
+        border-radius: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-header .header-container {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        height: auto;
+        padding: 10px 16px;
+        gap: 8px;
+    }
+
+    .header-left {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .logo-icon {
+        height: 36px;
+        width: 36px;
+    }
+
+    .header-search {
+        width: 100%;
+        max-width: none;
+        margin-top: 0;
+    }
+
+    .header-search .search-input {
+        width: 100%;
+        height: 38px;
+        border-radius: 20px;
+        padding: 0 14px 0 40px;
+    }
+
+    .header-nav {
+        display: none;
+    }
+
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: #0b1a2b;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 1000;
+    }
+
+    .mobile-nav a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #cbd5e1;
+        text-decoration: none;
+        min-width: 42px;
+        min-height: 42px;
+    }
+
+    .mobile-nav a.active {
+        color: #ffffff;
+    }
+
+    .mobile-nav i,
+    .mobile-nav svg,
+    .mobile-nav .nav-icon-header {
+        font-size: 22px;
+        font-style: normal;
+    }
+
+    .mobile-nav span,
+    .nav-label {
+        display: none;
+    }
+
+    .search-box {
+        display: block;
+    }
+}
+
+.dark-mode .notification-dropdown-item,
+.dark-mode .notification-item {
+    background: #0f1b2d;
+}
+
+.dark-mode .notification-item-title,
+.dark-mode .notification-title {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.dark-mode .notification-item-message,
+.dark-mode .notification-text {
+    color: #cbd5e1;
+}
+
+.dark-mode .notification-item-time,
+.dark-mode .notification-time {
+    color: #94a3b8;
+}
+
+/* CeleCircle global dark mode layer for feed/network surfaces */
+:root,
+[data-theme="light"] {
+    --bg-primary: #f4f7fb;
+    --bg-secondary: #eef3f9;
+    --bg-card: #ffffff;
+    --text-primary: #191919;
+    --text-secondary: #5f6b7a;
+    --text-muted: #7c8a9b;
+    --border-color: #dbe3ef;
+    --accent-color: #3b82f6;
+}
+
+[data-theme="dark"] {
+    --bg-primary: #0b1a2b;
+    --bg-secondary: #0f1f36;
+    --bg-card: #12243d;
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255,255,255,0.08);
+    --accent-color: #3b82f6;
+}
+
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.header,
+.main-header {
+    background: var(--bg-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.logo {
+    height: 36px;
+}
+
+.feed-container {
+    padding-bottom: 80px;
+}
+
+.card,
+.post-card,
+.start-post-card,
+.widget,
+.profile-card,
+.ad-card,
+.create-type-banner {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.post-card p,
+.post-content,
+.news-meta,
+.post-author-title,
+.profile-title,
+.profile-footer-label,
+.profile-stat-label {
+    color: var(--text-secondary) !important;
+}
+
+.post-author-name,
+.profile-name,
+.widget-header h3,
+.news-title,
+.modal-header h2,
+.post-content-textarea,
+.comment-author,
+.comment-text {
+    color: var(--text-primary) !important;
+}
+
+.post-actions {
+    border-top: 1px solid var(--border-color) !important;
+}
+
+.post-actions button,
+.post-action-btn {
+    color: var(--text-secondary) !important;
+}
+
+.post-actions button:hover,
+.post-action-btn:hover {
+    color: var(--text-primary) !important;
+}
+
+.notification-item,
+.notification-dropdown-item {
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.notification-title,
+.notification-item-title {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.notification-text,
+.notification-item-message {
+    color: var(--text-secondary) !important;
+}
+
+.notification-time,
+.notification-item-time {
+    color: var(--text-muted) !important;
+}
+
+.notification-unread,
+.notification-dropdown-item.unread {
+    background: rgba(59,130,246,0.08) !important;
+}
+
+input,
+textarea,
+.search-input,
+.comment-input,
+.post-content-textarea,
+.audience-select {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.modal-content,
+.me-dropdown,
+.notifications-dropdown,
+.search-results {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+a {
+    color: var(--accent-color);
+}
+
+a:hover {
+    opacity: 0.9;
+}
+
+img {
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+.mobile-nav {
+    background: var(--bg-primary) !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+
+.mobile-nav i,
+.mobile-nav svg,
+.mobile-nav .nav-icon-header {
+    color: var(--text-secondary) !important;
+    font-size: 22px;
+}
+
+.mobile-nav a:hover {
+    color: var(--text-primary) !important;
+}
+
+/* Extra dark-mode contrast fixes for feed/search/notifications */
+[data-theme="dark"] .search-results,
+[data-theme="dark"] .notifications-dropdown,
+[data-theme="dark"] .me-dropdown {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .search-result-item,
+[data-theme="dark"] .notification-dropdown-item {
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .search-result-name,
+[data-theme="dark"] .search-result-details,
+[data-theme="dark"] .search-no-results,
+[data-theme="dark"] .search-loading,
+[data-theme="dark"] .notifications-dropdown-header h3,
+[data-theme="dark"] .view-all-link,
+[data-theme="dark"] .dropdown-profile-name,
+[data-theme="dark"] .dropdown-profile-title,
+[data-theme="dark"] .dropdown-item,
+[data-theme="dark"] .dropdown-section-title {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .news-meta,
+[data-theme="dark"] .post-time,
+[data-theme="dark"] .profile-stat-label,
+[data-theme="dark"] .profile-footer-label,
+[data-theme="dark"] .comment-actions,
+[data-theme="dark"] .notification-item-time {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .mobile-nav a {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .mobile-nav a.active,
+[data-theme="dark"] .mobile-nav a:hover {
+    color: var(--text-primary) !important;
+}
+
+/* Sidebar/widget contrast fixes from live dark-mode UI */
+[data-theme="dark"] .profile-card,
+[data-theme="dark"] .widget,
+[data-theme="dark"] .ad-card {
+    background: var(--bg-card) !important;
+}
+
+[data-theme="dark"] .profile-name,
+[data-theme="dark"] .profile-title,
+[data-theme="dark"] .profile-stat-value,
+[data-theme="dark"] .profile-stat-label,
+[data-theme="dark"] .profile-footer-label,
+[data-theme="dark"] .profile-footer-value {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .profile-footer-note {
+    background: #1a2d47 !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .widget-header h3,
+[data-theme="dark"] .news-title,
+[data-theme="dark"] .ad-text strong {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .info-icon,
+[data-theme="dark"] .news-meta,
+[data-theme="dark"] .ad-label,
+[data-theme="dark"] .ad-text p {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .news-item {
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .news-item:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    transform: translateX(2px);
+}
+
+[data-theme="dark"] .news-item:active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .show-more-btn,
+[data-theme="dark"] #newsRefreshBtn {
+    color: var(--accent-color) !important;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .show-more-btn:hover,
+[data-theme="dark"] #newsRefreshBtn:hover {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .notifications-dropdown-content [style*="color: #666"],
+[data-theme="dark"] .notifications-dropdown-content [style*="color:#666"] {
+    color: var(--text-secondary) !important;
 }
