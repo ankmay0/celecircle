@@ -4,6 +4,25 @@ let authToken = localStorage.getItem('authToken');
 let currentUser = null;
 
 // Theme Management
+function ensureCeleCircleFavicon() {
+    const iconHref = '/static/celecircle-logo.png';
+
+    const upsertIcon = (relValue) => {
+        let link = document.querySelector(`link[rel="${relValue}"]`);
+        if (!link) {
+            link = document.createElement('link');
+            link.setAttribute('rel', relValue);
+            document.head.appendChild(link);
+        }
+        link.setAttribute('type', 'image/png');
+        link.setAttribute('href', iconHref);
+    };
+
+    upsertIcon('icon');
+    upsertIcon('shortcut icon');
+    upsertIcon('apple-touch-icon');
+}
+
 function initTheme() {
     const theme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
@@ -297,6 +316,7 @@ function closeModal(modalId) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    ensureCeleCircleFavicon();
     initTheme();
     updateNavigation();
     
