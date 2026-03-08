@@ -60,12 +60,20 @@ function createMobileBottomNav() {
     return `
         <nav class="mobile-nav" id="mobileNav">
             <a href="/feed" id="mobile-nav-home" aria-label="Home"><i class="nav-icon-header" aria-hidden="true">🏠</i><span class="nav-label">Home</span></a>
-            <a href="/connections" id="mobile-nav-network" aria-label="Network"><i class="nav-icon-header" aria-hidden="true">👥</i><span class="nav-label">Network</span></a>
-            <a href="/browse-gigs" id="mobile-nav-gigs" aria-label="Gigs"><i class="nav-icon-header" aria-hidden="true">💼</i><span class="nav-label">Gigs</span></a>
-            <a href="/bookings" id="mobile-nav-bookings" aria-label="Bookings"><i class="nav-icon-header" aria-hidden="true">📅</i><span class="nav-label">Bookings</span></a>
-            <a href="/chat" id="mobile-nav-messaging" aria-label="Messaging"><i class="nav-icon-header" aria-hidden="true">💬</i><span class="nav-label">Messages</span></a>
+            <a href="/chat" id="mobile-nav-messaging" aria-label="Messages"><i class="nav-icon-header" aria-hidden="true">💬</i><span class="nav-label">Messages</span></a>
             <a href="/notifications" id="mobile-nav-notifications" aria-label="Notifications"><i class="nav-icon-header" aria-hidden="true">🔔</i><span class="nav-label">Notifications</span></a>
-            <a href="#" id="mobile-nav-theme" aria-label="Toggle theme"><i class="nav-icon-header" aria-hidden="true">☀️</i><span class="nav-label">Theme</span></a>
+            <a href="/profile" id="mobile-nav-profile" aria-label="Profile"><i class="nav-icon-header" aria-hidden="true">👤</i><span class="nav-label">Profile</span></a>
+            <button type="button" id="mobileQuickMenuToggle" class="mobile-quick-toggle" aria-label="Open quick menu" aria-expanded="false">
+                <span class="menu-line"></span>
+                <span class="menu-line"></span>
+                <span class="menu-line"></span>
+            </button>
+            <div id="mobileQuickMenuPanel" class="mobile-quick-panel" aria-hidden="true">
+                <a href="/connections" id="mobile-nav-network" aria-label="My Network"><i class="nav-icon-header" aria-hidden="true">👥</i><span class="nav-label">My Network</span></a>
+                <a href="/bookings" id="mobile-nav-bookings" aria-label="My Bookings"><i class="nav-icon-header" aria-hidden="true">📅</i><span class="nav-label">My Bookings</span></a>
+                <a href="/browse-gigs" id="mobile-nav-gigs" aria-label="Gigs"><i class="nav-icon-header" aria-hidden="true">💼</i><span class="nav-label">Gigs</span></a>
+                <a href="#" id="mobile-nav-theme" aria-label="Toggle theme"><i class="nav-icon-header" aria-hidden="true">☀️</i><span class="nav-label">Theme</span></a>
+            </div>
         </nav>
     `;
 }
@@ -107,10 +115,14 @@ function initHeader() {
         attachNotificationListeners();
     }
 
-    if (!document.getElementById('mobileNav')) {
+    const existingMobileNav = document.getElementById('mobileNav');
+    if (existingMobileNav) {
+        existingMobileNav.outerHTML = createMobileBottomNav();
+    } else {
         document.body.insertAdjacentHTML('beforeend', createMobileBottomNav());
     }
     bindMobileThemeToggle();
+    bindMobileQuickMenu();
 }
 
 function bindMobileThemeToggle() {
@@ -133,6 +145,48 @@ function bindMobileThemeToggle() {
 
     themeLink.dataset.bound = 'true';
     updateThemeIcon();
+}
+
+function bindMobileQuickMenu() {
+    const menu = document.getElementById('mobileNav');
+    const toggleBtn = document.getElementById('mobileQuickMenuToggle');
+    const panel = document.getElementById('mobileQuickMenuPanel');
+    if (!menu || !toggleBtn || !panel || toggleBtn.dataset.bound === 'true') return;
+
+    const closeMenu = () => {
+        panel.classList.remove('open');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        panel.setAttribute('aria-hidden', 'true');
+    };
+
+    toggleBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const willOpen = !panel.classList.contains('open');
+        if (willOpen) {
+            panel.classList.add('open');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            panel.setAttribute('aria-hidden', 'false');
+        } else {
+            closeMenu();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!menu.contains(event.target)) {
+            closeMenu();
+        }
+    });
+
+    panel.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+            if (link.id !== 'mobile-nav-theme') {
+                closeMenu();
+            }
+        });
+    });
+
+    toggleBtn.dataset.bound = 'true';
 }
 
 // Initialize header when DOM is ready
