@@ -149,6 +149,21 @@
             border-color: var(--border-color) !important;
         }
 
+        /* Footer help links must stack vertically (override global nav styles) */
+        footer .help-links-nav {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            gap: 0.5rem !important;
+        }
+
+        footer .help-links-nav a {
+            display: block !important;
+            width: 100%;
+            text-align: left;
+        }
+
         /* Landing header mobile auth actions (top-right) */
         .main-header .logo-header .brand-logo-circle {
             width: 72px !important;
@@ -427,7 +442,7 @@
 
                 <div>
                     <h4 class="text-sm font-bold text-gray-900 mb-3">Help & Links</h4>
-                    <nav class="space-y-2 text-sm text-gray-600">
+                    <nav class="help-links-nav text-sm text-gray-600">
                         <a href="/help" class="block hover:text-blue-600 transition-colors">Help Center</a>
                         <a href="/contact-sales" class="block hover:text-blue-600 transition-colors">Contact Sales</a>
                         <a href="/secure-payments" class="block hover:text-blue-600 transition-colors">Secure Payments</a>
