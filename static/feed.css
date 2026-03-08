@@ -2098,8 +2098,18 @@ img {
     border-color: var(--border-color) !important;
 }
 
+[data-theme="dark"] .notifications-dropdown-header {
+    background: var(--bg-card) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .notifications-dropdown-content {
+    background: var(--bg-card) !important;
+}
+
 [data-theme="dark"] .search-result-item,
 [data-theme="dark"] .notification-dropdown-item {
+    background: var(--bg-secondary) !important;
     border-bottom-color: var(--border-color) !important;
 }
 
@@ -2139,6 +2149,14 @@ img {
 [data-theme="dark"] .mobile-nav a.active,
 [data-theme="dark"] .mobile-nav a:hover {
     color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .notification-dropdown-item.unread {
+    background: #17314d !important;
+}
+
+[data-theme="dark"] .notification-dropdown-item.unread:hover {
+    background: #1d3b5a !important;
 }
 
 /* Sidebar/widget contrast fixes from live dark-mode UI */
