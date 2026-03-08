@@ -504,6 +504,10 @@
             color: var(--text-primary) !important;
         }
 
+        [data-theme="dark"] .msg-booking-ctx-item {
+            color: var(--text-secondary) !important;
+        }
+
         [data-theme="dark"] .contact-item:hover,
         [data-theme="dark"] .contact-item.active,
         [data-theme="dark"] .msg-bubble.received,
@@ -530,13 +534,39 @@
             background: var(--accent-color) !important;
         }
 
-        [data-theme="dark"] .ctx-status-pending,
-        [data-theme="dark"] .ctx-status-awaiting_payment,
-        [data-theme="dark"] .ctx-status-confirmed,
-        [data-theme="dark"] .ctx-status-completed,
-        [data-theme="dark"] .ctx-status-cancelled,
+        [data-theme="dark"] .msg-booking-ctx-link {
+            color: #60a5fa !important;
+        }
+
+        [data-theme="dark"] .msg-contact-notice {
+            background: #3a2f0f !important;
+            border-bottom: 1px solid #7c5d17 !important;
+            color: #fde68a !important;
+        }
+
+        [data-theme="dark"] .ctx-status-pending {
+            background: rgba(245, 158, 11, 0.2) !important;
+            color: #fbbf24 !important;
+        }
+        [data-theme="dark"] .ctx-status-awaiting_payment {
+            background: rgba(234, 179, 8, 0.22) !important;
+            color: #fde68a !important;
+        }
+        [data-theme="dark"] .ctx-status-confirmed {
+            background: rgba(16, 185, 129, 0.18) !important;
+            color: #6ee7b7 !important;
+        }
+        [data-theme="dark"] .ctx-status-completed {
+            background: rgba(59, 130, 246, 0.18) !important;
+            color: #93c5fd !important;
+        }
+        [data-theme="dark"] .ctx-status-cancelled {
+            background: rgba(239, 68, 68, 0.18) !important;
+            color: #fca5a5 !important;
+        }
         [data-theme="dark"] .ctx-status-disputed {
-            color: var(--text-primary) !important;
+            background: rgba(168, 85, 247, 0.2) !important;
+            color: #d8b4fe !important;
         }
 
         [data-theme="dark"] #chatMessages [style*="color:#999"],
