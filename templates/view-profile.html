@@ -107,6 +107,10 @@
         .btn-book:hover { background: #004182; }
         .btn-enquiry { background: #fff; color: #0a66c2; border: 1.5px solid #0a66c2; font-weight: 600; }
         .btn-enquiry:hover { background: #e8f0fe; }
+        .btn-follow { background: #0a66c2; color: #fff; border: 1.5px solid #0a66c2; font-weight: 700; }
+        .btn-follow:hover { background: #004182; border-color: #004182; }
+        .btn-unfollow { background: #fff; color: #0a66c2; border: 1.5px solid #0a66c2; font-weight: 700; }
+        .btn-unfollow:hover { background: #e8f0fe; }
 
         /* Trust indicators */
         .vp-trust {
@@ -310,6 +314,92 @@
         .bm-btn-secondary:hover { background: #e0e0e0; }
         .bm-btn-success { background: #10b981; color: #fff; }
         .bm-btn-success:hover { background: #059669; }
+
+        /* Dark mode readability for view-profile page */
+        [data-theme="dark"] .vp-hero,
+        [data-theme="dark"] .booking-card,
+        [data-theme="dark"] .mw-section,
+        [data-theme="dark"] .booking-modal {
+            background: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        [data-theme="dark"] .vp-tagline,
+        [data-theme="dark"] .vp-meta,
+        [data-theme="dark"] .vp-quick-item,
+        [data-theme="dark"] .vp-trust-item,
+        [data-theme="dark"] .vp-stat-label,
+        [data-theme="dark"] .mw-count,
+        [data-theme="dark"] .bc-field label,
+        [data-theme="dark"] .bc-price-row,
+        [data-theme="dark"] .bc-trust-item,
+        [data-theme="dark"] .bm-field label,
+        [data-theme="dark"] .bm-step-label {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .vp-name,
+        [data-theme="dark"] .vp-info-grid p,
+        [data-theme="dark"] .mw-title,
+        [data-theme="dark"] .bc-price-row.total,
+        [data-theme="dark"] .bc-addon-label,
+        [data-theme="dark"] .bm-header h2 {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .vp-trust,
+        [data-theme="dark"] .vp-stats-row,
+        [data-theme="dark"] .vp-info-toggle,
+        [data-theme="dark"] .vp-info-panel,
+        [data-theme="dark"] .mw-header,
+        [data-theme="dark"] .bm-header,
+        [data-theme="dark"] .bm-footer {
+            border-color: var(--border-color) !important;
+        }
+
+        [data-theme="dark"] .vp-info-toggle:hover,
+        [data-theme="dark"] .mw-tab:hover,
+        [data-theme="dark"] .bm-close:hover,
+        [data-theme="dark"] .bm-btn-secondary:hover {
+            background: var(--bg-secondary) !important;
+        }
+
+        [data-theme="dark"] .vp-info-panel,
+        [data-theme="dark"] .bc-price-box,
+        [data-theme="dark"] .bc-addon-item,
+        [data-theme="dark"] .bm-btn-secondary {
+            background: var(--bg-secondary) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .bc-field input,
+        [data-theme="dark"] .bc-field select,
+        [data-theme="dark"] .bm-field input,
+        [data-theme="dark"] .bm-field select,
+        [data-theme="dark"] .bm-field textarea {
+            background: #0d2138 !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .bc-field input::placeholder,
+        [data-theme="dark"] .bm-field input::placeholder,
+        [data-theme="dark"] .bm-field textarea::placeholder {
+            color: var(--text-muted) !important;
+        }
+
+        [data-theme="dark"] .bc-advance-box {
+            background: rgba(16, 185, 129, 0.12) !important;
+            color: #a7f3d0 !important;
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        }
+
+        [data-theme="dark"] .mw-item,
+        [data-theme="dark"] .mw-loading {
+            background: var(--bg-secondary) !important;
+            color: var(--text-secondary) !important;
+        }
 
         /* Responsive */
         @media (max-width: 900px) {
@@ -526,7 +616,17 @@
                 let profile;
                 if (profileId) { profile = await apiRequest('/users/profiles/' + profileId); }
                 else { profile = await apiRequest('/users/profiles/user/' + userId); }
-                displayProfile(profile);
+                const currentUser = getCurrentUser();
+                let isFollowing = false;
+                if (currentUser && currentUser.id !== profile.user_id) {
+                    try {
+                        const status = await apiRequest('/connections/' + profile.user_id + '/status');
+                        isFollowing = !!(status && status.is_following);
+                    } catch (statusError) {
+                        isFollowing = false;
+                    }
+                }
+                displayProfile(profile, isFollowing);
             } catch (error) {
                 document.getElementById('profileContent').innerHTML = '<div class="card" style="text-align:center;padding:2rem;"><p>Error loading profile.</p><a href="/connections" class="btn btn-primary" style="margin-top:1rem;">Back to Network</a></div>';
             }
@@ -535,7 +635,7 @@
         /* ═══════════════════════════════════════
            DISPLAY PROFILE
            ═══════════════════════════════════════ */
-        function displayProfile(profile) {
+        function displayProfile(profile, isFollowing) {
             currentProfile = profile;
             currentUserId = profile.user_id;
             const container = document.getElementById('profileContent');
@@ -543,8 +643,10 @@
             const hasFullProfile = profile.has_profile !== false && profile.id !== 0;
             const isOrganizer = profile.category && profile.category.toLowerCase().includes('looking for');
             const isArtist = hasFullProfile ? !isOrganizer : false;
-            const canBook = currentUser && currentUser.role === 'organizer' && isArtist && currentUser.id !== profile.user_id;
-            const canMessage = currentUser && currentUser.id !== profile.user_id;
+            const isOwnProfile = currentUser && currentUser.id === profile.user_id;
+            const canBook = currentUser && currentUser.role === 'organizer' && isArtist && !isOwnProfile;
+            const canFollowToggle = currentUser && !isOwnProfile;
+            const canMessage = canFollowToggle && !!isFollowing;
             const initial = (profile.name || '?').charAt(0).toUpperCase();
             const photoUrl = profile && profile.profile_photo_url ? profile.profile_photo_url : null;
             const safeName = escapeHtml(profile.name || 'User');
@@ -586,8 +688,11 @@
             }
 
             // Action buttons
-            if (canBook || canMessage) {
+            if (canBook || canMessage || canFollowToggle) {
                 html += '<div class="vp-actions">';
+                if (canFollowToggle) {
+                    html += `<button class="btn ${isFollowing ? 'btn-unfollow' : 'btn-follow'}" onclick="toggleFollowUser(${profile.user_id}, ${isFollowing ? 'true' : 'false'})">${isFollowing ? '✓ Following' : '+ Follow'}</button>`;
+                }
                 if (canBook) html += `<button class="btn btn-book" onclick="openBookingModal()">📅 Book Now</button>`;
                 if (canMessage) html += `<button class="btn btn-enquiry" onclick="messageUser(${profile.user_id}, '${profile.name.replace(/'/g, "\\'")}', '${(profile.category || '').replace(/'/g, "\\'")}')">💬 Send Enquiry</button>`;
                 html += '</div>';
@@ -1338,6 +1443,21 @@
         /* ═══════════════════════════════════════
            UTILITIES
            ═══════════════════════════════════════ */
+        async function toggleFollowUser(userId, isCurrentlyFollowing) {
+            try {
+                if (isCurrentlyFollowing) {
+                    await apiRequest('/connections/' + userId + '/unfollow', { method: 'DELETE' });
+                    showNotification('User unfollowed successfully', 'success');
+                } else {
+                    await apiRequest('/connections/' + userId + '/follow', { method: 'POST' });
+                    showNotification('User followed successfully', 'success');
+                }
+                await loadProfile();
+            } catch (error) {
+                showNotification(error.message || 'Unable to update follow status', 'error');
+            }
+        }
+
         function messageUser(userId, name, category) {
             window.location.href = '/chat?open_user=' + userId + '&name=' + encodeURIComponent(name) + '&category=' + encodeURIComponent(category || '');
         }
@@ -1356,6 +1476,7 @@
         window.bookingStepNext = bookingStepNext;
         window.bookingStepBack = bookingStepBack;
         window.recalcSidebarPrice = recalcSidebarPrice;
+        window.toggleFollowUser = toggleFollowUser;
     </script>
 </body>
 </html>

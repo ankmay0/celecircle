@@ -2103,8 +2103,11 @@ img {
     border-bottom-color: var(--border-color) !important;
 }
 
+[data-theme="dark"] .search-result-item:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+}
+
 [data-theme="dark"] .search-result-name,
-[data-theme="dark"] .search-result-details,
 [data-theme="dark"] .search-no-results,
 [data-theme="dark"] .search-loading,
 [data-theme="dark"] .notifications-dropdown-header h3,
@@ -2114,6 +2117,10 @@ img {
 [data-theme="dark"] .dropdown-item,
 [data-theme="dark"] .dropdown-section-title {
     color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .search-result-details {
+    color: var(--text-secondary) !important;
 }
 
 [data-theme="dark"] .news-meta,
