@@ -148,6 +148,52 @@
         [data-theme="dark"] .border-gray-100 {
             border-color: var(--border-color) !important;
         }
+
+        /* Landing header mobile auth actions (top-right) */
+        .main-header .logo-header .brand-logo-circle {
+            width: 72px !important;
+            height: 72px !important;
+        }
+
+        @media (max-width: 768px) {
+            .main-header .header-container {
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 10px 12px !important;
+                gap: 8px !important;
+            }
+
+            .main-header .header-left {
+                width: auto !important;
+                flex: 0 1 auto !important;
+                min-width: 0;
+            }
+
+            .main-header .header-nav {
+                display: flex !important;
+                align-items: center;
+                gap: 6px;
+                width: auto !important;
+                flex: 0 0 auto;
+            }
+
+            .main-header .header-nav .nav-item-header {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 34px;
+                padding: 0.35rem 0.6rem !important;
+                border-radius: 999px !important;
+            }
+
+            .main-header .header-nav .nav-item-header .nav-label {
+                display: inline !important;
+                font-size: 0.82rem;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+        }
     </style>
 </head>
 <body>

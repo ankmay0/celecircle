@@ -7,10 +7,15 @@ function createLinkedInHeader() {
                     <a href="/feed" class="logo-header">
                         <img src="/static/celecircle-logo.png" alt="CeleCircle" class="brand-logo-circle">
                     </a>
-                    <div class="search-box header-search" id="searchBox">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" placeholder="Search events, venues, planners..." class="search-input" id="searchInput" autocomplete="off">
-                        <div id="searchResults" class="search-results"></div>
+                    <div class="mobile-search-profile-row">
+                        <div class="search-box header-search" id="searchBox">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" placeholder="Search events, venues, planners..." class="search-input" id="searchInput" autocomplete="off">
+                            <div id="searchResults" class="search-results"></div>
+                        </div>
+                        <button type="button" class="mobile-profile-trigger nav-profile" id="mobileProfileTrigger" aria-label="Open profile menu" onclick="toggleMeDropdown(event)">
+                            <span class="nav-icon-header nav-me-avatar" aria-hidden="true">👤</span>
+                        </button>
                     </div>
                 </div>
                 <nav class="header-nav">
@@ -59,7 +64,8 @@ function createMobileBottomNav() {
             <a href="/browse-gigs" id="mobile-nav-gigs" aria-label="Gigs"><i class="nav-icon-header" aria-hidden="true">💼</i><span class="nav-label">Gigs</span></a>
             <a href="/bookings" id="mobile-nav-bookings" aria-label="Bookings"><i class="nav-icon-header" aria-hidden="true">📅</i><span class="nav-label">Bookings</span></a>
             <a href="/chat" id="mobile-nav-messaging" aria-label="Messaging"><i class="nav-icon-header" aria-hidden="true">💬</i><span class="nav-label">Messages</span></a>
-            <a href="/profile" id="mobile-nav-profile" class="nav-profile" aria-label="Profile"><i class="nav-icon-header" aria-hidden="true">👤</i><span class="nav-label">Profile</span></a>
+            <a href="/notifications" id="mobile-nav-notifications" aria-label="Notifications"><i class="nav-icon-header" aria-hidden="true">🔔</i><span class="nav-label">Notifications</span></a>
+            <a href="#" id="mobile-nav-theme" aria-label="Toggle theme"><i class="nav-icon-header" aria-hidden="true">☀️</i><span class="nav-label">Theme</span></a>
         </nav>
     `;
 }
@@ -104,6 +110,29 @@ function initHeader() {
     if (!document.getElementById('mobileNav')) {
         document.body.insertAdjacentHTML('beforeend', createMobileBottomNav());
     }
+    bindMobileThemeToggle();
+}
+
+function bindMobileThemeToggle() {
+    const themeLink = document.getElementById('mobile-nav-theme');
+    if (!themeLink || themeLink.dataset.bound === 'true') return;
+
+    const updateThemeIcon = () => {
+        const icon = themeLink.querySelector('.nav-icon-header');
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        if (icon) icon.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+    };
+
+    themeLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (typeof window.toggleTheme === 'function') {
+            window.toggleTheme();
+            updateThemeIcon();
+        }
+    });
+
+    themeLink.dataset.bound = 'true';
+    updateThemeIcon();
 }
 
 // Initialize header when DOM is ready
@@ -379,7 +408,7 @@ function createMeDropdown() {
     // Close dropdown when clicking outside
     setTimeout(() => {
         document.addEventListener('click', function closeDropdown(e) {
-            if (!dropdown.contains(e.target) && !e.target.closest('#nav-me')) {
+            if (!dropdown.contains(e.target) && !e.target.closest('#nav-me') && !e.target.closest('#mobileProfileTrigger')) {
                 dropdown.style.display = 'none';
                 document.removeEventListener('click', closeDropdown);
             }
@@ -389,7 +418,10 @@ function createMeDropdown() {
 
 function positionMeDropdown() {
     const dropdown = document.getElementById('meDropdown');
-    const navItem = document.getElementById('nav-me');
+    const desktopTrigger = document.getElementById('nav-me');
+    const mobileTrigger = document.getElementById('mobileProfileTrigger');
+    const useMobileTrigger = window.innerWidth <= 768 && mobileTrigger;
+    const navItem = useMobileTrigger ? mobileTrigger : desktopTrigger;
     if (dropdown && navItem) {
         const rect = navItem.getBoundingClientRect();
         
