@@ -109,6 +109,9 @@ def _migrate_sqlite_schema(conn):
     _sqlite_add_column_if_missing(conn, "users", "profile_photo_url", "ALTER TABLE users ADD COLUMN profile_photo_url VARCHAR")
     _sqlite_add_column_if_missing(conn, "users", "is_deleted", "ALTER TABLE users ADD COLUMN is_deleted BOOLEAN DEFAULT 0")
     _sqlite_add_column_if_missing(conn, "users", "deleted_at", "ALTER TABLE users ADD COLUMN deleted_at TIMESTAMP")
+    _sqlite_add_column_if_missing(conn, "users", "verification_type", "ALTER TABLE users ADD COLUMN verification_type VARCHAR")
+    _sqlite_add_column_if_missing(conn, "users", "verification_payment_status", "ALTER TABLE users ADD COLUMN verification_payment_status VARCHAR")
+    _sqlite_add_column_if_missing(conn, "users", "verification_expiry", "ALTER TABLE users ADD COLUMN verification_expiry TIMESTAMP")
 
     _sqlite_add_column_if_missing(
         conn,
@@ -212,6 +215,9 @@ def init_db():
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url VARCHAR;"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_payment_status VARCHAR;"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_expiry TIMESTAMP;"))
 
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_users_username ON users (username);"))
         conn.execute(

@@ -11,7 +11,7 @@ from models import (
     ArtistAvailability, Notification, Payout, PayoutStatus
 )
 from auth import require_role
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import io
 import csv
@@ -210,6 +210,9 @@ def list_users(
             "username": u.username,
             "role": u.role.value if u.role else None,
             "is_verified": u.is_verified,
+            "verification_type": u.verification_type,
+            "verification_payment_status": u.verification_payment_status,
+            "verification_expiry": u.verification_expiry.isoformat() if u.verification_expiry else None,
             "is_active": u.is_active,
             "name": prof.name if prof else (f"{u.first_name or ''} {u.last_name or ''}").strip() or u.email,
             "total_bookings": booking_count,
@@ -232,6 +235,107 @@ def verify_user(
     log_action(db, admin.id, "verify_user", "user", user_id)
     db.commit()
     return {"message": "User verified"}
+
+
+@router.put("/users/{user_id}/verification/approve")
+def approve_verification_payment(
+    user_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.verification_type:
+        raise HTTPException(status_code=400, detail="No verification plan requested")
+
+    now = datetime.utcnow()
+    current_expiry = user.verification_expiry if user.verification_expiry and user.verification_expiry > now else now
+    user.verification_expiry = current_expiry + timedelta(days=30)
+    user.verification_payment_status = "approved"
+
+    log_action(
+        db,
+        admin.id,
+        "approve_verification_payment",
+        "user",
+        user_id,
+        {
+            "verification_type": user.verification_type,
+            "verification_expiry": user.verification_expiry.isoformat() if user.verification_expiry else None,
+        },
+    )
+    db.commit()
+    return {
+        "message": "Verification payment approved. Badge activated immediately.",
+        "verification_type": user.verification_type,
+        "verification_expiry": user.verification_expiry.isoformat() if user.verification_expiry else None,
+    }
+
+
+@router.put("/users/{user_id}/verification/cancel")
+def cancel_verification_request(
+    user_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.verification_payment_status != "pending":
+        raise HTTPException(status_code=400, detail="No pending verification request found")
+
+    previous_type = user.verification_type
+    user.verification_type = None
+    user.verification_payment_status = "rejected"
+    user.verification_expiry = None
+
+    log_action(
+        db,
+        admin.id,
+        "cancel_verification_request",
+        "user",
+        user_id,
+        {"verification_type": previous_type},
+    )
+    db.commit()
+    return {"message": "Verification request cancelled"}
+
+
+@router.get("/verification-requests")
+def list_verification_requests(
+    status_filter: Optional[str] = Query("pending", alias="status"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(25, ge=1, le=100),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    query = db.query(User).filter(
+        User.is_deleted == False,
+        (User.verification_payment_status != None) | (User.verification_type != None),
+    )
+
+    if status_filter and status_filter != "all":
+        query = query.filter(User.verification_payment_status == status_filter)
+
+    total = query.count()
+    users = query.order_by(User.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    rows = []
+    for user in users:
+        prof = db.query(Profile).filter(Profile.user_id == user.id).first()
+        rows.append({
+            "id": user.id,
+            "name": prof.name if prof else (f"{user.first_name or ''} {user.last_name or ''}").strip() or user.email,
+            "email": user.email,
+            "role": user.role.value if user.role else None,
+            "verification_type": user.verification_type,
+            "verification_payment_status": user.verification_payment_status,
+            "verification_expiry": user.verification_expiry.isoformat() if user.verification_expiry else None,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+        })
+
+    return {"total": total, "page": page, "limit": limit, "requests": rows}
 
 
 @router.put("/users/{user_id}/suspend")

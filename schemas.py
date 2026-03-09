@@ -44,6 +44,9 @@ class UserResponse(BaseModel):
     email: str
     role: UserRole
     is_verified: bool
+    verification_type: Optional[str] = None
+    verification_payment_status: Optional[str] = None
+    verification_expiry: Optional[datetime] = None
     is_active: bool
     created_at: datetime
     first_name: Optional[str] = None
@@ -103,6 +106,8 @@ class ProfileResponse(BaseModel):
     total_hires: int
     total_reviews: int
     average_rating: float
+    verification_type: Optional[str] = None
+    verification_expiry: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     
@@ -270,6 +275,7 @@ class PostAuthor(BaseModel):
     email: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    verification_type: Optional[str] = None
     profile: Optional[PostAuthorProfile] = None
 
 class PostResponse(BaseModel):

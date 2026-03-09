@@ -198,6 +198,7 @@
 
             <div class="nav-section">Management</div>
             <a class="nav-item" onclick="showPage('users',this)"><span class="icon">👥</span><span>Users</span></a>
+            <a class="nav-item" onclick="showPage('verification',this)"><span class="icon">✔️</span><span>Verification</span></a>
             <a class="nav-item" onclick="showPage('bookings',this)"><span class="icon">📅</span><span>Bookings</span></a>
             <a class="nav-item" onclick="showPage('payments',this)"><span class="icon">💳</span><span>Payments</span></a>
 
@@ -260,6 +261,38 @@
                     </div>
                     <div class="panel-body" style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Verified</th><th>Status</th><th>Bookings</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
                     <div class="pagination" id="usersPagination"></div>
+                </div>
+            </div>
+
+            <!-- ═══ VERIFICATION REQUESTS ═══ -->
+            <div class="page" id="pg-verification">
+                <div class="panel">
+                    <div class="panel-header"><h3>Verification Payment Requests</h3></div>
+                    <div class="filters">
+                        <select id="verificationStatusFilter" onchange="loadVerificationRequests()">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Cancelled/Rejected</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="panel-body" style="overflow-x:auto;">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Plan</th>
+                                    <th>Status</th>
+                                    <th>Expiry</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="verificationTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="verificationPagination"></div>
                 </div>
             </div>
 
@@ -382,7 +415,7 @@
     (function(){
         'use strict';
 
-        var currentPage = {users:1,bookings:1,payments:1,disputes:1,audit:1};
+        var currentPage = {users:1,verification:1,bookings:1,payments:1,disputes:1,audit:1};
         var debounceTimer = null;
 
         document.addEventListener('DOMContentLoaded', function(){
@@ -401,10 +434,11 @@
             document.getElementById('pg-'+id).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
             if(el)el.classList.add('active');
-            var titles={dashboard:'Dashboard',users:'User Management',bookings:'Booking Management',payments:'Payment Transactions',disputes:'Dispute Management',pricing:'Pricing Control',reports:'Reports & Analytics',audit:'Audit Logs'};
+            var titles={dashboard:'Dashboard',users:'User Management',verification:'Verification Requests',bookings:'Booking Management',payments:'Payment Transactions',disputes:'Dispute Management',pricing:'Pricing Control',reports:'Reports & Analytics',audit:'Audit Logs'};
             document.getElementById('pageTitle').textContent=titles[id]||id;
             if(id==='dashboard')loadDashboard();
             else if(id==='users')loadUsers();
+            else if(id==='verification')loadVerificationRequests();
             else if(id==='bookings')loadBookings();
             else if(id==='payments')loadPayments();
             else if(id==='disputes')loadDisputes();
@@ -468,7 +502,10 @@
                         '<td>'+esc(u.name||u.email)+'</td>'+
                         '<td class="mono">'+esc(u.email)+'</td>'+
                         '<td>'+badge(u.role)+'</td>'+
-                        '<td>'+(u.is_verified?'<span class="badge badge-green">Yes</span>':'<span class="badge badge-gray">No</span>')+'</td>'+
+                        '<td>'+(u.is_verified?'<span class="badge badge-green">Yes</span>':'<span class="badge badge-gray">No</span>')+
+                            (u.verification_payment_status==='pending'?'<br><span class="badge badge-orange" style="margin-top:4px;display:inline-block;">Verification Payment Pending</span>':'')+
+                            (u.verification_payment_status==='approved'&&u.verification_type?'<br><span class="badge badge-blue" style="margin-top:4px;display:inline-block;">'+u.verification_type.replace('_verified','').replace('_',' ')+' verified</span>':'')+
+                        '</td>'+
                         '<td>'+(u.is_active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-red">Suspended</span>')+'</td>'+
                         '<td>'+u.total_bookings+'</td>'+
                         '<td>'+fmtDate(u.created_at)+'</td>'+
@@ -482,6 +519,7 @@
             var h='';
             if(u.role!=='admin'){
                 if(!u.is_verified)h+='<button class="btn btn-success btn-sm" onclick="adminAction(\'verify\','+u.id+')">Verify</button> ';
+                if(u.verification_payment_status==='pending')h+='<button class="btn btn-success btn-sm" onclick="adminAction(\'approveVerification\','+u.id+')">Approve Verification Payment</button> ';
                 if(u.is_active)h+='<button class="btn btn-warning btn-sm" onclick="adminAction(\'suspend\','+u.id+')">Suspend</button> ';
                 else h+='<button class="btn btn-success btn-sm" onclick="adminAction(\'activate\','+u.id+')">Activate</button> ';
                 h+='<button class="btn btn-danger btn-sm" onclick="adminAction(\'delete\','+u.id+')">Delete</button>';
@@ -492,11 +530,57 @@
         async function adminAction(action,userId){
             if(action==='delete'&&!confirm('Permanently soft-delete this user?'))return;
             if(action==='suspend'&&!confirm('Suspend this user?'))return;
+            if(action==='approveVerification'&&!confirm('Approve verification payment and activate badge immediately?'))return;
             try{
                 if(action==='verify')await apiRequest('/admin/users/'+userId+'/verify',{method:'PUT'});
+                else if(action==='approveVerification')await apiRequest('/admin/users/'+userId+'/verification/approve',{method:'PUT'});
+                else if(action==='cancelVerification')await apiRequest('/admin/users/'+userId+'/verification/cancel',{method:'PUT'});
                 else if(action==='suspend')await apiRequest('/admin/users/'+userId+'/suspend',{method:'PUT'});
                 else if(action==='activate')await apiRequest('/admin/users/'+userId+'/activate',{method:'PUT'});
                 else if(action==='delete')await apiRequest('/admin/users/'+userId,{method:'DELETE'});
+                loadUsers();
+            }catch(e){alert(e.message||'Error');}
+        }
+
+        async function loadVerificationRequests(){
+            var status=document.getElementById('verificationStatusFilter').value||'pending';
+            var q='/admin/verification-requests?page='+currentPage.verification+'&limit=25&status='+encodeURIComponent(status);
+            try{
+                var res=await apiRequest(q);
+                var tb=document.getElementById('verificationTableBody');
+                tb.innerHTML=(res.requests||[]).map(function(r){
+                    var plan=(r.verification_type||'-').replace('_verified','').replace('_',' ');
+                    var actions='';
+                    if(r.verification_payment_status==='pending'){
+                        actions='<button class="btn btn-success btn-sm" onclick="verificationAction(\'approve\','+r.id+')">Confirm</button> '+
+                                '<button class="btn btn-danger btn-sm" onclick="verificationAction(\'cancel\','+r.id+')">Cancel</button>';
+                    }else{
+                        actions='<span style="color:#94a3b8;font-size:11px;">No actions</span>';
+                    }
+                    return '<tr>'+
+                        '<td>'+esc(r.name||'-')+'</td>'+
+                        '<td class="mono">'+esc(r.email||'-')+'</td>'+
+                        '<td>'+badge(r.role)+'</td>'+
+                        '<td>'+esc(plan)+'</td>'+
+                        '<td>'+badge(r.verification_payment_status||'-')+'</td>'+
+                        '<td>'+(r.verification_expiry?fmtDate(r.verification_expiry):'-')+'</td>'+
+                        '<td>'+actions+'</td>'+
+                    '</tr>';
+                }).join('')||'<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">No verification requests</td></tr>';
+                renderPagination('verificationPagination',res.total,res.page,25,'verification');
+            }catch(e){console.error(e);}
+        }
+
+        async function verificationAction(action,userId){
+            if(action==='approve'&&!confirm('Confirm payment and activate verification badge?'))return;
+            if(action==='cancel'&&!confirm('Cancel this verification request?'))return;
+            try{
+                if(action==='approve'){
+                    await apiRequest('/admin/users/'+userId+'/verification/approve',{method:'PUT'});
+                }else{
+                    await apiRequest('/admin/users/'+userId+'/verification/cancel',{method:'PUT'});
+                }
+                loadVerificationRequests();
                 loadUsers();
             }catch(e){alert(e.message||'Error');}
         }
@@ -980,6 +1064,7 @@
         function goPage(section,page){
             currentPage[section]=page;
             if(section==='users')loadUsers();
+            else if(section==='verification')loadVerificationRequests();
             else if(section==='bookings')loadBookings();
             else if(section==='payments')loadPayments();
             else if(section==='disputes')loadDisputes();
@@ -1009,6 +1094,8 @@
         window.drawerOverride=drawerOverride;
         window.confirmAdvancePayment=confirmAdvancePayment;
         window.confirmRemainingPayment=confirmRemainingPayment;
+        window.loadVerificationRequests=loadVerificationRequests;
+        window.verificationAction=verificationAction;
     })();
     </script>
 </body>

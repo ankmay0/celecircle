@@ -11,6 +11,18 @@ import os, uuid
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
+
+def _paid_verification_type(user: User):
+    if (
+        user
+        and user.verification_type
+        and user.verification_payment_status == "approved"
+        and user.verification_expiry
+        and user.verification_expiry > datetime.utcnow()
+    ):
+        return user.verification_type
+    return None
+
 @router.post("", response_model=ChatMessageResponse)
 def send_message(
     message_data: ChatMessageCreate,
@@ -169,6 +181,7 @@ def list_conversations(
                 "user_name": other_profile.name if other_profile else (other_user.email.split('@')[0] if other_user else 'Unknown'),
                 "user_category": other_profile.category if other_profile else (other_user.role if other_user else ''),
                 "user_role": other_user.role if other_user else '',
+                "verification_type": _paid_verification_type(other_user) if other_user else None,
                 "last_message": last_message.message,
                 "last_message_time": last_message.created_at.isoformat() if last_message.created_at else None,
                 "unread_count": unread_count

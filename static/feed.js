@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadFeed();
         await loadNotifications();
         await loadConnections();
+        await loadSuggestions();
     } catch (error) {
         console.error('Error loading feed:', error);
         showNotification('Error loading feed. Please refresh.', 'error');
@@ -159,7 +160,11 @@ function updateProfileSidebar() {
         }
     }
     
-    if (profileNameEl) profileNameEl.textContent = displayName;
+    if (profileNameEl) {
+        const verificationType = currentUser && currentUser.verification_type ? currentUser.verification_type : null;
+        const badge = (window.getVerificationBadgeHTML && verificationType) ? window.getVerificationBadgeHTML(verificationType) : '';
+        profileNameEl.innerHTML = `${escapeHtml(displayName)} ${badge}`;
+    }
     if (profileTitleEl) profileTitleEl.textContent = displayTitle;
     if (profileLocationEl) {
         profileLocationEl.textContent = displayLocation || (currentUser.role !== 'artist' ? '' : 'Location not set');
@@ -411,12 +416,20 @@ function createPostHTML(post) {
         });
     }
     
+    const authorBadge = (window.getVerificationBadgeHTML && post.author && post.author.verification_type)
+        ? window.getVerificationBadgeHTML(post.author.verification_type)
+        : '';
+
+    const authorAvatarBadge = (post.author && post.author.verification_type)
+        ? `<span class="verification-badge ${post.author.verification_type === 'organizer_verified' ? 'celebadge-green' : 'celebadge-blue'}">✔</span>`
+        : '';
+
     return `
         <div class="post-card" id="post-${post.id}">
             <div class="post-header">
-                <div class="user-avatar-small">${authorName.charAt(0).toUpperCase()}</div>
+                <div class="user-avatar-small profile-avatar">${authorName.charAt(0).toUpperCase()}${authorAvatarBadge}</div>
                 <div class="post-author-info">
-                    <div class="post-author-name">${escapeHtml(authorName)}</div>
+                    <div class="post-author-name">${escapeHtml(authorName)} ${authorBadge}</div>
                     <div class="post-author-title">${escapeHtml(authorTitle)}</div>
                     <div class="post-time">${timeAgo}</div>
                 </div>
@@ -567,7 +580,7 @@ async function loadComments(postId) {
                 <div class="comment-item">
                     <div class="comment-avatar">${comment.author ? ((comment.author.profile && comment.author.profile.name) || comment.author.first_name || comment.author.email || 'U').charAt(0).toUpperCase() : 'U'}</div>
                     <div class="comment-content">
-                        <span class="comment-author">${(comment.author && comment.author.profile && comment.author.profile.name) || (comment.author && comment.author.first_name ? (comment.author.first_name + (comment.author.last_name ? ' ' + comment.author.last_name : '')) : '') || (comment.author && comment.author.email) || 'User'}</span>
+                        <span class="comment-author">${((comment.author && comment.author.profile && comment.author.profile.name) || (comment.author && comment.author.first_name ? (comment.author.first_name + (comment.author.last_name ? ' ' + comment.author.last_name : '')) : '') || (comment.author && comment.author.email) || 'User')}${window.getVerificationBadgeHTML && comment.author && comment.author.verification_type ? ' ' + window.getVerificationBadgeHTML(comment.author.verification_type) : ''}</span>
                         <span class="comment-text">${escapeHtml(comment.content)}</span>
                         <div class="comment-actions">
                             <span class="comment-action" onclick="likeComment(${comment.id})">Like</span>
@@ -646,6 +659,161 @@ async function followUser(userId) {
         await loadSuggestions();
     } catch (error) {
         showNotification(error.message || 'Error following user', 'error');
+    }
+}
+
+function tokenizeText(text) {
+    if (!text) return [];
+    return String(text)
+        .toLowerCase()
+        .split(/[^a-z0-9]+/g)
+        .filter((token) => token && token.length > 2);
+}
+
+function getSuggestedMatch(profile, currentUser, currentProfile) {
+    let score = 0;
+    const reasons = [];
+
+    const myRole = (currentUser && currentUser.role) ? String(currentUser.role).toLowerCase() : '';
+    const myCategory = currentProfile && currentProfile.category ? String(currentProfile.category).toLowerCase() : '';
+    const myLocation = currentProfile && currentProfile.location ? String(currentProfile.location).toLowerCase() : '';
+    const myTokens = new Set([
+        ...tokenizeText(currentProfile && currentProfile.category),
+        ...tokenizeText(currentProfile && currentProfile.bio),
+        ...tokenizeText(currentProfile && currentProfile.languages)
+    ]);
+
+    const profileCategory = profile && profile.category ? String(profile.category).toLowerCase() : '';
+    const profileLocation = profile && profile.location ? String(profile.location).toLowerCase() : '';
+    const profileTokens = new Set([
+        ...tokenizeText(profile && profile.category),
+        ...tokenizeText(profile && profile.bio),
+        ...tokenizeText(profile && profile.languages)
+    ]);
+
+    if (myRole && currentUser && profile && profile.user_id !== currentUser.id) {
+        // Light role affinity so suggestions stay in the same ecosystem.
+        score += 1;
+    }
+
+    if (myCategory && profileCategory) {
+        if (profileCategory === myCategory) {
+            score += 6;
+            reasons.push('Same field');
+        } else if (profileCategory.includes(myCategory) || myCategory.includes(profileCategory)) {
+            score += 4;
+            reasons.push('Similar field');
+        }
+    }
+
+    if (myLocation && profileLocation) {
+        const myCityToken = myLocation.split(',')[0].trim();
+        if (myCityToken && profileLocation.includes(myCityToken)) {
+            score += 2;
+            reasons.push('Near your location');
+        }
+    }
+
+    let overlapCount = 0;
+    profileTokens.forEach((token) => {
+        if (myTokens.has(token)) overlapCount += 1;
+    });
+    if (overlapCount > 0) {
+        score += Math.min(4, overlapCount);
+        reasons.push('Shared interests');
+    }
+
+    if (profile && typeof profile.ai_score === 'number') {
+        score += Math.min(2, profile.ai_score / 50);
+    }
+
+    if (!reasons.length) {
+        reasons.push('Suggested for you');
+    }
+
+    return { score, reason: reasons[0] };
+}
+
+function getDisplayNameForSuggestion(profile) {
+    if (profile && profile.name) return profile.name;
+    return 'Unknown';
+}
+
+async function loadSuggestions() {
+    const container = document.getElementById('peopleSuggestions');
+    if (!container) return;
+
+    container.innerHTML = '<div class="loading">Finding matching people...</div>';
+
+    try {
+        const currentUser = window.currentUser || getCurrentUser();
+        if (!currentUser || !currentUser.id) {
+            container.innerHTML = '<div class="loading">Login required</div>';
+            return;
+        }
+
+        const [allProfiles, following] = await Promise.all([
+            apiRequest('/users/profiles?limit=60'),
+            apiRequest('/connections/following')
+        ]);
+
+        const followingIds = new Set((Array.isArray(following) ? following : []).map((u) => u.user_id));
+        const currentProfileSafe = window.currentProfile || null;
+
+        const ranked = (Array.isArray(allProfiles) ? allProfiles : [])
+            .filter((profile) => profile && profile.user_id && profile.user_id !== currentUser.id && !followingIds.has(profile.user_id))
+            .map((profile) => {
+                const match = getSuggestedMatch(profile, currentUser, currentProfileSafe);
+                return { profile, score: match.score, reason: match.reason };
+            })
+            .sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return (b.profile.ai_score || 0) - (a.profile.ai_score || 0);
+            })
+            .slice(0, 5);
+
+        if (!ranked.length) {
+            container.innerHTML = '<div class="news-item"><div class="news-title">No suggestions available right now</div></div>';
+            return;
+        }
+
+        let html = '';
+        ranked.forEach(({ profile, reason }) => {
+            const displayName = getDisplayNameForSuggestion(profile);
+            const initial = displayName.charAt(0).toUpperCase();
+            const subtitle = [profile.category, profile.location].filter(Boolean).join(' • ');
+            const profileHref = `/view-profile?user_id=${profile.user_id}`;
+            const safeName = escapeHtml(displayName);
+            const safeSubtitle = escapeHtml(subtitle || 'CeleCircle member');
+            const safeReason = escapeHtml(reason);
+            const photoUrl = profile.profile_photo_url ? String(profile.profile_photo_url) : '';
+            const verifyBadge = (window.getVerificationBadgeHTML && profile.verification_type)
+                ? window.getVerificationBadgeHTML(profile.verification_type)
+                : '';
+            const avatarBadge = profile.verification_type
+                ? `<span class="verification-badge ${profile.verification_type === 'organizer_verified' ? 'celebadge-green' : 'celebadge-blue'}">✔</span>`
+                : '';
+            const avatarHtml = photoUrl
+                ? `<img src="${escapeHtml(photoUrl)}" alt="${safeName}">`
+                : `<span>${initial}</span>`;
+
+            html += `
+                <div class="people-item">
+                    <a class="people-avatar profile-avatar" href="${profileHref}">${avatarHtml}${avatarBadge}</a>
+                    <a class="people-info" href="${profileHref}">
+                        <strong>${safeName} ${verifyBadge}</strong>
+                        <span>${safeSubtitle}</span>
+                        <small class="people-reason">${safeReason}</small>
+                    </a>
+                    <button class="connect-btn" onclick="followUser(${profile.user_id})">Connect</button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading feed suggestions:', error);
+        container.innerHTML = '<div class="news-item"><div class="news-title">Unable to load suggestions</div></div>';
     }
 }
 

@@ -80,6 +80,9 @@ body {
 .topbar {
     background: #ffffff !important;
     border-bottom: 1px solid var(--border-soft) !important;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
 }
 
 .topbar-title {

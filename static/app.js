@@ -2,6 +2,7 @@
 const API_BASE = '/api';
 let authToken = localStorage.getItem('authToken');
 let currentUser = null;
+let themeMediaQuery = null;
 
 // Theme Management
 function ensureCeleCircleFavicon() {
@@ -24,39 +25,144 @@ function ensureCeleCircleFavicon() {
 }
 
 function initTheme() {
-    const theme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
-    mountThemeToggle();
-    updateThemeIcon(theme);
+    const storedTheme = localStorage.getItem('theme');
+    const themePreference = (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system')
+        ? storedTheme
+        : 'dark';
+    setThemePreference(themePreference, false);
 }
 
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeIcon(newTheme);
+    setThemePreference(newTheme);
 }
 
-function updateThemeIcon(theme) {
-    const icon = document.querySelector('.theme-toggle-icon');
-    const label = document.querySelector('.theme-toggle-label');
-    if (icon && label) {
-        icon.textContent = theme === 'dark' ? '☀️' : '🌙';
-        label.textContent = theme === 'dark' ? 'Light' : 'Dark';
+function getResolvedTheme(themePreference) {
+    if (themePreference === 'system') {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return themePreference === 'light' ? 'light' : 'dark';
+}
+
+function getThemePreference() {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light' || stored === 'system') return stored;
+    return 'dark';
+}
+
+function isPaidVerified(userLike) {
+    if (!userLike) return false;
+    if (userLike.verification_payment_status && userLike.verification_payment_status !== 'approved') return false;
+    if (!userLike.verification_type || !userLike.verification_expiry) return false;
+    const expiry = new Date(userLike.verification_expiry);
+    return !Number.isNaN(expiry.getTime()) && expiry.getTime() > Date.now();
+}
+
+function getVerificationBadgeClass(verificationType) {
+    return verificationType === 'organizer_verified' ? 'celebadge-green' : 'celebadge-blue';
+}
+
+function getVerificationBadgeHTML(verificationType) {
+    if (!verificationType) return '';
+    const cls = getVerificationBadgeClass(verificationType);
+    return `<span class="${cls}" title="Verified">✔</span>`;
+}
+
+function handleSystemThemeChange() {
+    if (getThemePreference() === 'system') {
+        const resolvedTheme = getResolvedTheme('system');
+        document.documentElement.setAttribute('data-theme', resolvedTheme);
+        if (typeof window.refreshThemeMenu === 'function') {
+            window.refreshThemeMenu();
+        }
     }
 }
 
-function mountThemeToggle() {
-    if (document.getElementById('themeToggleBtn')) return;
-    const btn = document.createElement('button');
-    btn.id = 'themeToggleBtn';
-    btn.className = 'theme-toggle theme-toggle-floating';
-    btn.setAttribute('type', 'button');
-    btn.setAttribute('aria-label', 'Toggle theme');
-    btn.innerHTML = '<span class="theme-toggle-icon">🌙</span><span class="theme-toggle-label">Dark</span>';
-    btn.addEventListener('click', toggleTheme);
-    document.body.appendChild(btn);
+function bindSystemThemeListener() {
+    if (themeMediaQuery) return;
+    themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    if (typeof themeMediaQuery.addEventListener === 'function') {
+        themeMediaQuery.addEventListener('change', handleSystemThemeChange);
+    } else if (typeof themeMediaQuery.addListener === 'function') {
+        themeMediaQuery.addListener(handleSystemThemeChange);
+    }
+}
+
+function setThemePreference(themePreference, persist = true) {
+    const safePreference = (themePreference === 'light' || themePreference === 'dark' || themePreference === 'system')
+        ? themePreference
+        : 'dark';
+    const resolvedTheme = getResolvedTheme(safePreference);
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+    if (persist) {
+        localStorage.setItem('theme', safePreference);
+    }
+    bindSystemThemeListener();
+    if (typeof window.refreshThemeMenu === 'function') {
+        window.refreshThemeMenu();
+    }
+}
+
+function mountDesktopShell() {
+    const path = window.location.pathname || '/';
+    const skipShellPrefixes = ['/admin', '/eventnet'];
+    if (skipShellPrefixes.some((prefix) => path.startsWith(prefix))) return;
+
+    const main = document.querySelector('main.page-container');
+    if (!main || main.classList.contains('cc-shell-mounted')) return;
+
+    const shell = document.createElement('div');
+    shell.className = 'cc-shell';
+
+    const left = document.createElement('aside');
+    left.className = 'cc-shell-left';
+    left.innerHTML = `
+        <div class="cc-nav-card">
+            <div class="cc-nav-title">Navigation</div>
+            <a href="/feed" class="cc-nav-link ${path === '/feed' ? 'active' : ''}">🏠 <span>Home</span></a>
+            <a href="/connections" class="cc-nav-link ${path.startsWith('/connections') ? 'active' : ''}">👥 <span>My Network</span></a>
+            <a href="/browse-gigs" class="cc-nav-link ${path.startsWith('/browse-gigs') || path.startsWith('/gig-detail') ? 'active' : ''}">💼 <span>Gigs</span></a>
+            <a href="/chat" class="cc-nav-link ${path.startsWith('/chat') ? 'active' : ''}">💬 <span>Messages</span></a>
+            <a href="/profile" class="cc-nav-link ${path.startsWith('/profile') || path.startsWith('/view-profile') ? 'active' : ''}">👤 <span>Profile</span></a>
+        </div>
+    `;
+
+    const center = document.createElement('section');
+    center.className = 'cc-shell-main';
+    while (main.firstChild) {
+        center.appendChild(main.firstChild);
+    }
+
+    const right = document.createElement('aside');
+    const hideRightPanel = ['/chat', '/post-gig', '/secure-payments', '/terms', '/escrow', '/payout', '/help'].some((prefix) =>
+        path.startsWith(prefix)
+    );
+    right.className = `cc-shell-right${hideRightPanel ? ' hidden' : ''}`;
+    right.innerHTML = `
+        <div class="cc-widget-card">
+            <div class="cc-widget-title">Trending Topics</div>
+            <ul class="cc-widget-list">
+                <li>Ollywood industry updates</li>
+                <li>Live event opportunities</li>
+                <li>Creator collaborations</li>
+            </ul>
+        </div>
+        <div class="cc-widget-card">
+            <div class="cc-widget-title">People You May Know</div>
+            <ul class="cc-widget-list">
+                <li>Top event organizers</li>
+                <li>Verified performers</li>
+                <li>Production collaborators</li>
+            </ul>
+        </div>
+    `;
+
+    shell.appendChild(left);
+    shell.appendChild(center);
+    shell.appendChild(right);
+    main.appendChild(shell);
+    main.classList.add('cc-shell-page', 'cc-shell-mounted');
 }
 
 // API Helper Functions
@@ -216,6 +322,22 @@ function getCurrentUser() {
     return currentUser;
 }
 
+async function syncCurrentUser() {
+    if (!authToken) return null;
+    try {
+        const latest = await apiRequest('/auth/me');
+        currentUser = latest;
+        localStorage.setItem('currentUser', JSON.stringify(latest));
+        window.currentUser = latest;
+        if (typeof window.updateMeDropdown === 'function') {
+            window.updateMeDropdown();
+        }
+        return latest;
+    } catch (error) {
+        return null;
+    }
+}
+
 // Navigation
 function updateNavigation() {
     // Navigation is now handled by LinkedIn-style header
@@ -318,7 +440,10 @@ function closeModal(modalId) {
 document.addEventListener('DOMContentLoaded', () => {
     ensureCeleCircleFavicon();
     initTheme();
+    mountDesktopShell();
     updateNavigation();
+    syncCurrentUser();
+    setInterval(syncCurrentUser, 5000);
     
     // Close modals on outside click
     document.addEventListener('click', (e) => {
@@ -342,4 +467,10 @@ window.formatCurrency = formatCurrency;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.toggleTheme = toggleTheme;
+window.setThemePreference = setThemePreference;
+window.getThemePreference = getThemePreference;
+window.isPaidVerified = isPaidVerified;
+window.getVerificationBadgeClass = getVerificationBadgeClass;
+window.getVerificationBadgeHTML = getVerificationBadgeHTML;
+window.syncCurrentUser = syncCurrentUser;
 

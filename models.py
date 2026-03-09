@@ -64,6 +64,9 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(SQLEnum(UserRole), nullable=False)
     is_verified = Column(Boolean, default=False)
+    verification_type = Column(String, nullable=True)  # organizer_verified | celebrity_verified
+    verification_payment_status = Column(String, nullable=True)  # pending | approved | rejected
+    verification_expiry = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True)
     is_deleted = Column(Boolean, default=False)
     deleted_at = Column(DateTime, nullable=True)
@@ -135,6 +138,34 @@ class Profile(Base):
     def profile_photo_url(self):
         """Convenience attribute for API responses (stored on User)."""
         return self.user.profile_photo_url if self.user else None
+
+    @property
+    def verification_type(self):
+        if not self.user:
+            return None
+        expiry = self.user.verification_expiry
+        if (
+            self.user.verification_type
+            and self.user.verification_payment_status == "approved"
+            and expiry
+            and expiry > datetime.utcnow()
+        ):
+            return self.user.verification_type
+        return None
+
+    @property
+    def verification_expiry(self):
+        if not self.user:
+            return None
+        expiry = self.user.verification_expiry
+        if (
+            self.user.verification_type
+            and self.user.verification_payment_status == "approved"
+            and expiry
+            and expiry > datetime.utcnow()
+        ):
+            return expiry
+        return None
 
 class Gig(Base):
     __tablename__ = "gigs"

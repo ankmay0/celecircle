@@ -109,6 +109,9 @@
                 ? `${user.first_name} ${user.last_name}`
                 : (profile.name || (user && user.email ? user.email.split('@')[0] : ''));
             const usernameDisplay = user && user.username ? `@${user.username}` : '';
+            const verificationBadge = (window.getVerificationBadgeHTML && user && user.verification_type)
+                ? window.getVerificationBadgeHTML(user.verification_type)
+                : '';
             
             // Profile header with avatar, full name, username, and role/category
             let html = `<div class="card">
@@ -117,7 +120,7 @@
                         ${fullName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h2>${escapeHtml(fullName)}</h2>
+                        <h2>${escapeHtml(fullName)} ${verificationBadge}</h2>
                         ${usernameDisplay ? `<p class="text-secondary" style="margin: 0.1rem 0 0.3rem 0; color: #777;">${escapeHtml(usernameDisplay)}</p>` : ''}
                         <p class="text-secondary">${escapeHtml(profile.category || (isOrganizer ? 'Event Organizer' : 'Member'))}</p>
                         ${!isOrganizer ? `<div class="ai-score">AI Score: ${profile.ai_score.toFixed(1)}/100</div>` : ''}

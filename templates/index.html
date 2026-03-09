@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="/static/common.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        .main-header{
+        height: 12vh !important;
+        }
         .landing-shell {
             background: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15), #ffffff 45%, #ffffff 100%);
             padding: 4.5rem 2rem 4rem;
@@ -165,9 +168,26 @@
         }
 
         /* Landing header mobile auth actions (top-right) */
+        .main-header .logo-header {
+            width: 55px !important;
+            height: 55px !important;
+            min-width: 64px;
+            min-height: 64px;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            background: transparent !important;
+            border: none !important;
+        }
+
         .main-header .logo-header .brand-logo-circle {
-            width: 120px !important;
-            height: 120px !important;
+            width: 50px !important;
+            height: 50px !important;
+            object-fit: contain !important;
+            transform: scale(1.75);
+            transform-origin: center;
         }
 
         @media (max-width: 768px) {
@@ -198,8 +218,8 @@
                 align-items: center;
                 justify-content: center;
                 min-height: 34px;
-                padding: 0.35rem 0.6rem !important;
-                border-radius: 999px !important;
+                /* padding: 0.35rem 0.6rem !important;
+                border-radius: 999px !important; */
             }
 
             .main-header .header-nav .nav-item-header .nav-label {
@@ -216,10 +236,11 @@
         <div class="header-container">
             <div class="header-left">
                 <a href="/" class="logo-header">
-                    <img src="/static/celecircle-logo.png" alt="CeleCircle" class="brand-logo-circle">
+                    <img src="/static/celecircle-logo.png" alt="CeleCircle" class="brand-logo-circle" style="height: 5px; width: 5px;">
                 </a>
             </div>
-            <nav class="header-nav">
+            <!-- <nav class="header-nav"> -->
+                <nav >
                 <a href="/login" class="nav-item-header">
                     <span class="nav-label">Sign In</span>
                 </a>

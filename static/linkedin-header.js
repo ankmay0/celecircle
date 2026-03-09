@@ -72,7 +72,6 @@ function createMobileBottomNav() {
                 <a href="/connections" id="mobile-nav-network" aria-label="My Network"><i class="nav-icon-header" aria-hidden="true">👥</i><span class="nav-label">My Network</span></a>
                 <a href="/bookings" id="mobile-nav-bookings" aria-label="My Bookings"><i class="nav-icon-header" aria-hidden="true">📅</i><span class="nav-label">My Bookings</span></a>
                 <a href="/browse-gigs" id="mobile-nav-gigs" aria-label="Gigs"><i class="nav-icon-header" aria-hidden="true">💼</i><span class="nav-label">Gigs</span></a>
-                <a href="#" id="mobile-nav-theme" aria-label="Toggle theme"><i class="nav-icon-header" aria-hidden="true">☀️</i><span class="nav-label">Theme</span></a>
             </div>
         </nav>
     `;
@@ -180,9 +179,7 @@ function bindMobileQuickMenu() {
 
     panel.querySelectorAll('a').forEach((link) => {
         link.addEventListener('click', () => {
-            if (link.id !== 'mobile-nav-theme') {
-                closeMenu();
-            }
+            closeMenu();
         });
     });
 
@@ -257,6 +254,176 @@ function toggleMeDropdown(event) {
     } else {
         createMeDropdown();
     }
+}
+
+function getThemePreferenceLabel(preference) {
+    if (preference === 'light') return 'Light';
+    if (preference === 'system') return 'System default';
+    return 'Dark';
+}
+
+function updateThemeMenuUI(dropdown) {
+    if (!dropdown) return;
+    const getPref = (typeof window.getThemePreference === 'function')
+        ? window.getThemePreference
+        : () => (localStorage.getItem('theme') || 'dark');
+    const activePreference = getPref();
+
+    const labelEl = dropdown.querySelector('#themeCurrentLabel');
+    if (labelEl) {
+        labelEl.textContent = getThemePreferenceLabel(activePreference);
+    }
+
+    dropdown.querySelectorAll('.theme-option').forEach((option) => {
+        const isActive = option.getAttribute('data-theme-pref') === activePreference;
+        option.classList.toggle('active', isActive);
+        option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+}
+
+function bindThemeMenuInteractions(dropdown) {
+    if (!dropdown) return;
+    const themeToggle = dropdown.querySelector('#themeMenuToggle');
+    const themeOptions = dropdown.querySelector('#themeOptions');
+
+    if (themeToggle && themeOptions) {
+        themeToggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            themeOptions.classList.toggle('open');
+            themeToggle.classList.toggle('open');
+        });
+    }
+
+    dropdown.querySelectorAll('.theme-option').forEach((option) => {
+        option.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const pref = option.getAttribute('data-theme-pref');
+            if (typeof window.setThemePreference === 'function') {
+                window.setThemePreference(pref);
+            } else {
+                localStorage.setItem('theme', pref);
+                document.documentElement.setAttribute('data-theme', pref === 'light' ? 'light' : 'dark');
+            }
+            updateThemeMenuUI(dropdown);
+        });
+    });
+
+    updateThemeMenuUI(dropdown);
+}
+
+function openVerificationModal() {
+    const existing = document.getElementById('verificationModal');
+    if (existing) existing.remove();
+
+    let currentUser = null;
+    if (typeof window.getCurrentUser === 'function') {
+        currentUser = window.getCurrentUser();
+    } else {
+        try {
+            const raw = localStorage.getItem('currentUser');
+            currentUser = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            currentUser = null;
+        }
+    }
+    const normalizedRole = String((currentUser && currentUser.role) || '').toLowerCase();
+    const isOrganizerRole = normalizedRole === 'organizer' || normalizedRole.endsWith('.organizer');
+    const isArtistRole = normalizedRole === 'artist' || normalizedRole.endsWith('.artist');
+    const selectedPlanDefault = isArtistRole ? 'celebrity_verified' : 'organizer_verified';
+    const planMarkup = isArtistRole
+        ? `
+            <button type="button" class="verify-plan-item active" data-plan="celebrity_verified">
+                <span>
+                    <strong>Celebrity</strong><br>
+                    <small>Blue tick badge</small>
+                </span>
+                <span><strong>₹100 / month</strong></span>
+            </button>
+        `
+        : `
+            <button type="button" class="verify-plan-item active" data-plan="organizer_verified">
+                <span>
+                    <strong>Organizer / Event Manager</strong><br>
+                    <small>Green tick badge</small>
+                </span>
+                <span><strong>₹50 / month</strong></span>
+            </button>
+        `;
+
+    const modal = document.createElement('div');
+    modal.id = 'verificationModal';
+    modal.className = 'modal verification-modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content create-post-modal" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2>Get Verified</h2>
+                <button class="close-modal" id="closeVerificationModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin:0;color:var(--text-secondary);">
+                    Get a verification badge to build trust and credibility on the platform.
+                </p>
+                <div class="verify-plan-list">
+                    ${planMarkup}
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
+                    <button class="btn btn-primary" id="subscribeVerifyBtn">Subscribe & Verify</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    let selectedPlan = selectedPlanDefault;
+    modal.querySelectorAll('.verify-plan-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            modal.querySelectorAll('.verify-plan-item').forEach((x) => x.classList.remove('active'));
+            item.classList.add('active');
+            selectedPlan = item.getAttribute('data-plan') || 'organizer_verified';
+        });
+    });
+
+    const closeModal = () => modal.remove();
+    modal.querySelector('#closeVerificationModal')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    modal.querySelector('#subscribeVerifyBtn')?.addEventListener('click', async () => {
+        const btn = modal.querySelector('#subscribeVerifyBtn');
+        if (!btn) return;
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+        try {
+            const apiRequestFn = window.apiRequest || apiRequest;
+            const result = await apiRequestFn('/users/verification/subscribe', {
+                method: 'POST',
+                body: JSON.stringify({ verification_type: selectedPlan })
+            });
+            if (typeof window.showNotification === 'function') {
+                window.showNotification('Request submitted. Badge appears after admin confirms payment.', 'success');
+            }
+            // Keep auth/me in sync for instant badge rendering.
+            const me = await apiRequestFn('/auth/me');
+            localStorage.setItem('currentUser', JSON.stringify(me));
+            window.currentUser = me;
+            if (typeof window.refreshThemeMenu === 'function') {
+                window.refreshThemeMenu();
+            }
+            updateMeDropdown();
+            closeModal();
+        } catch (error) {
+            if (typeof window.showNotification === 'function') {
+                window.showNotification(error.message || 'Unable to activate verification', 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = original;
+        }
+    });
 }
 
 function createMeDropdown() {
@@ -381,7 +548,7 @@ function createMeDropdown() {
         <div class="dropdown-profile-section">
             <div class="dropdown-profile-pic">${userInitial}</div>
             <div class="dropdown-profile-info">
-                <div class="dropdown-profile-name">${userName} ${currentUser && currentUser.is_verified ? '<span class="verified-badge">✓</span>' : ''}</div>
+                <div class="dropdown-profile-name">${userName} ${window.getVerificationBadgeHTML && currentUser ? window.getVerificationBadgeHTML(currentUser.verification_type) : ''}</div>
                 <div class="dropdown-profile-title">${roleTitle}</div>
             </div>
             ${!isAdmin ? '<a href="/profile" class="btn-view-profile">View profile</a>' : ''}
@@ -410,6 +577,10 @@ function createMeDropdown() {
                 <span class="dropdown-icon">🌐</span>
                 <span>Language</span>
             </a>
+            <button type="button" class="dropdown-item" id="getVerifiedBtn">
+                <span class="dropdown-icon">✔️</span>
+                <span>Get Verified</span>
+            </button>
         </div>
         
         <div class="dropdown-section">
@@ -426,6 +597,29 @@ function createMeDropdown() {
             ` : ''}
         </div>
         ` : ''}
+
+        <div class="dropdown-section">
+            <div class="dropdown-section-title">Theme</div>
+            <button type="button" class="dropdown-item dropdown-item-expand" id="themeMenuToggle">
+                <span class="dropdown-icon">🎨</span>
+                <span>Theme</span>
+                <span class="dropdown-item-meta" id="themeCurrentLabel">Dark</span>
+            </button>
+            <div class="theme-options" id="themeOptions">
+                <button type="button" class="dropdown-item theme-option" data-theme-pref="dark" aria-pressed="false">
+                    <span class="dropdown-icon">🌙</span>
+                    <span>Dark</span>
+                </button>
+                <button type="button" class="dropdown-item theme-option" data-theme-pref="light" aria-pressed="false">
+                    <span class="dropdown-icon">☀️</span>
+                    <span>Light</span>
+                </button>
+                <button type="button" class="dropdown-item theme-option" data-theme-pref="system" aria-pressed="false">
+                    <span class="dropdown-icon">💻</span>
+                    <span>System default</span>
+                </button>
+            </div>
+        </div>
         
         <div class="dropdown-divider"></div>
         <a href="#" class="dropdown-item signout-item" id="signoutLink">
@@ -435,6 +629,7 @@ function createMeDropdown() {
     
     document.body.appendChild(dropdown);
     positionMeDropdown();
+    bindThemeMenuInteractions(dropdown);
     
     // Add logout event listener
     const signoutLink = dropdown.querySelector('#signoutLink');
@@ -458,6 +653,15 @@ function createMeDropdown() {
             }
         });
     }
+
+    const getVerifiedBtn = dropdown.querySelector('#getVerifiedBtn');
+    if (getVerifiedBtn) {
+        getVerifiedBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openVerificationModal();
+        });
+    }
     
     // Close dropdown when clicking outside
     setTimeout(() => {
@@ -469,6 +673,13 @@ function createMeDropdown() {
         });
     }, 100);
 }
+
+window.refreshThemeMenu = function refreshThemeMenu() {
+    const dropdown = document.getElementById('meDropdown');
+    if (dropdown) {
+        updateThemeMenuUI(dropdown);
+    }
+};
 
 function positionMeDropdown() {
     const dropdown = document.getElementById('meDropdown');
@@ -853,13 +1064,19 @@ async function displaySearchResults(results) {
     for (const result of results) {
         const initial = result.name.charAt(0).toUpperCase();
         const isFollowing = followingStatus[result.user_id] || false;
+        const avatarBadge = result.verification_type
+            ? `<span class="verification-badge ${result.verification_type === 'organizer_verified' ? 'celebadge-green' : 'celebadge-blue'}">✔</span>`
+            : '';
+        const avatarContent = result.profile_photo_url
+            ? `<img src="${escapeHtml(result.profile_photo_url)}" alt="${escapeHtml(result.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+            : initial;
         
         html += `
             <div class="search-result-item" onclick="viewUserProfile(${result.user_id})">
-                <div class="search-result-avatar">${initial}</div>
+                <div class="search-result-avatar profile-avatar">${avatarContent}${avatarBadge}</div>
                 <div class="search-result-info">
                     <div class="search-result-name">
-                        ${escapeHtml(result.name)} ${result.is_verified ? '<span style="color: #0077b5;">✓</span>' : ''}
+                        ${escapeHtml(result.name)} ${window.getVerificationBadgeHTML ? window.getVerificationBadgeHTML(result.verification_type) : ''}
                     </div>
                     <div class="search-result-details">
                         ${escapeHtml(result.category || result.email.split('@')[0])}${result.location ? ' • ' + escapeHtml(result.location) : ''}

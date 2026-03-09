@@ -650,6 +650,13 @@
             const initial = (profile.name || '?').charAt(0).toUpperCase();
             const photoUrl = profile && profile.profile_photo_url ? profile.profile_photo_url : null;
             const safeName = escapeHtml(profile.name || 'User');
+            const profileBadge = (window.getVerificationBadgeHTML && profile.verification_type)
+                ? window.getVerificationBadgeHTML(profile.verification_type)
+                : '';
+            const avatarBadgeClass = profile.verification_type === 'organizer_verified' ? 'celebadge-green' : 'celebadge-blue';
+            const avatarBadge = profile.verification_type
+                ? `<span class="verification-badge ${avatarBadgeClass}">✔</span>`
+                : '';
             const safeCategory = escapeHtml(profile.category || '');
             const safeLocation = escapeHtml(profile.location || '');
 
@@ -668,9 +675,9 @@
                         <div class="vp-hero">
                             <div class="vp-hero-banner"></div>
                             <div class="vp-hero-body">
-                                <div class="vp-avatar">${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${safeName}">` : initial}</div>
+                                <div class="vp-avatar profile-avatar">${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${safeName}">` : initial}${avatarBadge}</div>
                                 <div class="vp-identity">
-                                    <h1 class="vp-name">${safeName}</h1>
+                                    <h1 class="vp-name">${safeName} ${profileBadge}</h1>
                                     <p class="vp-tagline">${safeCategory || 'CeleCircle Member'}</p>
                                     <div class="vp-quick-info">
                                         ${profile.average_rating ? `<span class="vp-quick-item"><span class="icon">⭐</span> ${profile.average_rating.toFixed(1)} Rating</span>` : ''}

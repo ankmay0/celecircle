@@ -8,7 +8,7 @@ from auth import (
     get_password_hash, verify_password, create_access_token,
     generate_otp, store_otp, verify_otp, get_current_active_user
 )
-from datetime import timedelta
+from datetime import datetime, timedelta
 from email_service import send_otp_email
 import os
 
@@ -153,5 +153,25 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 def get_current_user_info(current_user: User = Depends(get_current_active_user)):
     """Get current user information"""
-    return current_user
+    paid_verified = (
+        current_user.verification_payment_status == "approved"
+        and current_user.verification_type
+        and current_user.verification_expiry
+        and current_user.verification_expiry > datetime.utcnow()
+    )
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "role": current_user.role,
+        "is_verified": current_user.is_verified,
+        "verification_type": current_user.verification_type if paid_verified else None,
+        "verification_payment_status": current_user.verification_payment_status,
+        "verification_expiry": current_user.verification_expiry if paid_verified else None,
+        "is_active": current_user.is_active,
+        "created_at": current_user.created_at,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "username": current_user.username,
+        "profile_photo_url": current_user.profile_photo_url,
+    }
 

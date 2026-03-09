@@ -740,7 +740,8 @@
                         user_id: p.user_id,
                         name: p.name || '',
                         category: p.category || '',
-                        location: p.location || ''
+                        location: p.location || '',
+                        verification_type: p.verification_type || null
                     };
                 });
                 sidebarLoaded = true;
@@ -782,9 +783,9 @@
 
                     html += '<div class="contact-item' + (isActive ? ' active' : '') + '"' +
                         ' onclick="window._openChat(' + conv.user_id + ', \'' + esc(name) + '\', \'' + esc(cat) + '\')">' +
-                        '<div class="contact-avatar">' + initials + '</div>' +
+                        '<div class="contact-avatar profile-avatar">' + initials + renderAvatarBadge(conv.verification_type) + '</div>' +
                         '<div class="contact-info">' +
-                            '<div class="contact-name">' + escapeHtml(name) + '</div>' +
+                            '<div class="contact-name">' + escapeHtml(name) + renderVerificationBadge(conv.verification_type) + '</div>' +
                             '<div class="contact-sub">' + escapeHtml(preview) + '</div>' +
                         '</div>' +
                         '<div class="contact-meta">' +
@@ -823,9 +824,9 @@
 
                     html += '<div class="contact-item' + (pActive ? ' active' : '') + '"' +
                         ' onclick="window._openChat(' + p.user_id + ', \'' + esc(p.name) + '\', \'' + esc(p.category) + '\')">' +
-                        '<div class="contact-avatar">' + pInitials + '</div>' +
+                        '<div class="contact-avatar profile-avatar">' + pInitials + renderAvatarBadge(p.verification_type) + '</div>' +
                         '<div class="contact-info">' +
-                            '<div class="contact-name">' + escapeHtml(p.name) + '</div>' +
+                            '<div class="contact-name">' + escapeHtml(p.name) + renderVerificationBadge(p.verification_type) + '</div>' +
                             '<div class="contact-sub">' + escapeHtml(sub) + '</div>' +
                         '</div></div>';
                 }
@@ -1296,6 +1297,22 @@
             if (diffDays === 0) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             if (diffDays < 7) return d.toLocaleDateString([], { weekday: 'short' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function renderVerificationBadge(verificationType) {
+            if (!verificationType) return '';
+            if (typeof window.getVerificationBadgeHTML === 'function') {
+                return ' ' + window.getVerificationBadgeHTML(verificationType);
+            }
+            return verificationType === 'organizer_verified'
+                ? ' <span class="celebadge-green">✔</span>'
+                : ' <span class="celebadge-blue">✔</span>';
+        }
+
+        function renderAvatarBadge(verificationType) {
+            if (!verificationType) return '';
+            var cls = verificationType === 'organizer_verified' ? 'celebadge-green' : 'celebadge-blue';
+            return '<span class="verification-badge ' + cls + '">✔</span>';
         }
 
         function escapeHtml(text) {

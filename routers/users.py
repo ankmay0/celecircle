@@ -19,6 +19,44 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+VERIFICATION_PRICING = {
+    "organizer_verified": {
+        "label": "Organizer / Event Manager",
+        "amount_inr": 50,
+        "badge_color": "green",
+    },
+    "celebrity_verified": {
+        "label": "Celebrity",
+        "amount_inr": 100,
+        "badge_color": "blue",
+    },
+}
+
+
+def _is_paid_verified(user: User) -> bool:
+    return bool(
+        user
+        and user.verification_type
+        and user.verification_payment_status == "approved"
+        and user.verification_expiry
+        and user.verification_expiry > datetime.utcnow()
+    )
+
+
+def _clear_expired_paid_verification(user: User) -> bool:
+    if not user:
+        return False
+    if (
+        user.verification_payment_status == "approved"
+        and user.verification_expiry
+        and user.verification_expiry <= datetime.utcnow()
+    ):
+        user.verification_type = None
+        user.verification_payment_status = None
+        user.verification_expiry = None
+        return True
+    return False
+
 @router.post("/profiles", response_model=ProfileResponse)
 def create_profile(
     profile_data: ProfileCreate,
@@ -164,7 +202,39 @@ def get_profile_by_user_id(user_id: int, db: Session = Depends(get_db)):
         .first()
     )
     if profile:
-        return profile
+        user = profile.user
+        if user and _clear_expired_paid_verification(user):
+            db.commit()
+            db.refresh(profile)
+        return {
+            "id": profile.id,
+            "user_id": profile.user_id,
+            "name": profile.name,
+            "category": profile.category,
+            "location": profile.location,
+            "languages": profile.languages,
+            "bio": profile.bio,
+            "phone": profile.phone,
+            "profile_photo_url": profile.profile_photo_url,
+            "portfolio_videos": profile.portfolio_videos,
+            "portfolio_images": profile.portfolio_images,
+            "portfolio_links": profile.portfolio_links,
+            "min_price": profile.min_price or 0,
+            "max_price": profile.max_price or 0,
+            "experience_years": profile.experience_years or 0,
+            "ai_score": profile.ai_score or 0.0,
+            "response_time_avg": profile.response_time_avg or 0.0,
+            "total_hires": profile.total_hires or 0,
+            "total_reviews": profile.total_reviews or 0,
+            "average_rating": profile.average_rating or 0.0,
+            "past_events": profile.past_events,
+            "availability_calendar": profile.availability_calendar,
+            "created_at": profile.created_at.isoformat() if profile.created_at else None,
+            "updated_at": profile.updated_at.isoformat() if profile.updated_at else None,
+            "has_profile": True,
+            "verification_type": user.verification_type if _is_paid_verified(user) else None,
+            "verification_expiry": user.verification_expiry.isoformat() if _is_paid_verified(user) else None,
+        }
 
     # Fallback: construct a minimal response from User data
     user = db.query(User).filter(User.id == user_id).first()
@@ -205,6 +275,8 @@ def get_profile_by_user_id(user_id: int, db: Session = Depends(get_db)):
         "created_at": user.created_at.isoformat() if user.created_at else None,
         "updated_at": user.created_at.isoformat() if user.created_at else None,
         "has_profile": False,
+        "verification_type": user.verification_type if _is_paid_verified(user) else None,
+        "verification_expiry": user.verification_expiry.isoformat() if _is_paid_verified(user) else None,
     }
 
 @router.get("/profiles", response_model=List[ProfileResponse])
@@ -284,6 +356,8 @@ def search_users(
                 "location": profile.location,
                 "email": user.email,
                 "is_verified": user.is_verified,
+                "verification_type": user.verification_type if _is_paid_verified(user) else None,
+                "profile_photo_url": user.profile_photo_url,
                 "ai_score": profile.ai_score
             })
     
@@ -308,10 +382,72 @@ def search_users(
                     "location": profile.location if profile else None,
                     "email": user.email,
                     "is_verified": user.is_verified,
+                    "verification_type": user.verification_type if _is_paid_verified(user) else None,
+                    "profile_photo_url": user.profile_photo_url,
                     "ai_score": profile.ai_score if profile else 0
                 })
     
     return results
+
+
+@router.get("/verification/plans")
+def get_verification_plans():
+    return {
+        "plans": [
+            {"type": key, **value}
+            for key, value in VERIFICATION_PRICING.items()
+        ]
+    }
+
+
+@router.get("/verification/status")
+def get_my_verification_status(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    if _clear_expired_paid_verification(current_user):
+        db.commit()
+        db.refresh(current_user)
+    return {
+        "is_verified": _is_paid_verified(current_user),
+        "verification_type": current_user.verification_type if _is_paid_verified(current_user) else None,
+        "verification_payment_status": current_user.verification_payment_status,
+        "verification_expiry": current_user.verification_expiry.isoformat() if _is_paid_verified(current_user) else None,
+    }
+
+
+@router.post("/verification/subscribe")
+def subscribe_verification(
+    payload: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    verification_type = (payload or {}).get("verification_type")
+    if verification_type not in VERIFICATION_PRICING:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification type")
+
+    # Role validation
+    role_value = getattr(current_user.role, "value", str(current_user.role)).lower()
+    if verification_type == "organizer_verified" and role_value != "organizer":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This plan is only for organizers/event managers")
+    if verification_type == "celebrity_verified" and role_value != "artist":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This plan is only for celebrities/artists")
+
+    # Placeholder payment submission (admin must confirm payment first).
+    current_user.verification_type = verification_type
+    current_user.verification_payment_status = "pending"
+    current_user.verification_expiry = None
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "message": "Verification request submitted. Badge will appear after admin payment confirmation.",
+        "is_verified": False,
+        "verification_type": current_user.verification_type,
+        "verification_payment_status": current_user.verification_payment_status,
+        "verification_expiry": None,
+        "amount_inr": VERIFICATION_PRICING[verification_type]["amount_inr"],
+    }
 
 @router.post("/profiles/upload")
 async def upload_portfolio_file(

@@ -700,6 +700,229 @@ a:hover {
     opacity: 0.9;
 }
 
+.dropdown-item-expand {
+    justify-content: space-between;
+}
+
+.dropdown-item-meta {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.theme-options {
+    display: none;
+    padding: 0.25rem 0 0.5rem 0;
+}
+
+.theme-options.open {
+    display: block;
+}
+
+.theme-option {
+    padding-left: 2.2rem;
+}
+
+.theme-option.active {
+    background: rgba(59,130,246,0.12);
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+/* Navbar polish layer */
+.main-header {
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    backdrop-filter: saturate(150%) blur(10px);
+}
+
+.main-header .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1280px;
+    min-height: 64px;
+    padding: 8px 16px;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.main-header .header-left {
+    display: flex;
+    align-items: center;
+    flex: 1 1 0%;
+    min-width: 0;
+    gap: 12px;
+}
+
+.main-header .logo-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.main-header .header-search .search-input {
+    height: 42px;
+    border-radius: 999px;
+    padding-left: 38px;
+    font-size: 0.92rem;
+}
+
+.main-header .mobile-search-profile-row,
+.main-header .header-search,
+.main-header .search-box {
+    min-width: 0;
+}
+
+.main-header .header-search {
+    flex: 1 1 auto;
+    max-width: min(460px, 42vw);
+}
+
+.main-header .header-nav {
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.main-header .header-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.main-header .header-nav .nav-item-header {
+    flex: 0 0 auto;
+    min-width: 64px;
+    height: 54px;
+    border-radius: 10px;
+    border-bottom: 2px solid transparent;
+    transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+
+.main-header .header-nav .nav-icon-header {
+    font-size: 1.02rem;
+    line-height: 1;
+}
+
+.main-header .header-nav .nav-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+
+@media (max-width: 1320px) {
+    .main-header .header-nav .nav-label {
+        display: none !important;
+    }
+    .main-header .header-nav .nav-item-header {
+        min-width: 42px;
+        width: 42px;
+        padding: 0;
+    }
+}
+
+@media (max-width: 1500px) {
+    .main-header .header-nav .nav-label {
+        display: none !important;
+    }
+    .main-header .header-nav .nav-item-header {
+        min-width: 42px;
+        width: 42px;
+        padding: 0;
+    }
+}
+
+[data-theme="light"] .main-header .header-nav .nav-item-header:hover {
+    background: rgba(10, 102, 194, 0.08);
+}
+
+[data-theme="light"] .main-header .header-nav .nav-item-header.active {
+    color: #0a66c2;
+    border-bottom-color: #0a66c2;
+}
+
+[data-theme="dark"] .main-header .header-nav .nav-item-header:hover {
+    background: rgba(148, 163, 184, 0.12);
+}
+
+[data-theme="dark"] .main-header .header-nav .nav-item-header.active {
+    color: #8ec5ff;
+    border-bottom-color: #60a5fa;
+}
+
+.celebadge-green {
+    color: #22c55e;
+    margin-left: 6px;
+    font-weight: 700;
+}
+
+.celebadge-blue {
+    color: #3b82f6;
+    margin-left: 6px;
+    font-weight: 700;
+}
+
+.profile-avatar {
+    position: relative;
+}
+
+.verification-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+.verification-badge.celebadge-green,
+.verification-badge.celebadge-blue {
+    margin-left: 0;
+}
+
+.verification-modal .modal-content {
+    max-width: 520px;
+}
+
+.verify-plan-list {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.verify-plan-item {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.85rem 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.verify-plan-item.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.14);
+}
+
 img {
     max-width: 100%;
     border-radius: 10px;

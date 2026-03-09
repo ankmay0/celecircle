@@ -11,6 +11,18 @@ import os
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
 
+
+def _paid_verification_type(user: User):
+    if (
+        user
+        and user.verification_type
+        and user.verification_payment_status == "approved"
+        and user.verification_expiry
+        and user.verification_expiry > datetime.utcnow()
+    ):
+        return user.verification_type
+    return None
+
 UPLOAD_DIR = "uploads/posts"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -106,6 +118,7 @@ def get_feed(
                 "email": author.email,
                 "first_name": author.first_name,
                 "last_name": author.last_name,
+                "verification_type": _paid_verification_type(author),
                 "profile": None
             }
         }
@@ -231,6 +244,7 @@ def get_post_comments(post_id: int, db: Session = Depends(get_db)):
                 "email": author.email,
                 "first_name": author.first_name,
                 "last_name": author.last_name,
+                "verification_type": _paid_verification_type(author),
                 "profile": None
             }
         }

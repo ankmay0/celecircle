@@ -79,6 +79,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
+    # Auto-expire paid verification without touching account verification flow.
+    if (
+        user.verification_payment_status == "approved"
+        and user.verification_expiry
+        and datetime.utcnow() > user.verification_expiry
+    ):
+        user.verification_type = None
+        user.verification_payment_status = None
+        user.verification_expiry = None
+        db.commit()
+        db.refresh(user)
     return user
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)):

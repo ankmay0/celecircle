@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/feed.css">
 </head>
-<body>
+<body class="feed-page">
     <script>
         // Public/private layout guard: prevent unauthenticated access before dashboard UI renders.
         (function () {
@@ -19,6 +19,14 @@
     <!-- Header will be created by linkedin-header.js -->
 
     <div class="feed-container">
+        <aside class="sidebar left-sidebar cc-nav-card">
+            <div class="cc-nav-title">Navigation</div>
+            <a href="/feed" class="cc-nav-link active"><span class="nav-link-icon">🏠</span><span>Home</span></a>
+            <a href="/connections" class="cc-nav-link"><span class="nav-link-icon">👥</span><span>My Network</span></a>
+            <a href="/browse-gigs" class="cc-nav-link"><span class="nav-link-icon">💼</span><span>Gigs</span></a>
+            <a href="/chat" class="cc-nav-link"><span class="nav-link-icon">💬</span><span>Messages</span></a>
+            <a href="/profile" class="cc-nav-link"><span class="nav-link-icon">👤</span><span>Profile</span></a>
+        </aside>
         <!-- Main Feed (LinkedIn style) -->
         <main class="feed-main">
             <!-- Start a Post Section -->
@@ -35,7 +43,10 @@
                         <span>📷</span> Photo
                     </button>
                     <button class="post-option-btn" id="filterTextBtn" data-media="text">
-                        <span>📝</span> Write article
+                        <span>🗓️</span> Event
+                    </button>
+                    <button class="post-option-btn post-now-btn" onclick="focusPostInput()">
+                        Post
                     </button>
                     <button class="post-option-btn" id="filterAllBtn" data-media="" style="display: none;">
                         <span>📋</span> Show All
@@ -106,58 +117,23 @@
         <!-- Right Sidebar (LinkedIn style) -->
         <aside class="sidebar right-sidebar">
             <div class="sidebar-content">
-                <!-- Profile Card (moved from old left sidebar) -->
-                <div class="profile-card">
-                    <div class="profile-card-header">
-                        <div class="profile-picture-large" id="profilePictureLarge">
-                            <span id="profileInitial">U</span>
-                        </div>
-                        <div class="profile-meta">
-                            <div class="profile-name" id="profileName">Your Name</div>
-                            <div class="profile-title" id="profileTitle">Artist</div>
-                        </div>
-                    </div>
-                    <div class="profile-stats">
-                        <a href="/posts-activity" class="profile-stat" id="profilePostsLink">
-                            <div class="profile-stat-value" id="postCount">0</div>
-                            <div class="profile-stat-label">Posts</div>
-                        </a>
-                        <a href="/connections?tab=followers" class="profile-stat" id="profileFollowersLink">
-                            <div class="profile-stat-value" id="followersCount">0</div>
-                            <div class="profile-stat-label">Followers</div>
-                        </a>
-                        <a href="/connections?tab=following" class="profile-stat" id="profileFollowingLink">
-                            <div class="profile-stat-value" id="followingCount">0</div>
-                            <div class="profile-stat-label">Following</div>
-                        </a>
-                    </div>
-                    <div class="profile-footer-note">
-                        <span class="profile-footer-label">Recent booking</span>
-                        <span class="profile-footer-value">None</span>
-                    </div>
-                </div>
-
-                <!-- LinkedIn News -->
                 <div class="widget">
                     <div class="widget-header">
-                        <h3>CeleCircle News</h3>
-                        <span class="info-icon">ℹ️</span>
+                        <h3>Trending Topics</h3>
                     </div>
-                    <div class="news-list" id="newsList">
-                        <div class="loading">Loading Odisha &amp; Ollywood news...</div>
+                    <div class="news-list">
+                        <div class="news-item"><div class="news-title">#RemoteWork</div></div>
+                        <div class="news-item"><div class="news-title">#DigitalMarketing</div></div>
+                        <div class="news-item"><div class="news-title">#Blockchain</div></div>
                     </div>
-                    <button class="show-more-btn" id="newsRefreshBtn">Refresh news</button>
                 </div>
 
-                <!-- Ads / Promotional Widget -->
-                <div class="ad-card">
-                    <div class="ad-label">Ad</div>
-                    <div class="ad-content">
-                        <div class="ad-icon">📢</div>
-                        <div class="ad-text">
-                            <strong>Smarter connections</strong>
-                            <p>Connect with top talent</p>
-                        </div>
+                <div class="widget">
+                    <div class="widget-header">
+                        <h3>People You May Know</h3>
+                    </div>
+                    <div class="news-list" id="peopleSuggestions">
+                        <div class="loading">Finding matching people...</div>
                     </div>
                 </div>
             </div>

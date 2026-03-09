@@ -5,8 +5,21 @@ from database import get_db
 from models import User, Connection, Profile, Notification
 from schemas import UserResponse, ProfileResponse
 from auth import get_current_active_user
+from datetime import datetime
 
 router = APIRouter(prefix="/api/connections", tags=["connections"])
+
+
+def _paid_verification_type(user: User):
+    if (
+        user
+        and user.verification_type
+        and user.verification_payment_status == "approved"
+        and user.verification_expiry
+        and user.verification_expiry > datetime.utcnow()
+    ):
+        return user.verification_type
+    return None
 
 @router.post("/{user_id}/follow", response_model=dict)
 def follow_user(
@@ -97,6 +110,8 @@ def get_followers(
             "name": profile.name if profile else None,
             "category": profile.category if profile else None,
             "profile_id": profile.id if profile else None,
+            "profile_photo_url": user.profile_photo_url,
+            "verification_type": _paid_verification_type(user),
             "role": user.role,
             "followed_at": conn.created_at.isoformat() if conn.created_at else None
         })
@@ -127,6 +142,8 @@ def get_following(
             "name": profile.name if profile else None,
             "category": profile.category if profile else None,
             "profile_id": profile.id if profile else None,
+            "profile_photo_url": user.profile_photo_url,
+            "verification_type": _paid_verification_type(user),
             "role": user.role,
             "followed_at": conn.created_at.isoformat() if conn.created_at else None
         })
