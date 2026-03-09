@@ -102,6 +102,7 @@ def get_feed(
     result = []
     for post in posts:
         author = db.query(User).filter(User.id == post.author_id).first()
+        profile = db.query(Profile).filter(Profile.user_id == author.id).first()
         post_dict = {
             "id": post.id,
             "author_id": post.author_id,
@@ -119,15 +120,13 @@ def get_feed(
                 "first_name": author.first_name,
                 "last_name": author.last_name,
                 "verification_type": _paid_verification_type(author),
-                "profile": None
+                "profile_photo_url": profile.profile_photo_url if profile else None,
+                "profile": {
+                    "name": profile.name,
+                    "category": profile.category,
+                } if profile else None,
             }
         }
-        profile = db.query(Profile).filter(Profile.user_id == author.id).first()
-        if profile:
-            post_dict["author"]["profile"] = {
-                "name": profile.name,
-                "category": profile.category
-            }
         result.append(post_dict)
     
     return result
@@ -230,6 +229,7 @@ def get_post_comments(post_id: int, db: Session = Depends(get_db)):
     result = []
     for comment in comments:
         author = db.query(User).filter(User.id == comment.author_id).first()
+        profile = db.query(Profile).filter(Profile.user_id == author.id).first()
         comment_dict = {
             "id": comment.id,
             "author_id": comment.author_id,
@@ -245,15 +245,13 @@ def get_post_comments(post_id: int, db: Session = Depends(get_db)):
                 "first_name": author.first_name,
                 "last_name": author.last_name,
                 "verification_type": _paid_verification_type(author),
-                "profile": None
+                "profile_photo_url": profile.profile_photo_url if profile else None,
+                "profile": {
+                    "name": profile.name,
+                    "category": profile.category,
+                } if profile else None,
             }
         }
-        profile = db.query(Profile).filter(Profile.user_id == author.id).first()
-        if profile:
-            comment_dict["author"]["profile"] = {
-                "name": profile.name,
-                "category": profile.category
-            }
         result.append(comment_dict)
     
     return result

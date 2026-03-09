@@ -276,6 +276,7 @@ class PostAuthor(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     verification_type: Optional[str] = None
+    profile_photo_url: Optional[str] = None
     profile: Optional[PostAuthorProfile] = None
 
 class PostResponse(BaseModel):

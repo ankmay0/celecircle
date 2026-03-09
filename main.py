@@ -286,6 +286,21 @@ def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "CeleLink API"}
 
+# Serve React SPA build (frontend/dist) if available
+REACT_DIST = Path("frontend/dist")
+if REACT_DIST.exists() and (REACT_DIST / "index.html").exists():
+    app.mount("/assets", StaticFiles(directory=str(REACT_DIST / "assets")), name="react-assets")
+
+    @app.get("/react/{full_path:path}", response_class=HTMLResponse)
+    async def serve_react(request: Request, full_path: str = ""):
+        with open(REACT_DIST / "index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+
+    @app.get("/react", response_class=HTMLResponse)
+    async def serve_react_root(request: Request):
+        with open(REACT_DIST / "index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
