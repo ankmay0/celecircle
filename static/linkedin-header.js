@@ -995,6 +995,14 @@ function initSearch() {
             searchResults.style.display = 'block';
         }
     });
+
+    const searchIcon = document.querySelector('#searchBox .search-icon');
+    if (searchIcon) {
+        searchIcon.style.cursor = 'pointer';
+        searchIcon.addEventListener('click', function() {
+            newInput.focus();
+        });
+    }
     
     // Close search results when clicking outside
     document.addEventListener('click', function(e) {

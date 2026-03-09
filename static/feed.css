@@ -2831,7 +2831,7 @@ img {
     min-height: 64px;
     padding: 8px 16px;
     gap: 12px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .main-header .header-left {
@@ -2845,6 +2845,17 @@ img {
 .main-header .header-search .search-input {
     height: 42px;
     border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.main-header .header-search .search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.main-header .search-results {
+    z-index: 1400;
 }
 
 .main-header .mobile-search-profile-row,
