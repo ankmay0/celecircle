@@ -106,7 +106,9 @@ function setThemePreference(themePreference, persist = true) {
 
 function mountDesktopShell() {
     const path = window.location.pathname || '/';
+    const skipShellExactPaths = ['/', '/index.html'];
     const skipShellPrefixes = ['/admin', '/eventnet'];
+    if (skipShellExactPaths.includes(path)) return;
     if (skipShellPrefixes.some((prefix) => path.startsWith(prefix))) return;
 
     const main = document.querySelector('main.page-container');
