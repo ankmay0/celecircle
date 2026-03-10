@@ -17,7 +17,7 @@ import {
 import { gigsApi } from '@/api/gigs'
 import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
-import { formatDate, formatCurrency, cn } from '@/lib/utils'
+import { formatDate, formatCurrency, cn, assetUrl } from '@/lib/utils'
 import type { Gig, Application } from '@/types'
 
 export function GigDetailPage() {
@@ -219,7 +219,7 @@ export function GigDetailPage() {
               <div key={app.id} className="rounded-lg border border-border p-4">
                 <div className="flex items-start gap-3">
                   <UserAvatar
-                    src={app.artist?.profile_photo_url}
+                    src={assetUrl(app.artist?.profile_photo_url)}
                     firstName={app.artist?.first_name}
                     lastName={app.artist?.last_name}
                   />

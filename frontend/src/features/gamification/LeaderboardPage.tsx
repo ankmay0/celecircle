@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
-import { cn } from '@/lib/utils'
+import { cn, assetUrl } from '@/lib/utils'
 
 type Tab = 'leaderboard' | 'badges' | 'my-rank'
 
@@ -241,7 +241,7 @@ export function LeaderboardPage() {
         <div className="space-y-4">
           <div className="card p-6 text-center animate-fade-in">
             <UserAvatar
-              src={user?.profile_photo_url}
+              src={assetUrl(user?.profile_photo_url)}
               firstName={user?.first_name}
               lastName={user?.last_name}
               size="xl"

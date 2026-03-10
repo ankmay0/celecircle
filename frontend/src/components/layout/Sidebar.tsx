@@ -26,7 +26,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { connectionsApi } from '@/api/connections'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
-import { cn } from '@/lib/utils'
+import { cn, assetUrl } from '@/lib/utils'
 
 const links = [
   { to: '/feed', icon: Home, label: 'Home' },
@@ -78,7 +78,7 @@ export function Sidebar() {
           <div className="px-4 pb-4 -mt-6">
             <Link to="/profile">
               <UserAvatar
-                src={user?.profile_photo_url}
+                src={assetUrl(user?.profile_photo_url)}
                 firstName={user?.first_name}
                 lastName={user?.last_name}
                 size="lg"

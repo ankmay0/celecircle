@@ -22,7 +22,7 @@ import { connectionsApi } from '@/api/connections'
 import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
-import { formatDate, formatCurrency, cn } from '@/lib/utils'
+import { formatDate, formatCurrency, cn, assetUrl } from '@/lib/utils'
 import type { Profile } from '@/types'
 
 type TabId = 'about' | 'portfolio' | 'reviews'
@@ -100,7 +100,7 @@ export function ProfilePage() {
         <div className="px-6 pb-6 -mt-10">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <UserAvatar
-              src={profile.profile_photo_url}
+              src={assetUrl(profile.profile_photo_url)}
               firstName={user?.first_name}
               lastName={user?.last_name}
               size="xl"

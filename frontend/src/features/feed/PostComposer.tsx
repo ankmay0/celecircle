@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Image, Video, X, Loader2, Globe, Users as UsersIcon, CalendarDays, FileText, Smile } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { assetUrl } from '@/lib/utils'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { postsApi } from '@/api/posts'
 
@@ -88,7 +89,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
       <div className="card p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center gap-3">
           <UserAvatar
-            src={user?.profile_photo_url}
+            src={assetUrl(user?.profile_photo_url)}
             firstName={user?.first_name}
             lastName={user?.last_name}
             verificationType={user?.verification_type}
@@ -128,7 +129,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
             <div className="overflow-y-auto flex-1 p-5">
               <div className="flex items-center gap-3 mb-4">
                 <UserAvatar
-                  src={user?.profile_photo_url}
+                  src={assetUrl(user?.profile_photo_url)}
                   firstName={user?.first_name}
                   lastName={user?.last_name}
                   verificationType={user?.verification_type}

@@ -24,7 +24,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
 import { BookingFormModal } from '@/features/bookings/BookingFormModal'
-import { formatCurrency, cn } from '@/lib/utils'
+import { formatCurrency, cn, assetUrl } from '@/lib/utils'
 import type { Profile } from '@/types'
 
 type TabId = 'about' | 'portfolio'
@@ -116,7 +116,7 @@ export function ViewProfilePage() {
         <div className="px-6 pb-6 -mt-10">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <UserAvatar
-              src={profile.profile_photo_url}
+              src={assetUrl(profile.profile_photo_url)}
               firstName={profile.name.split(' ')[0]}
               lastName={profile.name.split(' ')[1]}
               size="xl"

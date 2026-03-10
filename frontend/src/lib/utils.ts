@@ -1,8 +1,16 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+export const BACKEND_URL = 'https://celecircle.onrender.com'
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+export function assetUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`
 }
 
 export function formatDate(date: string | Date): string {

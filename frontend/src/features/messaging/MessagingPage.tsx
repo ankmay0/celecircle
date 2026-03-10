@@ -17,7 +17,7 @@ import { chatApi } from '@/api/chat'
 import { connectionsApi } from '@/api/connections'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
-import { cn } from '@/lib/utils'
+import { cn, assetUrl } from '@/lib/utils'
 import type { ChatMessage, Conversation } from '@/api/chat'
 
 interface FollowedUser {
@@ -146,7 +146,7 @@ function ConversationList({
               )}
             >
               <UserAvatar
-                src={conv.profile_photo_url}
+                src={assetUrl(conv.profile_photo_url)}
                 firstName={conv.user_name.split(' ')[0]}
                 lastName={conv.user_name.split(' ')[1]}
                 size="md"
@@ -253,7 +253,7 @@ function NewChatPicker({
               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-bg-secondary transition-colors"
             >
               <UserAvatar
-                src={u.profile_photo_url}
+                src={assetUrl(u.profile_photo_url)}
                 firstName={u.name?.split(' ')[0]}
                 lastName={u.name?.split(' ')[1]}
                 size="md"
@@ -384,7 +384,7 @@ function ChatArea({
           className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
         >
           <UserAvatar
-            src={userPhoto}
+            src={assetUrl(userPhoto)}
             firstName={userName.split(' ')[0]}
             lastName={userName.split(' ')[1]}
             size="md"
@@ -436,14 +436,14 @@ function ChatArea({
                     >
                       {msg.attachment_url && msg.attachment_type === 'image' && (
                         <img
-                          src={msg.attachment_url}
+                          src={assetUrl(msg.attachment_url)}
                           alt="Attachment"
                           className="rounded-lg max-w-full max-h-60 mb-1"
                         />
                       )}
                       {msg.attachment_url && msg.attachment_type === 'file' && (
                         <a
-                          href={msg.attachment_url}
+                          href={assetUrl(msg.attachment_url) || '#'}
                           target="_blank"
                           rel="noreferrer"
                           className={cn(

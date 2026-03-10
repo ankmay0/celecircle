@@ -18,6 +18,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { usersApi } from '@/api/users'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
+import { assetUrl } from '@/lib/utils'
 import type { Profile } from '@/types'
 
 export function DashboardPage() {
@@ -84,7 +85,7 @@ export function DashboardPage() {
         <div className="bg-gray-100 dark:bg-gray-800 p-6">
           <div className="flex items-center gap-4">
             <UserAvatar
-              src={user?.profile_photo_url}
+              src={assetUrl(user?.profile_photo_url)}
               firstName={user?.first_name}
               lastName={user?.last_name}
               size="lg"

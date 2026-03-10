@@ -15,7 +15,7 @@ import { postsApi } from '@/api/posts'
 import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
-import { formatDate, cn } from '@/lib/utils'
+import { formatDate, cn, assetUrl } from '@/lib/utils'
 import { CommentSection } from './CommentSection'
 import type { Post } from '@/types'
 
@@ -107,9 +107,9 @@ export function PostCard({ post, onDeleted, style }: PostCardProps) {
       return (
         <div className="mt-3 bg-bg-tertiary/50">
           {post.media_type === 'video' ? (
-            <video src={mediaUrls[0]} controls className="w-full max-h-[500px] object-contain" />
+            <video src={assetUrl(mediaUrls[0])} controls className="w-full max-h-[500px] object-contain" />
           ) : (
-            <img src={mediaUrls[0]} alt="" className="w-full max-h-[500px] object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
+            <img src={assetUrl(mediaUrls[0])} alt="" className="w-full max-h-[500px] object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
           )}
         </div>
       )
@@ -118,17 +118,17 @@ export function PostCard({ post, onDeleted, style }: PostCardProps) {
       return (
         <div className="mt-3 grid grid-cols-2 gap-0.5 overflow-hidden">
           {mediaUrls.map((url, i) => (
-            <img key={i} src={url} alt="" className="w-full h-64 object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
+            <img key={i} src={assetUrl(url)} alt="" className="w-full h-64 object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
           ))}
         </div>
       )
     }
     return (
       <div className="mt-3 grid grid-cols-2 gap-0.5 overflow-hidden">
-        <img src={mediaUrls[0]} alt="" className="w-full h-64 object-cover row-span-2 cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
-        <img src={mediaUrls[1]} alt="" className="w-full h-[calc(8rem-1px)] object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
+        <img src={assetUrl(mediaUrls[0])} alt="" className="w-full h-64 object-cover row-span-2 cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
+        <img src={assetUrl(mediaUrls[1])} alt="" className="w-full h-[calc(8rem-1px)] object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
         <div className="relative">
-          <img src={mediaUrls[2]} alt="" className="w-full h-[calc(8rem-1px)] object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
+          <img src={assetUrl(mediaUrls[2])} alt="" className="w-full h-[calc(8rem-1px)] object-cover cursor-pointer hover:brightness-95 transition-all" loading="lazy" />
           {mediaUrls.length > 3 && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xl font-bold">
               +{mediaUrls.length - 3}
@@ -151,7 +151,7 @@ export function PostCard({ post, onDeleted, style }: PostCardProps) {
         <div className="flex items-start justify-between">
           <Link to={`/profile/${post.author_id}`} className="flex items-center gap-3 group">
             <UserAvatar
-              src={author?.profile_photo_url}
+              src={assetUrl(author?.profile_photo_url)}
               firstName={author?.first_name}
               lastName={author?.last_name}
               verificationType={author?.verification_type}

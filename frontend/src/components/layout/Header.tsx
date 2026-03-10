@@ -21,7 +21,7 @@ import { usersApi } from '@/api/users'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
-import { cn } from '@/lib/utils'
+import { cn, assetUrl } from '@/lib/utils'
 import type { SearchResult } from '@/types'
 
 const navItems = [
@@ -64,7 +64,7 @@ function SearchDropdown({
             className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg-secondary transition-colors"
           >
             <UserAvatar
-              src={r.profile_photo_url}
+              src={assetUrl(r.profile_photo_url)}
               firstName={r.name}
               lastName=""
               size="sm"
@@ -212,11 +212,11 @@ export function Header() {
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2 hover:bg-bg-secondary transition-colors"
             >
-              <UserAvatar
-                src={user?.profile_photo_url}
-                firstName={user?.first_name}
-                lastName={user?.last_name}
-                size="sm"
+                    <UserAvatar
+                      src={assetUrl(user?.profile_photo_url)}
+                      firstName={user?.first_name}
+                      lastName={user?.last_name}
+                      size="sm"
                 verificationType={user?.verification_type}
               />
               <ChevronDown className="h-3.5 w-3.5 text-text-secondary" />
@@ -227,7 +227,7 @@ export function Header() {
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3">
                     <UserAvatar
-                      src={user?.profile_photo_url}
+                      src={assetUrl(user?.profile_photo_url)}
                       firstName={user?.first_name}
                       lastName={user?.last_name}
                       size="lg"

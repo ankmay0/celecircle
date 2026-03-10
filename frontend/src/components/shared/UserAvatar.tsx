@@ -1,5 +1,5 @@
 import { BadgeCheck } from 'lucide-react'
-import { cn, getInitials } from '@/lib/utils'
+import { cn, getInitials, assetUrl } from '@/lib/utils'
 
 interface UserAvatarProps {
   src?: string | null
@@ -47,7 +47,7 @@ export function UserAvatar({ src, firstName, lastName, size = 'md', className, v
     return (
       <div className={cn('relative flex-shrink-0', sizeClasses[size])}>
         <img
-          src={src}
+          src={assetUrl(src)}
           alt={`${firstName || ''} ${lastName || ''}`}
           className={cn('rounded-full object-cover w-full h-full', className)}
         />

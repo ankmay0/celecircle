@@ -5,7 +5,7 @@ import { usersApi } from '@/api/users'
 import { connectionsApi } from '@/api/connections'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
-import { cn } from '@/lib/utils'
+import { cn, assetUrl } from '@/lib/utils'
 
 type Tab = 'followers' | 'following' | 'discover'
 
@@ -90,7 +90,7 @@ export function NetworkPage() {
       <div className="flex items-center gap-3">
         <Link to={`/profile/${person.user_id}`}>
           <UserAvatar
-            src={person.profile_photo_url}
+            src={assetUrl(person.profile_photo_url)}
             firstName={person.name}
             lastName=""
             verificationType={person.verification_type}
@@ -140,7 +140,7 @@ export function NetworkPage() {
       <div className="flex items-center gap-3">
         <Link to={`/profile/${person.id}`}>
           <UserAvatar
-            src={person.profile_photo_url}
+            src={assetUrl(person.profile_photo_url)}
             firstName={person.name}
             lastName=""
             verificationType={person.verification_type}

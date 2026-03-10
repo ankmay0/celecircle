@@ -3,7 +3,7 @@ import { Send, Loader2, Trash2 } from 'lucide-react'
 import { postsApi } from '@/api/posts'
 import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
-import { formatDate } from '@/lib/utils'
+import { formatDate, assetUrl } from '@/lib/utils'
 import type { Comment } from '@/types'
 
 interface CommentSectionProps {
@@ -64,7 +64,7 @@ export function CommentSection({ postId, onCommentCountChange }: CommentSectionP
     <div className="border-t border-border px-4 py-3">
       <form onSubmit={handleSubmit} className="flex items-center gap-2 mb-3">
         <UserAvatar
-          src={user?.profile_photo_url}
+          src={assetUrl(user?.profile_photo_url)}
           firstName={user?.first_name}
           lastName={user?.last_name}
           size="sm"
@@ -96,7 +96,7 @@ export function CommentSection({ postId, onCommentCountChange }: CommentSectionP
           {comments.map((comment) => (
             <div key={comment.id} className="flex gap-2 group">
               <UserAvatar
-                src={comment.author?.profile_photo_url}
+                src={assetUrl(comment.author?.profile_photo_url)}
                 firstName={comment.author?.first_name}
                 lastName={comment.author?.last_name}
                 size="sm"
