@@ -14,6 +14,7 @@ import {
   BadgeCheck,
   ShieldCheck,
   X,
+  Loader2,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { usersApi } from '@/api/users'
@@ -31,40 +32,115 @@ const navItems = [
   { to: '/notifications', icon: Bell, label: 'Notifications' },
 ]
 
+function SearchDropdown({
+  results,
+  loading,
+  query,
+  onSelect,
+}: {
+  results: SearchResult[]
+  loading: boolean
+  query: string
+  onSelect: (r: SearchResult) => void
+}) {
+  if (!query || query.trim().length < 2) return null
+
+  return (
+    <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-xl max-h-80 overflow-y-auto z-50">
+      {loading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      ) : results.length === 0 ? (
+        <div className="px-4 py-6 text-center">
+          <Search className="h-8 w-8 text-text-muted mx-auto mb-2" />
+          <p className="text-sm text-text-secondary">No results for "{query}"</p>
+        </div>
+      ) : (
+        results.map((r) => (
+          <button
+            key={r.id}
+            onClick={() => onSelect(r)}
+            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg-secondary transition-colors"
+          >
+            <UserAvatar
+              src={r.profile_photo_url}
+              firstName={r.name}
+              lastName=""
+              size="sm"
+              verificationType={r.verification_type}
+            />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-medium text-text-primary truncate">{r.name}</p>
+                <VerificationBadge type={r.verification_type} size={13} />
+              </div>
+              <p className="text-xs text-text-secondary truncate">{r.category || r.email}</p>
+            </div>
+          </button>
+        ))
+      )}
+    </div>
+  )
+}
+
 export function Header() {
   const { user, logout } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
+
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [showSearch, setShowSearch] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
+
   const searchRef = useRef<HTMLDivElement>(null)
+  const mobileSearchRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  const handleSearch = useCallback((query: string) => {
+  const performSearch = useCallback((query: string) => {
     setSearchQuery(query)
     if (searchTimeout.current) clearTimeout(searchTimeout.current)
     if (query.trim().length < 2) {
       setSearchResults([])
       setShowSearch(false)
+      setSearchLoading(false)
       return
     }
+    setSearchLoading(true)
+    setShowSearch(true)
     searchTimeout.current = setTimeout(async () => {
       try {
         const { data } = await usersApi.searchUsers(query)
         setSearchResults(data)
-        setShowSearch(true)
       } catch {
         setSearchResults([])
+      } finally {
+        setSearchLoading(false)
       }
     }, 300)
   }, [])
 
+  const handleSelectResult = useCallback(
+    (r: SearchResult) => {
+      navigate(`/profile/${r.id}`)
+      setShowSearch(false)
+      setSearchQuery('')
+      setSearchResults([])
+      setShowMobileSearch(false)
+    },
+    [navigate],
+  )
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSearch(false)
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target as Node)) {
+        /* keep mobile search open, user has to click X */
+      }
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -83,53 +159,32 @@ export function Header() {
           <img src="/celecircle-logo.png" alt="CeleCircle" style={{ height: '55px' }} className="w-auto" />
         </Link>
 
+        {/* Desktop search */}
         <div ref={searchRef} className="relative hidden md:block flex-1 max-w-[280px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
           <input
             type="text"
             placeholder="Search..."
             value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => performSearch(e.target.value)}
+            onFocus={() => {
+              if (searchQuery.trim().length >= 2) setShowSearch(true)
+            }}
             className="h-9 w-full rounded-lg bg-bg-secondary pl-9 pr-4 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
-          {showSearch && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-xl max-h-80 overflow-y-auto">
-              {searchResults.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    navigate(`/profile/${r.id}`)
-                    setShowSearch(false)
-                    setSearchQuery('')
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg-secondary transition-colors"
-                >
-                  <UserAvatar
-                    src={r.profile_photo_url}
-                    firstName={r.name}
-                    lastName=""
-                    size="sm"
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-medium text-text-primary truncate">
-                        {r.name}
-                      </p>
-                      <VerificationBadge type={r.verification_type} size={13} />
-                    </div>
-                    <p className="text-xs text-text-secondary truncate">
-                      {r.category || r.email}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
+          {showSearch && (
+            <SearchDropdown
+              results={searchResults}
+              loading={searchLoading}
+              query={searchQuery}
+              onSelect={handleSelectResult}
+            />
           )}
         </div>
 
         <nav className="hidden lg:flex items-center gap-1 ml-auto">
           {navItems.map(({ to, icon: Icon, label }) => {
-            const active = location.pathname === to
+            const active = location.pathname === to || location.pathname.startsWith(to + '/')
             return (
               <Link
                 key={to}
@@ -168,7 +223,7 @@ export function Header() {
             </button>
 
             {showProfile && (
-              <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-border bg-card shadow-xl overflow-hidden z-50">
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3">
                     <UserAvatar
@@ -243,34 +298,51 @@ export function Header() {
             )}
           </div>
 
+          {/* Mobile search toggle */}
           <button
-            className="lg:hidden flex items-center justify-center h-9 w-9 rounded-lg hover:bg-bg-secondary text-text-secondary"
-            onClick={() => {
-              const el = document.getElementById('mobile-search')
-              if (el) el.classList.toggle('hidden')
-            }}
+            className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg hover:bg-bg-secondary text-text-secondary"
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
           >
-            <Search className="h-5 w-5" />
+            {showMobileSearch ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
-      <div id="mobile-search" className="hidden md:hidden border-t border-border px-4 py-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="h-9 w-full rounded-lg bg-bg-secondary pl-9 pr-9 text-sm text-text-primary placeholder:text-text-muted outline-none"
-          />
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted"
-            onClick={() => document.getElementById('mobile-search')?.classList.add('hidden')}
-          >
-            <X className="h-4 w-4" />
-          </button>
+      {/* Mobile search bar */}
+      {showMobileSearch && (
+        <div ref={mobileSearchRef} className="md:hidden border-t border-border px-4 py-2 relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Search people..."
+              value={searchQuery}
+              onChange={(e) => performSearch(e.target.value)}
+              autoFocus
+              className="h-9 w-full rounded-lg bg-bg-secondary pl-9 pr-9 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            {searchQuery && (
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                onClick={() => {
+                  setSearchQuery('')
+                  setSearchResults([])
+                }}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {searchQuery.trim().length >= 2 && (
+            <SearchDropdown
+              results={searchResults}
+              loading={searchLoading}
+              query={searchQuery}
+              onSelect={handleSelectResult}
+            />
+          )}
         </div>
-      </div>
+      )}
     </header>
   )
 }

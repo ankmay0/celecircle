@@ -12,6 +12,7 @@ import {
   Loader2,
   Calendar,
   Clock,
+  CalendarCheck,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { usersApi } from '@/api/users'
@@ -64,15 +65,15 @@ export function DashboardPage() {
 
   const quickActions = isArtist
     ? [
+        { to: '/bookings', icon: CalendarCheck, label: 'My Bookings', desc: 'View and manage booking requests' },
         { to: '/gigs', icon: Briefcase, label: 'Browse Gigs', desc: 'Find your next opportunity' },
         { to: '/profile', icon: Eye, label: 'View Profile', desc: 'See how others see you' },
-        { to: '/feed', icon: Plus, label: 'Create Post', desc: 'Share updates with your network' },
         { to: '/chat', icon: MessageSquare, label: 'Messages', desc: 'Check your conversations' },
       ]
     : [
+        { to: '/bookings', icon: CalendarCheck, label: 'My Bookings', desc: 'Track your artist bookings' },
         { to: '/gigs/new', icon: Plus, label: 'Post a Gig', desc: 'Find the perfect artist' },
         { to: '/gigs', icon: Briefcase, label: 'My Gigs', desc: 'Manage your gig listings' },
-        { to: '/feed', icon: TrendingUp, label: 'Explore Feed', desc: 'Discover trending talent' },
         { to: '/chat', icon: MessageSquare, label: 'Messages', desc: 'Talk to artists' },
       ]
 

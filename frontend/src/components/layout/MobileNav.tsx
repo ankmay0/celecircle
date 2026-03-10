@@ -19,6 +19,7 @@ import {
   Bookmark,
   BadgeCheck,
   Sparkles,
+  CalendarCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,7 @@ const bottomItems = [
 
 const menuItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/bookings', icon: CalendarCheck, label: 'Bookings' },
   { to: '/network', icon: Users, label: 'My Network' },
   { to: '/community', icon: Users, label: 'Community' },
   { to: '/events', icon: Ticket, label: 'Events' },

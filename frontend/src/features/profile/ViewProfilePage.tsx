@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   MapPin,
   Star,
@@ -15,12 +15,15 @@ import {
   Clock,
   Image as ImageIcon,
   ExternalLink,
+  CalendarCheck,
+  IndianRupee,
 } from 'lucide-react'
 import { usersApi } from '@/api/users'
 import { connectionsApi } from '@/api/connections'
 import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
+import { BookingFormModal } from '@/features/bookings/BookingFormModal'
 import { formatCurrency, cn } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -28,12 +31,14 @@ type TabId = 'about' | 'portfolio'
 
 export function ViewProfilePage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const currentUser = useAuthStore((s) => s.user)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('about')
+  const [showBookingForm, setShowBookingForm] = useState(false)
 
   const userId = Number(id)
 
@@ -131,7 +136,7 @@ export function ViewProfilePage() {
               )}
             </div>
             {!isOwn && (
-              <div className="flex gap-2 self-start">
+              <div className="flex gap-2 self-start flex-wrap">
                 <button
                   onClick={handleFollow}
                   disabled={followLoading}
@@ -146,14 +151,59 @@ export function ViewProfilePage() {
                   )}
                   {isFollowing ? 'Following' : 'Follow'}
                 </button>
-                <button className="btn-ghost border border-border !rounded-full !px-4 !py-2">
+                <button
+                  onClick={() => {
+                    if (isFollowing) {
+                      navigate(`/chat/${userId}`)
+                    } else {
+                      alert('You need to follow this user before you can message them.')
+                    }
+                  }}
+                  className={cn(
+                    'btn-ghost border border-border !rounded-full !px-4 !py-2',
+                    !isFollowing && 'opacity-50 cursor-not-allowed',
+                  )}
+                  title={isFollowing ? 'Send a message' : 'Follow this user to send a message'}
+                >
                   <MessageSquare className="h-4 w-4" /> Message
                 </button>
+                {currentUser?.role !== 'artist' && (
+                  <button
+                    onClick={() => setShowBookingForm(true)}
+                    className="btn-primary !px-4 !py-2 !bg-emerald-600 hover:!bg-emerald-700"
+                  >
+                    <CalendarCheck className="h-4 w-4" /> Book Now
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Starting price + Book CTA for organizers */}
+      {!isOwn && currentUser?.role !== 'artist' && profile.min_price > 0 && (
+        <div className="card p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+              <IndianRupee className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-xs text-text-muted">Starting from</p>
+              <p className="text-lg font-bold text-text-primary">
+                {formatCurrency(profile.min_price)}
+                <span className="text-xs text-text-muted font-normal ml-1">per event</span>
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowBookingForm(true)}
+            className="btn-primary !bg-emerald-600 hover:!bg-emerald-700 !px-5"
+          >
+            <CalendarCheck className="h-4 w-4" /> Book Now
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {stats.map(({ icon: Icon, label, value }) => (
@@ -250,6 +300,16 @@ export function ViewProfilePage() {
           )}
         </div>
       </div>
+      {/* Booking Form Modal */}
+      {showBookingForm && profile && (
+        <BookingFormModal
+          artistId={userId}
+          artistName={profile.name}
+          artistCategory={profile.category}
+          onClose={() => setShowBookingForm(false)}
+          onSuccess={() => setShowBookingForm(false)}
+        />
+      )}
     </div>
   )
 }

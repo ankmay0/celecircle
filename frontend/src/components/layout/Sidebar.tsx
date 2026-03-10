@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Home,
@@ -8,7 +9,6 @@ import {
   User,
   Bookmark,
   LayoutDashboard,
-  Eye,
   FileText,
   Sparkles,
   Trophy,
@@ -18,8 +18,12 @@ import {
   BarChart3,
   Ticket,
   ShieldCheck,
+  UserCheck,
+  UserPlus,
+  CalendarCheck,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { connectionsApi } from '@/api/connections'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
 import { cn } from '@/lib/utils'
@@ -29,6 +33,7 @@ const links = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/network', icon: Users, label: 'My Network' },
   { to: '/gigs', icon: Briefcase, label: 'Gigs' },
+  { to: '/bookings', icon: CalendarCheck, label: 'Bookings' },
   { to: '/chat', icon: MessageSquare, label: 'Messaging' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/community', icon: Users, label: 'Community' },
@@ -45,6 +50,24 @@ const links = [
 export function Sidebar() {
   const user = useAuthStore((s) => s.user)
   const location = useLocation()
+  const [followersCount, setFollowersCount] = useState<number | null>(null)
+  const [followingCount, setFollowingCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    async function loadCounts() {
+      try {
+        const [followersRes, followingRes] = await Promise.all([
+          connectionsApi.getFollowers(),
+          connectionsApi.getFollowing(),
+        ])
+        setFollowersCount(followersRes.data.length)
+        setFollowingCount(followingRes.data.length)
+      } catch {
+        /* silent */
+      }
+    }
+    loadCounts()
+  }, [])
 
   return (
     <aside className="hidden lg:block w-[240px] flex-shrink-0">
@@ -73,21 +96,25 @@ export function Sidebar() {
               <p className="text-xs text-text-secondary capitalize mt-0.5">{user?.role}</p>
             </div>
 
-            {/* Stats row */}
+            {/* Followers / Following */}
             <div className="grid grid-cols-2 gap-1 mt-3 pt-3 border-t border-border">
-              <Link to="/profile" className="group rounded-lg px-2 py-1.5 hover:bg-bg-secondary transition-colors">
-                <div className="flex items-center gap-1.5 text-text-muted">
-                  <Eye className="h-3 w-3" />
-                  <span className="text-[10px]">Profile views</span>
-                </div>
-                <p className="text-sm font-bold text-primary mt-0.5 group-hover:underline">--</p>
-              </Link>
-              <Link to="/network" className="group rounded-lg px-2 py-1.5 hover:bg-bg-secondary transition-colors">
-                <div className="flex items-center gap-1.5 text-text-muted">
-                  <Users className="h-3 w-3" />
+              <Link to="/network" className="group rounded-lg px-2 py-1.5 hover:bg-bg-secondary transition-colors text-center">
+                <div className="flex items-center justify-center gap-1.5 text-text-muted">
+                  <UserCheck className="h-3 w-3" />
                   <span className="text-[10px]">Followers</span>
                 </div>
-                <p className="text-sm font-bold text-primary mt-0.5 group-hover:underline">--</p>
+                <p className="text-sm font-bold text-primary mt-0.5 group-hover:underline">
+                  {followersCount ?? 0}
+                </p>
+              </Link>
+              <Link to="/network" className="group rounded-lg px-2 py-1.5 hover:bg-bg-secondary transition-colors text-center">
+                <div className="flex items-center justify-center gap-1.5 text-text-muted">
+                  <UserPlus className="h-3 w-3" />
+                  <span className="text-[10px]">Following</span>
+                </div>
+                <p className="text-sm font-bold text-primary mt-0.5 group-hover:underline">
+                  {followingCount ?? 0}
+                </p>
               </Link>
             </div>
           </div>

@@ -26,6 +26,7 @@ import { StorePage } from '@/features/store/StorePage'
 import { AnalyticsPage } from '@/features/analytics/AnalyticsPage'
 import { EventsPage } from '@/features/events/EventsPage'
 import { VerificationManagementPage } from '@/features/admin/VerificationManagementPage'
+import { BookingsPage } from '@/features/bookings/BookingsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +74,7 @@ export default function App() {
             <Route path="/gigs/new" element={<PostGigPage />} />
             <Route path="/gigs/:id" element={<GigDetailPage />} />
             <Route path="/chat" element={<MessagingPage />} />
+            <Route path="/chat/:userId" element={<MessagingPage />} />
             <Route path="/network" element={<NetworkPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/saved" element={<SavedPage />} />
@@ -84,6 +86,7 @@ export default function App() {
             <Route path="/store" element={<StorePage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/events" element={<EventsPage />} />
+            <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/admin/verification" element={<VerificationManagementPage />} />
           </Route>
 

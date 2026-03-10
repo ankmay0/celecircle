@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List, Any, Optional
 from database import get_db
-from models import User, Profile, ChatMessage, Notification
+from models import User, Profile, ChatMessage, Notification, Connection
 from schemas import ChatMessageCreate, ChatMessageResponse, NotificationResponse
 from auth import get_current_active_user
 from datetime import datetime
@@ -29,13 +29,22 @@ def send_message(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Send a chat message"""
-    # Verify receiver exists
+    """Send a chat message. Requires the sender to follow the receiver."""
     receiver = db.query(User).filter(User.id == message_data.receiver_id).first()
     if not receiver:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Receiver not found"
+        )
+
+    is_following = db.query(Connection).filter(
+        Connection.follower_id == current_user.id,
+        Connection.following_id == message_data.receiver_id,
+    ).first()
+    if not is_following and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must follow this user before sending a message"
         )
     
     new_message = ChatMessage(
@@ -182,6 +191,7 @@ def list_conversations(
                 "user_category": other_profile.category if other_profile else (other_user.role if other_user else ''),
                 "user_role": other_user.role if other_user else '',
                 "verification_type": _paid_verification_type(other_user) if other_user else None,
+                "profile_photo_url": other_user.profile_photo_url if other_user else None,
                 "last_message": last_message.message,
                 "last_message_time": last_message.created_at.isoformat() if last_message.created_at else None,
                 "unread_count": unread_count

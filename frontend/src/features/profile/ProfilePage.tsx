@@ -11,10 +11,14 @@ import {
   Award,
   Clock,
   TrendingUp,
+  Eye,
+  Users,
+  UserCheck,
   Image as ImageIcon,
   ExternalLink,
 } from 'lucide-react'
 import { usersApi } from '@/api/users'
+import { connectionsApi } from '@/api/connections'
 import { useAuthStore } from '@/stores/authStore'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { VerificationBadge } from '@/components/shared/VerificationBadge'
@@ -28,12 +32,20 @@ export function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabId>('about')
+  const [followersCount, setFollowersCount] = useState(0)
+  const [followingCount, setFollowingCount] = useState(0)
 
   useEffect(() => {
     async function load() {
       try {
-        const { data } = await usersApi.getMyProfile()
-        setProfile(data)
+        const [profileRes, followersRes, followingRes] = await Promise.all([
+          usersApi.getMyProfile(),
+          connectionsApi.getFollowers(),
+          connectionsApi.getFollowing(),
+        ])
+        setProfile(profileRes.data)
+        setFollowersCount(followersRes.data.length)
+        setFollowingCount(followingRes.data.length)
       } catch {
         // Profile may not exist yet
       } finally {
@@ -112,6 +124,25 @@ export function ProfilePage() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Profile views + Followers/Following */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="card p-4 text-center">
+          <Eye className="h-5 w-5 text-text-muted mx-auto mb-1" />
+          <p className="text-lg font-bold text-text-primary">--</p>
+          <p className="text-xs text-text-secondary">Profile views</p>
+        </div>
+        <Link to="/network" className="card p-4 text-center hover:ring-1 hover:ring-primary/30 transition-all">
+          <UserCheck className="h-5 w-5 text-primary mx-auto mb-1" />
+          <p className="text-lg font-bold text-primary">{followersCount}</p>
+          <p className="text-xs text-text-secondary">Followers</p>
+        </Link>
+        <Link to="/network" className="card p-4 text-center hover:ring-1 hover:ring-primary/30 transition-all">
+          <Users className="h-5 w-5 text-primary mx-auto mb-1" />
+          <p className="text-lg font-bold text-primary">{followingCount}</p>
+          <p className="text-xs text-text-secondary">Following</p>
+        </Link>
       </div>
 
       {/* Stats */}
