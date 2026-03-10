@@ -89,7 +89,7 @@ export function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <img src="/celecircle-logo.png" alt="CeleCircle" style={{ height: '48px' }} className="w-auto" />
+            <img src="/celecircle-logo.png" alt="CeleCircle" style={{ height: '60px' }} className="w-auto" />
           </Link>
           {step === 'register' && (
             <>
