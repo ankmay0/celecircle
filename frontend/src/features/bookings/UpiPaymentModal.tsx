@@ -13,7 +13,6 @@ import {
 } from 'lucide-react'
 import { bookingsApi } from '@/api/bookings'
 import type { BookingData } from '@/api/bookings'
-import { cn } from '@/lib/utils'
 
 interface UpiPaymentModalProps {
   booking: BookingData
