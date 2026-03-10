@@ -555,3 +555,21 @@ async def upload_profile_photo(
         "profile_photo_url": file_url,
     }
 
+
+@router.delete("/me/profile-photo")
+def delete_profile_photo(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Remove the current user's profile photo."""
+    if not current_user.profile_photo_url:
+        raise HTTPException(status_code=400, detail="No profile photo to delete")
+
+    old_path = os.path.join(".", current_user.profile_photo_url.lstrip("/"))
+    if os.path.exists(old_path):
+        os.remove(old_path)
+
+    current_user.profile_photo_url = None
+    db.commit()
+    return {"message": "Profile photo removed"}
+

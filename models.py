@@ -509,3 +509,56 @@ class Payout(Base):
 
     booking = relationship("Booking", foreign_keys=[booking_id])
     artist = relationship("User", foreign_keys=[artist_id])
+
+
+class ReportedContent(Base):
+    __tablename__ = "reported_content"
+    id = Column(Integer, primary_key=True, index=True)
+    reporter_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content_type = Column(String(50), nullable=False)  # post, comment, user, message
+    content_id = Column(Integer, nullable=False)
+    reason = Column(String(500), nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String(50), default="pending")  # pending, resolved, dismissed
+    admin_notes = Column(Text, nullable=True)
+    resolved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class SupportTicket(Base):
+    __tablename__ = "support_tickets"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    subject = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    issue_type = Column(String(50), nullable=False)  # payment, booking, technical, account
+    priority = Column(String(20), default="medium")  # low, medium, high, critical
+    status = Column(String(50), default="open")  # open, in_progress, resolved, closed
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    admin_response = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+    id = Column(Integer, primary_key=True, index=True)
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+    target_audience = Column(String(50), default="all")  # all, artists, organizers
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)
+
+
+class FeaturedUser(Base):
+    __tablename__ = "featured_users"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    category = Column(String(50), nullable=False)  # featured_artist, top_celebrity, trending
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)

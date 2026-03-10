@@ -11,6 +11,7 @@ import {
   Filter,
 } from 'lucide-react'
 import { adminApi } from '@/api/admin'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { cn } from '@/lib/utils'
 
 interface VerificationRequest {
@@ -138,22 +139,10 @@ export function VerificationManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="card p-6 animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-400/30 to-amber-600/10 flex items-center justify-center">
-              <BadgeCheck className="h-6 w-6 text-amber-500" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-text-primary">Verification Management</h1>
-              <p className="text-sm text-text-secondary">
-                Review and manage user verification requests ({total} total)
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Verification Management"
+        description={`Review and manage user verification requests (${total} total)`}
+      />
 
       {/* Status Tabs */}
       <div className="card p-1.5">

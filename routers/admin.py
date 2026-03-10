@@ -8,7 +8,9 @@ from models import (
     User, Profile, Gig, Payment, Review, Application,
     Booking, BookingPayment, BookingStatus, BookingPaymentType, BookingPaymentStatus,
     Dispute, DisputeStatus, ResolutionType, SystemSetting, AuditLog,
-    ArtistAvailability, Notification, Payout, PayoutStatus
+    ArtistAvailability, Notification, Payout, PayoutStatus,
+    ReportedContent, SupportTicket, Announcement, FeaturedUser,
+    Post, Comment,
 )
 from auth import require_role
 from datetime import datetime, timedelta
@@ -1697,3 +1699,434 @@ def export_disputes_csv(
         iter([output.getvalue()]), media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=disputes_report.csv"},
     )
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CONTENT MODERATION
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/moderation")
+def list_reported_content(
+    status_filter: Optional[str] = Query(None, alias="status"),
+    content_type: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(25, ge=1, le=100),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    query = db.query(ReportedContent)
+    if status_filter:
+        query = query.filter(ReportedContent.status == status_filter)
+    if content_type:
+        query = query.filter(ReportedContent.content_type == content_type)
+
+    total = query.count()
+    reports = query.order_by(ReportedContent.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    results = []
+    for r in reports:
+        reporter = db.query(User).filter(User.id == r.reporter_id).first()
+        resolver = db.query(User).filter(User.id == r.resolved_by).first() if r.resolved_by else None
+        results.append({
+            "id": r.id,
+            "reporter_email": reporter.email if reporter else None,
+            "content_type": r.content_type,
+            "content_id": r.content_id,
+            "reason": r.reason,
+            "description": r.description,
+            "status": r.status,
+            "admin_notes": r.admin_notes,
+            "resolved_by_email": resolver.email if resolver else None,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        })
+    return {"total": total, "page": page, "limit": limit, "reports": results}
+
+
+@router.put("/moderation/{report_id}/resolve")
+def resolve_report(
+    report_id: int,
+    action: str = Query(...),
+    notes: Optional[str] = Query(None),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    report = db.query(ReportedContent).filter(ReportedContent.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    if action == "remove":
+        if report.content_type == "post":
+            post = db.query(Post).filter(Post.id == report.content_id).first()
+            if post:
+                db.delete(post)
+        elif report.content_type == "comment":
+            comment = db.query(Comment).filter(Comment.id == report.content_id).first()
+            if comment:
+                db.delete(comment)
+        report.status = "resolved"
+    elif action == "warn":
+        report.status = "resolved"
+    elif action == "ban":
+        if report.content_type == "user":
+            target = db.query(User).filter(User.id == report.content_id).first()
+            if target and target.role != "admin":
+                target.is_active = False
+        report.status = "resolved"
+    elif action == "dismiss":
+        report.status = "dismissed"
+    else:
+        report.status = "resolved"
+
+    report.admin_notes = notes
+    report.resolved_by = admin.id
+    report.updated_at = datetime.utcnow()
+    log_action(db, admin.id, "resolve_report", "moderation", report_id, {"action": action})
+    db.commit()
+    return {"message": f"Report resolved with action: {action}"}
+
+
+@router.delete("/posts/{post_id}")
+def admin_delete_post(
+    post_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    db.delete(post)
+    log_action(db, admin.id, "delete_post", "post", post_id)
+    db.commit()
+    return {"message": "Post deleted"}
+
+
+@router.delete("/comments/{comment_id}")
+def admin_delete_comment(
+    comment_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    db.delete(comment)
+    log_action(db, admin.id, "delete_comment", "comment", comment_id)
+    db.commit()
+    return {"message": "Comment deleted"}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  SUPPORT TICKETS
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/support")
+def list_support_tickets(
+    status_filter: Optional[str] = Query(None, alias="status"),
+    issue_type: Optional[str] = None,
+    priority: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(25, ge=1, le=100),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    query = db.query(SupportTicket)
+    if status_filter:
+        query = query.filter(SupportTicket.status == status_filter)
+    if issue_type:
+        query = query.filter(SupportTicket.issue_type == issue_type)
+    if priority:
+        query = query.filter(SupportTicket.priority == priority)
+
+    total = query.count()
+    tickets = query.order_by(SupportTicket.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    results = []
+    for t in tickets:
+        user = db.query(User).filter(User.id == t.user_id).first()
+        handler = db.query(User).filter(User.id == t.admin_id).first() if t.admin_id else None
+        results.append({
+            "id": t.id,
+            "user_email": user.email if user else None,
+            "user_name": f"{user.first_name or ''} {user.last_name or ''}".strip() if user else None,
+            "subject": t.subject,
+            "description": t.description,
+            "issue_type": t.issue_type,
+            "priority": t.priority,
+            "status": t.status,
+            "admin_email": handler.email if handler else None,
+            "admin_response": t.admin_response,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+            "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+        })
+    return {"total": total, "page": page, "limit": limit, "tickets": results}
+
+
+@router.get("/support/{ticket_id}")
+def get_support_ticket(
+    ticket_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    t = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    user = db.query(User).filter(User.id == t.user_id).first()
+    handler = db.query(User).filter(User.id == t.admin_id).first() if t.admin_id else None
+
+    return {
+        "id": t.id,
+        "user_id": t.user_id,
+        "user_email": user.email if user else None,
+        "user_name": f"{user.first_name or ''} {user.last_name or ''}".strip() if user else None,
+        "subject": t.subject,
+        "description": t.description,
+        "issue_type": t.issue_type,
+        "priority": t.priority,
+        "status": t.status,
+        "admin_id": t.admin_id,
+        "admin_email": handler.email if handler else None,
+        "admin_response": t.admin_response,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+        "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+    }
+
+
+@router.put("/support/{ticket_id}/respond")
+def respond_to_ticket(
+    ticket_id: int,
+    response: str = Query(...),
+    new_status: str = Query("in_progress"),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    t = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    t.admin_response = response
+    t.admin_id = admin.id
+    t.status = new_status
+    t.updated_at = datetime.utcnow()
+
+    db.add(Notification(
+        user_id=t.user_id,
+        title="Support Ticket Update",
+        message=f"Your support ticket #{t.id} has been updated.",
+        type="support",
+        link="/support",
+    ))
+
+    log_action(db, admin.id, "respond_ticket", "support", ticket_id, {"status": new_status})
+    db.commit()
+    return {"message": "Response sent"}
+
+
+@router.put("/support/{ticket_id}/close")
+def close_ticket(
+    ticket_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    t = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    t.status = "closed"
+    t.updated_at = datetime.utcnow()
+    log_action(db, admin.id, "close_ticket", "support", ticket_id)
+    db.commit()
+    return {"message": "Ticket closed"}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  ANNOUNCEMENTS
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/announcements")
+def list_announcements(
+    page: int = Query(1, ge=1),
+    limit: int = Query(25, ge=1, le=100),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Announcement)
+    total = query.count()
+    items = query.order_by(Announcement.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    results = []
+    for a in items:
+        author = db.query(User).filter(User.id == a.admin_id).first()
+        results.append({
+            "id": a.id,
+            "title": a.title,
+            "message": a.message,
+            "target_audience": a.target_audience,
+            "is_active": a.is_active,
+            "admin_email": author.email if author else None,
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+            "expires_at": a.expires_at.isoformat() if a.expires_at else None,
+        })
+    return {"total": total, "page": page, "limit": limit, "announcements": results}
+
+
+@router.post("/announcements")
+def create_announcement(
+    title: str = Query(...),
+    message: str = Query(...),
+    target_audience: str = Query("all"),
+    expires_at: Optional[str] = Query(None),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    exp = None
+    if expires_at:
+        try:
+            exp = datetime.fromisoformat(expires_at)
+        except ValueError:
+            pass
+
+    announcement = Announcement(
+        admin_id=admin.id,
+        title=title,
+        message=message,
+        target_audience=target_audience,
+        expires_at=exp,
+    )
+    db.add(announcement)
+    log_action(db, admin.id, "create_announcement", "announcement", metadata={"title": title, "target": target_audience})
+    db.commit()
+    db.refresh(announcement)
+    return {"message": "Announcement created", "id": announcement.id}
+
+
+@router.put("/announcements/{ann_id}")
+def update_announcement(
+    ann_id: int,
+    title: Optional[str] = Query(None),
+    message: Optional[str] = Query(None),
+    target_audience: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    a = db.query(Announcement).filter(Announcement.id == ann_id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+
+    if title is not None:
+        a.title = title
+    if message is not None:
+        a.message = message
+    if target_audience is not None:
+        a.target_audience = target_audience
+    if is_active is not None:
+        a.is_active = is_active
+
+    log_action(db, admin.id, "update_announcement", "announcement", ann_id)
+    db.commit()
+    return {"message": "Announcement updated"}
+
+
+@router.delete("/announcements/{ann_id}")
+def delete_announcement(
+    ann_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    a = db.query(Announcement).filter(Announcement.id == ann_id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    db.delete(a)
+    log_action(db, admin.id, "delete_announcement", "announcement", ann_id)
+    db.commit()
+    return {"message": "Announcement deleted"}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  FEATURED USERS
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/featured")
+def list_featured_users(
+    page: int = Query(1, ge=1),
+    limit: int = Query(25, ge=1, le=100),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    query = db.query(FeaturedUser).filter(FeaturedUser.is_active == True)
+    total = query.count()
+    items = query.order_by(FeaturedUser.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    results = []
+    for f in items:
+        user = db.query(User).filter(User.id == f.user_id).first()
+        prof = db.query(Profile).filter(Profile.user_id == f.user_id).first()
+        results.append({
+            "id": f.id,
+            "user_id": f.user_id,
+            "user_email": user.email if user else None,
+            "user_name": prof.name if prof else (user.email if user else None),
+            "user_role": user.role.value if user and user.role else None,
+            "category": f.category,
+            "is_active": f.is_active,
+            "created_at": f.created_at.isoformat() if f.created_at else None,
+            "expires_at": f.expires_at.isoformat() if f.expires_at else None,
+        })
+    return {"total": total, "page": page, "limit": limit, "featured": results}
+
+
+@router.post("/featured")
+def feature_user(
+    user_id: int = Query(...),
+    category: str = Query(...),
+    expires_at: Optional[str] = Query(None),
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if category not in ("featured_artist", "top_celebrity", "trending"):
+        raise HTTPException(status_code=400, detail="Invalid category")
+
+    existing = db.query(FeaturedUser).filter(
+        FeaturedUser.user_id == user_id, FeaturedUser.category == category, FeaturedUser.is_active == True
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User already featured in this category")
+
+    exp = None
+    if expires_at:
+        try:
+            exp = datetime.fromisoformat(expires_at)
+        except ValueError:
+            pass
+
+    featured = FeaturedUser(
+        user_id=user_id,
+        category=category,
+        admin_id=admin.id,
+        expires_at=exp,
+    )
+    db.add(featured)
+    log_action(db, admin.id, "feature_user", "featured", user_id, {"category": category})
+    db.commit()
+    db.refresh(featured)
+    return {"message": "User featured", "id": featured.id}
+
+
+@router.delete("/featured/{featured_id}")
+def remove_featured(
+    featured_id: int,
+    admin: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    f = db.query(FeaturedUser).filter(FeaturedUser.id == featured_id).first()
+    if not f:
+        raise HTTPException(status_code=404, detail="Featured entry not found")
+    f.is_active = False
+    log_action(db, admin.id, "remove_featured", "featured", featured_id)
+    db.commit()
+    return {"message": "Featured status removed"}

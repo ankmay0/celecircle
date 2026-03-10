@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MapPin,
@@ -16,6 +16,8 @@ import {
   UserCheck,
   Image as ImageIcon,
   ExternalLink,
+  Camera,
+  Trash2,
 } from 'lucide-react'
 import { usersApi } from '@/api/users'
 import { connectionsApi } from '@/api/connections'
@@ -29,11 +31,59 @@ type TabId = 'about' | 'portfolio' | 'reviews'
 
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user)
+  const updateUser = useAuthStore((s) => s.setUser)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabId>('about')
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
+  const [photoLoading, setPhotoLoading] = useState(false)
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const photoMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showPhotoMenu) return
+    function handleClick(e: MouseEvent) {
+      if (photoMenuRef.current && !photoMenuRef.current.contains(e.target as Node)) {
+        setShowPhotoMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showPhotoMenu])
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPhotoLoading(true)
+    setShowPhotoMenu(false)
+    try {
+      const { data } = await usersApi.uploadProfilePhoto(file)
+      setProfile((p) => p ? { ...p, profile_photo_url: data.profile_photo_url } : p)
+      if (user) updateUser({ ...user, profile_photo_url: data.profile_photo_url })
+    } catch {
+      alert('Failed to upload photo')
+    } finally {
+      setPhotoLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handlePhotoDelete = async () => {
+    if (!window.confirm('Remove your profile photo?')) return
+    setPhotoLoading(true)
+    setShowPhotoMenu(false)
+    try {
+      await usersApi.deleteProfilePhoto()
+      setProfile((p) => p ? { ...p, profile_photo_url: null } : p)
+      if (user) updateUser({ ...user, profile_photo_url: null })
+    } catch {
+      alert('Failed to remove photo')
+    } finally {
+      setPhotoLoading(false)
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -95,18 +145,59 @@ export function ProfilePage() {
   return (
     <div className="space-y-4">
       {/* Profile Header */}
-      <div className="card overflow-hidden">
-        <div className="h-32 bg-gray-200 dark:bg-gray-700" />
+      <div className="card">
+        <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-t-xl" />
         <div className="px-6 pb-6 -mt-10">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-            <UserAvatar
-              src={assetUrl(profile.profile_photo_url)}
-              firstName={user?.first_name}
-              lastName={user?.last_name}
-              size="xl"
-              className="ring-4 ring-card"
-              verificationType={user?.verification_type}
-            />
+            <div ref={photoMenuRef} className="relative group z-10">
+              <UserAvatar
+                src={assetUrl(profile.profile_photo_url)}
+                firstName={user?.first_name}
+                lastName={user?.last_name}
+                size="xl"
+                className="ring-4 ring-card"
+                verificationType={user?.verification_type}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={handlePhotoUpload}
+              />
+              <button
+                onClick={() => setShowPhotoMenu((v) => !v)}
+                disabled={photoLoading}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 group-hover:bg-black/40 transition-all cursor-pointer"
+              >
+                {photoLoading ? (
+                  <Loader2 className="h-6 w-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
+              </button>
+              {showPhotoMenu && (
+                <div className="absolute left-0 mt-2 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-1.5 w-44 animate-in fade-in slide-in-from-top-1">
+                  <button
+                    onClick={() => { setShowPhotoMenu(false); fileInputRef.current?.click() }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Camera className="h-4 w-4 text-primary" /> Change Photo
+                  </button>
+                  {profile.profile_photo_url && (
+                    <>
+                      <div className="mx-3 my-1 border-t border-gray-200 dark:border-gray-700" />
+                      <button
+                        onClick={handlePhotoDelete}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" /> Remove Photo
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
             <div className="flex-1 sm:pb-1">
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-text-primary">{profile.name}</h1>

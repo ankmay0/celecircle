@@ -33,9 +33,13 @@ export const usersApi = {
   uploadProfilePhoto(file: File) {
     const formData = new FormData()
     formData.append('file', file)
-    return apiClient.post<{ url: string }>('/users/me/profile-photo', formData, {
+    return apiClient.post<{ message: string; profile_photo_url: string }>('/users/me/profile-photo', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
+  },
+
+  deleteProfilePhoto() {
+    return apiClient.delete('/users/me/profile-photo')
   },
 
   getVerificationPlans() {

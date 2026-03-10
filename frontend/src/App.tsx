@@ -25,8 +25,20 @@ import { PollsPage } from '@/features/polls/PollsPage'
 import { StorePage } from '@/features/store/StorePage'
 import { AnalyticsPage } from '@/features/analytics/AnalyticsPage'
 import { EventsPage } from '@/features/events/EventsPage'
-import { VerificationManagementPage } from '@/features/admin/VerificationManagementPage'
 import { BookingsPage } from '@/features/bookings/BookingsPage'
+import { AdminLayout } from '@/components/admin/AdminLayout'
+import { OverviewPage as AdminOverviewPage } from '@/features/admin/OverviewPage'
+import { UsersPage as AdminUsersPage } from '@/features/admin/UsersPage'
+import { VerificationManagementPage } from '@/features/admin/VerificationManagementPage'
+import { BookingsAdminPage } from '@/features/admin/BookingsAdminPage'
+import { PaymentsPage as AdminPaymentsPage } from '@/features/admin/PaymentsPage'
+import { AnalyticsPage as AdminAnalyticsPage } from '@/features/admin/AnalyticsPage'
+import { RevenuePage } from '@/features/admin/RevenuePage'
+import { DisputesPage } from '@/features/admin/DisputesPage'
+import { ModerationPage } from '@/features/admin/ModerationPage'
+import { SupportPage } from '@/features/admin/SupportPage'
+import { AnnouncementsPage } from '@/features/admin/AnnouncementsPage'
+import { FeaturedPage } from '@/features/admin/FeaturedPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,7 +99,28 @@ export default function App() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/bookings" element={<BookingsPage />} />
-            <Route path="/admin/verification" element={<VerificationManagementPage />} />
+          </Route>
+
+          {/* Admin routes with dedicated admin layout */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/admin" element={<AdminOverviewPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/verifications" element={<VerificationManagementPage />} />
+            <Route path="/admin/bookings" element={<BookingsAdminPage />} />
+            <Route path="/admin/payments" element={<AdminPaymentsPage />} />
+            <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+            <Route path="/admin/revenue" element={<RevenuePage />} />
+            <Route path="/admin/disputes" element={<DisputesPage />} />
+            <Route path="/admin/moderation" element={<ModerationPage />} />
+            <Route path="/admin/support" element={<SupportPage />} />
+            <Route path="/admin/announcements" element={<AnnouncementsPage />} />
+            <Route path="/admin/featured" element={<FeaturedPage />} />
           </Route>
 
           {/* Catch-all */}

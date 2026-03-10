@@ -276,11 +276,11 @@ export function Header() {
                   </Link>
                   {user?.role === 'admin' && (
                     <Link
-                      to="/admin/verification"
+                      to="/admin"
                       onClick={() => setShowProfile(false)}
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
                     >
-                      <ShieldCheck className="h-4 w-4" /> Verification Requests
+                      <ShieldCheck className="h-4 w-4" /> Admin Dashboard
                     </Link>
                   )}
                 </div>

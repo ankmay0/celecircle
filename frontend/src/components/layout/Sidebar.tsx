@@ -168,17 +168,17 @@ export function Sidebar() {
               Admin
             </p>
             <Link
-              to="/admin/verification"
+              to="/admin"
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                location.pathname === '/admin/verification'
+                location.pathname.startsWith('/admin')
                   ? 'bg-primary/10 text-primary'
                   : 'text-text-secondary hover:bg-bg-secondary hover:text-text-primary',
               )}
             >
-              <ShieldCheck className={cn('h-[18px] w-[18px]', location.pathname === '/admin/verification' && 'text-primary')} />
-              Verification Requests
-              {location.pathname === '/admin/verification' && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+              <ShieldCheck className={cn('h-[18px] w-[18px]', location.pathname.startsWith('/admin') && 'text-primary')} />
+              Admin Dashboard
+              {location.pathname.startsWith('/admin') && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
             </Link>
           </div>
         )}
