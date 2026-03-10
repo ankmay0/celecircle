@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-export const BACKEND_URL = 'https://celecircle.onrender.com'
+export const BACKEND_URL = import.meta.env.DEV ? '' : 'https://celecircle.onrender.com'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
